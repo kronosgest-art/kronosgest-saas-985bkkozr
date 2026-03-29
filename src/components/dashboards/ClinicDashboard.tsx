@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -69,6 +70,14 @@ const chartConfig = {
 
 export default function ClinicDashboard() {
   const navigate = useNavigate()
+  const [navigatePath, setNavigatePath] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (navigatePath) {
+      navigate(navigatePath)
+      setNavigatePath(null)
+    }
+  }, [navigatePath, navigate])
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -82,7 +91,7 @@ export default function ClinicDashboard() {
         <Button
           size="lg"
           className="shadow-lg shadow-primary/20"
-          onClick={() => navigate('/consultation')}
+          onClick={() => setNavigatePath('/consultation')}
         >
           <Plus className="mr-2 h-5 w-5" /> Novo Cliente / Consulta
         </Button>

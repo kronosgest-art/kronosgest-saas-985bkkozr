@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 
 export type Role = 'admin' | 'clinic' | 'patient' | null
 
+// Basic global state implementation since Zustand is not available
 let globalRole: Role = null
 const listeners = new Set<() => void>()
 
-export default function useAuthStore() {
+const useAuthStore = () => {
   const [role, setRole] = useState<Role>(globalRole)
 
   useEffect(() => {
@@ -16,15 +17,17 @@ export default function useAuthStore() {
     }
   }, [])
 
-  return {
-    role,
-    login: (newRole: Role) => {
-      globalRole = newRole
-      listeners.forEach((l) => l())
-    },
-    logout: () => {
-      globalRole = null
-      listeners.forEach((l) => l())
-    },
+  const login = (newRole: Role) => {
+    globalRole = newRole
+    listeners.forEach((l) => l())
   }
+
+  const logout = () => {
+    globalRole = null
+    listeners.forEach((l) => l())
+  }
+
+  return { role, login, logout }
 }
+
+export default useAuthStore

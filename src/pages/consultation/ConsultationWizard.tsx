@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -30,8 +30,15 @@ const STEPS = [
 export default function ConsultationWizard() {
   const [currentStep, setCurrentStep] = useState(1)
   const navigate = useNavigate()
+  const [isFinished, setIsFinished] = useState(false)
   const totalSteps = STEPS.length
   const progress = (currentStep / totalSteps) * 100
+
+  useEffect(() => {
+    if (isFinished) {
+      navigate('/')
+    }
+  }, [isFinished, navigate])
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -42,7 +49,7 @@ export default function ConsultationWizard() {
         title: 'Consulta Finalizada',
         description: 'Todos os dados foram registrados com sucesso.',
       })
-      navigate('/')
+      setIsFinished(true)
     }
   }
 

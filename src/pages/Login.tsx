@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore, { Role } from '@/stores/useAuthStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,10 +8,17 @@ import { Activity } from 'lucide-react'
 export default function Login() {
   const { login } = useAuthStore()
   const navigate = useNavigate()
+  const [shouldNavigate, setShouldNavigate] = useState(false)
+
+  useEffect(() => {
+    if (shouldNavigate) {
+      navigate('/')
+    }
+  }, [shouldNavigate, navigate])
 
   const handleLogin = (role: Role) => {
     login(role)
-    navigate('/')
+    setShouldNavigate(true)
   }
 
   return (
