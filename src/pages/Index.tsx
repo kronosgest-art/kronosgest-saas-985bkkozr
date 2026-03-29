@@ -15,8 +15,22 @@ export default function Index() {
     }
   }, [user, loading, navigate])
 
-  if (loading || !user) {
-    return null
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] w-full flex-col items-center justify-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="text-lg font-medium text-muted-foreground">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-[80vh] w-full flex-col items-center justify-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="text-lg font-medium text-muted-foreground">Redirecionando...</p>
+      </div>
+    )
   }
 
   const role = user.user_metadata?.role || 'clinic'
