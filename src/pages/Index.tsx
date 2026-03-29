@@ -1,12 +1,17 @@
-/* Home Page - Replace this page layout, components, content, behavior with what you want and translate to the language of the user */
-const Index = () => {
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">
-        This is a example page ready to be rewritten with your own content
-      </h1>
-    </div>
-  )
-}
+import { Navigate } from 'react-router-dom'
+import useAuthStore from '@/stores/useAuthStore'
+import AdminDashboard from '@/components/dashboards/AdminDashboard'
+import ClinicDashboard from '@/components/dashboards/ClinicDashboard'
+import PatientDashboard from '@/components/dashboards/PatientDashboard'
 
-export default Index
+export default function Index() {
+  const { role } = useAuthStore()
+
+  if (!role) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (role === 'admin') return <AdminDashboard />
+  if (role === 'patient') return <PatientDashboard />
+  return <ClinicDashboard />
+}
