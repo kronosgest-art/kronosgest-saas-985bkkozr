@@ -1,23 +1,25 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useAuthStore from '@/stores/useAuthStore'
+import { useAuth } from '@/hooks/use-auth'
 import AdminDashboard from '@/components/dashboards/AdminDashboard'
 import ClinicDashboard from '@/components/dashboards/ClinicDashboard'
 import PatientDashboard from '@/components/dashboards/PatientDashboard'
 
 export default function Index() {
-  const { role } = useAuthStore()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!role) {
+    if (!loading && !user) {
       navigate('/login', { replace: true })
     }
-  }, [role, navigate])
+  }, [user, loading, navigate])
 
-  if (!role) {
+  if (loading || !user) {
     return null
   }
+
+  const role = user.user_metadata?.role || 'clinic'
 
   if (role === 'admin') return <AdminDashboard />
   if (role === 'patient') return <PatientDashboard />

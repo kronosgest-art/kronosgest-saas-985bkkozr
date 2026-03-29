@@ -1,24 +1,36 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useAuthStore, { Role } from '@/stores/useAuthStore'
+import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Activity } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
 
 export default function Login() {
-  const { login } = useAuthStore()
+  const { signIn, user } = useAuth()
   const navigate = useNavigate()
-  const [shouldNavigate, setShouldNavigate] = useState(false)
+  const [loadingRole, setLoadingRole] = useState<string | null>(null)
 
   useEffect(() => {
-    if (shouldNavigate) {
-      navigate('/')
+    if (user) {
+      navigate('/', { replace: true })
     }
-  }, [shouldNavigate, navigate])
+  }, [user, navigate])
 
-  const handleLogin = (role: Role) => {
-    login(role)
-    setShouldNavigate(true)
+  const handleLogin = async (role: 'admin' | 'clinic' | 'patient') => {
+    setLoadingRole(role)
+
+    let email = ''
+    if (role === 'admin') email = 'admin@kronosgest.com'
+    if (role === 'clinic') email = 'dra.morganavieira@gmail.com'
+    if (role === 'patient') email = 'patient@kronosgest.com'
+
+    const { error } = await signIn(email, 'securepassword123')
+
+    if (error) {
+      toast({ title: 'Erro de Autenticação', description: error.message, variant: 'destructive' })
+      setLoadingRole(null)
+    }
   }
 
   return (
@@ -39,22 +51,25 @@ export default function Login() {
           <Button
             className="w-full h-12 text-lg group hover:scale-[1.02] transition-transform"
             onClick={() => handleLogin('admin')}
+            disabled={loadingRole !== null}
           >
-            Acesso Admin Global
+            {loadingRole === 'admin' ? 'Entrando...' : 'Acesso Admin Global'}
           </Button>
           <Button
             className="w-full h-12 text-lg group hover:scale-[1.02] transition-transform"
             variant="secondary"
             onClick={() => handleLogin('clinic')}
+            disabled={loadingRole !== null}
           >
-            Acesso Clínica / Profissional
+            {loadingRole === 'clinic' ? 'Entrando...' : 'Acesso Clínica / Profissional'}
           </Button>
           <Button
             className="w-full h-12 text-lg group hover:scale-[1.02] transition-transform"
             variant="outline"
             onClick={() => handleLogin('patient')}
+            disabled={loadingRole !== null}
           >
-            Portal do Paciente
+            {loadingRole === 'patient' ? 'Entrando...' : 'Portal do Paciente'}
           </Button>
         </CardContent>
       </Card>
