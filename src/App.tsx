@@ -10,6 +10,7 @@ import ConsultationWizard from '@/pages/consultation/ConsultationWizard'
 import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
 import NotFound from '@/pages/NotFound'
+import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -24,6 +25,32 @@ const App = () => (
             <Route path="/consultation" element={<ConsultationWizard />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/financial" element={<Financial />} />
+
+            {/* Profissional / Admin Routes */}
+            <Route
+              path="/exams/biochemical"
+              element={<FeaturePlaceholder title="Exames Bioquímicos" />}
+            />
+            <Route
+              path="/exams/biophysical"
+              element={<FeaturePlaceholder title="Exames Biofísicos" />}
+            />
+            <Route path="/prescriptions" element={<FeaturePlaceholder title="Prescrições" />} />
+            <Route path="/protocols" element={<FeaturePlaceholder title="Protocolos" />} />
+            <Route path="/sessions" element={<FeaturePlaceholder title="Sessões" />} />
+            <Route path="/reports" element={<FeaturePlaceholder title="Relatórios" />} />
+
+            {/* Patient Routes */}
+            <Route path="/patient/exams" element={<FeaturePlaceholder title="Meus Exames" />} />
+            <Route
+              path="/patient/prescriptions"
+              element={<FeaturePlaceholder title="Minhas Prescrições" />}
+            />
+            <Route
+              path="/patient/sessions"
+              element={<FeaturePlaceholder title="Minhas Sessões Agendadas" />}
+            />
+            <Route path="/patient/history" element={<FeaturePlaceholder title="Meu Histórico" />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

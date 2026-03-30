@@ -21,9 +21,9 @@ export default function Index() {
     return <Navigate to="/login" replace />
   }
 
-  const role = user.user_metadata?.role || 'clinic'
+  const role = user.user_metadata?.role || 'profissional'
 
   if (role === 'admin') return <AdminDashboard />
-  if (role === 'patient') return <PatientDashboard />
+  if (role === 'paciente' || role === 'cliente' || role === 'patient') return <PatientDashboard />
   return <ClinicDashboard />
 }

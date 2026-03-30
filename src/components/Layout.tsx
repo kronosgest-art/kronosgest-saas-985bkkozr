@@ -1,7 +1,21 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Users, FileText, LogOut } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  LogOut,
+  Activity,
+  HeartPulse,
+  FileSignature,
+  BookOpen,
+  Calendar,
+  PieChart,
+  ClipboardList,
+  Stethoscope,
+  History,
+} from 'lucide-react'
 
 export default function Layout() {
   const { user, loading, signOut } = useAuth()
@@ -16,51 +30,91 @@ export default function Layout() {
     )
   }
 
-  // Redirecionamento declarativo protege rotas filhas contra acessos não autenticados
-  // Eliminando totalmente os erros de ciclo de renderização no React
   if (!user && location.pathname !== '/login') {
     return <Navigate to="/login" replace />
   }
 
+  // RBAC Logic
+  const role = user?.user_metadata?.role || 'profissional'
+  const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
+
+  const adminLinks = [
+    { to: '/', label: 'Dashboard Principal', icon: LayoutDashboard },
+    { to: '/crm', label: 'Pacientes', icon: Users },
+    { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
+    { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
+    { to: '/prescriptions', label: 'Prescrições', icon: FileSignature },
+    { to: '/protocols', label: 'Protocolos', icon: BookOpen },
+    { to: '/sessions', label: 'Sessões', icon: Calendar },
+    { to: '/financial', label: 'Financeiro', icon: FileText },
+    { to: '/reports', label: 'Relatórios', icon: PieChart },
+  ]
+
+  const patientLinks = [
+    { to: '/', label: 'Minha Ficha Clínica', icon: ClipboardList },
+    { to: '/patient/exams', label: 'Meus Exames', icon: Stethoscope },
+    { to: '/patient/prescriptions', label: 'Minhas Prescrições', icon: FileSignature },
+    { to: '/patient/sessions', label: 'Minhas Sessões Agendadas', icon: Calendar },
+    { to: '/patient/history', label: 'Meu Histórico', icon: History },
+  ]
+
+  const navLinks = isPatient ? patientLinks : adminLinks
+
+  // Simple Route Protection
+  const allowedPaths = isPatient
+    ? patientLinks.map((l) => l.to)
+    : ['/consultation', ...adminLinks.map((l) => l.to)]
+
+  const isAllowed = allowedPaths.some(
+    (path) =>
+      location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/')),
+  )
+
+  if (!isAllowed && location.pathname !== '/') {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <div className="flex min-h-screen bg-muted/20">
-      <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
-        <div className="flex h-14 items-center border-b px-6">
-          <span className="text-lg font-bold text-primary tracking-tight">KronosGest</span>
+      {/* Sidebar with Blue (#1E3A8A) and Gold (#B8860B) Theme */}
+      <aside className="hidden w-64 flex-col border-r border-primary/10 bg-primary sm:flex shadow-xl z-10 transition-all">
+        <div className="flex h-16 items-center border-b border-primary-foreground/10 px-6">
+          <span className="text-xl font-bold text-primary-foreground tracking-tight flex items-center gap-2">
+            <span className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-sm shadow-sm">
+              IMV
+            </span>
+            KronosGest
+          </span>
         </div>
-        <nav className="flex-1 space-y-2 p-4">
-          <Link to="/">
-            <Button
-              variant={location.pathname === '/' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
-            >
-              <LayoutDashboard className="mr-3 h-5 w-5" />
-              Dashboard
-            </Button>
-          </Link>
-          <Link to="/crm">
-            <Button
-              variant={location.pathname === '/crm' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
-            >
-              <Users className="mr-3 h-5 w-5" />
-              Pacientes & CRM
-            </Button>
-          </Link>
-          <Link to="/financial">
-            <Button
-              variant={location.pathname === '/financial' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
-            >
-              <FileText className="mr-3 h-5 w-5" />
-              Financeiro
-            </Button>
-          </Link>
+        <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
+          {navLinks.map((link) => {
+            const Icon = link.icon
+            const isActive =
+              location.pathname === link.to ||
+              (location.pathname.startsWith(link.to) && link.to !== '/')
+            return (
+              <Link key={link.to} to={link.to}>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start transition-all duration-200 ${
+                    isActive
+                      ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold shadow-md'
+                      : 'text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10'
+                  }`}
+                >
+                  <Icon
+                    className={`mr-3 h-5 w-5 ${isActive ? 'text-secondary-foreground' : 'text-primary-foreground/70'}`}
+                  />
+                  {link.label}
+                </Button>
+              </Link>
+            )
+          })}
         </nav>
-        <div className="border-t p-4">
+        <div className="border-t border-primary-foreground/10 p-4">
           <Button
             variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            className="w-full justify-start text-primary-foreground/80 hover:text-white hover:bg-red-500/20 transition-colors"
             onClick={() => signOut()}
           >
             <LogOut className="mr-3 h-5 w-5" />
@@ -69,16 +123,26 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-6 sm:hidden">
-          <span className="text-lg font-bold text-primary">KronosGest</span>
+      <main className="flex-1 overflow-y-auto bg-muted/10">
+        <header className="flex h-16 items-center gap-4 border-b bg-primary px-6 sm:hidden text-primary-foreground shadow-md">
+          <span className="text-lg font-bold flex items-center gap-2">
+            <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs">
+              IMV
+            </span>
+            KronosGest
+          </span>
           <div className="ml-auto">
-            <Button variant="ghost" size="icon" onClick={() => signOut()}>
-              <LogOut className="h-5 w-5 text-muted-foreground" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => signOut()}
+              className="text-primary-foreground hover:bg-primary-foreground/20"
+            >
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </header>
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
           <Outlet />
         </div>
       </main>
