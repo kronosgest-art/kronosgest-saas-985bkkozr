@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, UserPlus, DollarSign, Calendar, Plus } from 'lucide-react'
+import { Users, UserPlus, DollarSign, Calendar, Plus, Crown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 const sessionsData = [
@@ -79,13 +79,22 @@ export default function ClinicDashboard() {
           </h1>
           <p className="text-muted-foreground mt-1">Acompanhe seus pacientes e consultas.</p>
         </div>
-        <Button
-          size="lg"
-          className="shadow-lg shadow-primary/20"
-          onClick={() => navigate('/consultation')}
-        >
-          <Plus className="mr-2 h-5 w-5" /> Novo Cliente / Consulta
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="lg"
+            className="shadow-lg shadow-primary/20"
+            onClick={() => navigate('/consultation')}
+          >
+            <Plus className="mr-2 h-5 w-5" /> Novo Cliente
+          </Button>
+          <Button
+            size="lg"
+            className="bg-[#1E3A8A] hover:bg-[#152865] text-white shadow-lg"
+            onClick={() => navigate('/premium-consultation')}
+          >
+            <Crown className="mr-2 h-5 w-5 text-[#B8860B]" /> Consulta Premium
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -27,8 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Activity, Users, DollarSign, Target } from 'lucide-react'
+import { Activity, Users, DollarSign, Target, Crown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { useNavigate } from 'react-router-dom'
 
 const revData = [
   { month: 'Jan', rev: 120000 },
@@ -78,11 +80,22 @@ const chartConfig = {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate()
+
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Global</h1>
-        <p className="text-muted-foreground mt-1">Visão geral do sistema KronosGest.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Global</h1>
+          <p className="text-muted-foreground mt-1">Visão geral do sistema KronosGest.</p>
+        </div>
+        <Button
+          size="lg"
+          className="bg-[#1E3A8A] hover:bg-[#152865] text-white shadow-lg"
+          onClick={() => navigate('/premium-consultation')}
+        >
+          <Crown className="mr-2 h-5 w-5 text-[#B8860B]" /> Consulta Premium
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

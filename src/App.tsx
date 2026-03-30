@@ -7,6 +7,7 @@ import Layout from '@/components/Layout'
 import Index from '@/pages/Index'
 import Login from '@/pages/Login'
 import ConsultationWizard from '@/pages/consultation/ConsultationWizard'
+import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationWizard'
 import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
 import NotFound from '@/pages/NotFound'
@@ -23,6 +24,7 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/consultation" element={<ConsultationWizard />} />
+            <Route path="/premium-consultation" element={<PremiumConsultationWizard />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/financial" element={<Financial />} />
 
