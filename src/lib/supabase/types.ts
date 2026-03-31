@@ -9,6 +9,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      exames: {
+        Row: {
+          arquivo_pdf_url: string | null
+          created_at: string
+          id: string
+          patient_id: string
+          resultado_json: Json | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_pdf_url?: string | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          resultado_json?: Json | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_pdf_url?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          resultado_json?: Json | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'exames_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'patients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       leads: {
         Row: {
           created_at: string
@@ -47,6 +85,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      patients: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          id: string
+          last_consultation: string | null
+          name: string
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          last_consultation?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          last_consultation?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      prescricoes: {
+        Row: {
+          anamnese_id: string | null
+          arquivo_pdf_url: string | null
+          conteudo_json: Json | null
+          created_at: string
+          exames_ids: string[] | null
+          id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          anamnese_id?: string | null
+          arquivo_pdf_url?: string | null
+          conteudo_json?: Json | null
+          created_at?: string
+          exames_ids?: string[] | null
+          id?: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          anamnese_id?: string | null
+          arquivo_pdf_url?: string | null
+          conteudo_json?: Json | null
+          created_at?: string
+          exames_ids?: string[] | null
+          id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'prescricoes_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'patients'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
@@ -195,6 +307,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: exames
+//   id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (not null)
+//   tipo: text (not null)
+//   resultado_json: jsonb (nullable)
+//   arquivo_pdf_url: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -206,13 +326,44 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   phone: text (nullable)
 //   email: text (nullable)
+// Table: patients
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   name: text (not null)
+//   cpf: text (nullable)
+//   status: text (nullable, default: 'ativo'::text)
+//   last_consultation: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+// Table: prescricoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (not null)
+//   anamnese_id: text (nullable)
+//   exames_ids: _uuid (nullable)
+//   conteudo_json: jsonb (nullable)
+//   arquivo_pdf_url: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
+// Table: exames
+//   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: patients
+//   PRIMARY KEY patients_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY patients_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: prescricoes
+//   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: exames
+//   Policy "authenticated_all_exames" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: leads
 //   Policy "Users can delete their own leads" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
@@ -223,6 +374,14 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can view their own leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: patients
+//   Policy "authenticated_all_patients" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: prescricoes
+//   Policy "authenticated_all_prescricoes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION update_leads_updated_at()
