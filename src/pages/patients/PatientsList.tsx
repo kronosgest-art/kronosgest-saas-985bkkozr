@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, UserPlus } from 'lucide-react'
+import { Search, UserPlus, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -14,43 +14,34 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
-
-const initialPatients = [
-  {
-    id: 1,
-    name: 'Ana Silva',
-    cpf: '111.222.333-44',
-    status: 'Ativo',
-    lastConsultation: '15/10/2023',
-  },
-  {
-    id: 2,
-    name: 'Carlos Oliveira',
-    cpf: '555.666.777-88',
-    status: 'Inativo',
-    lastConsultation: '02/08/2023',
-  },
-  {
-    id: 3,
-    name: 'Mariana Costa',
-    cpf: '999.000.111-22',
-    status: 'Ativo',
-    lastConsultation: '20/10/2023',
-  },
-]
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function PatientsList() {
+  const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  const [patients, setPatients] = useState(initialPatients)
+  const [patients, setPatients] = useState<any[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [newPatient, setNewPatient] = useState({
     name: '',
     cpf: '',
     status: 'Ativo',
-    lastConsultation: '-',
   })
 
-  const handleAddPatient = () => {
+  useEffect(() => {
+    fetchPatients()
+  }, [])
+
+  const fetchPatients = async () => {
+    const { data } = await supabase
+      .from('patients')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) setPatients(data)
+  }
+
+  const handleAddPatient = async () => {
     if (!newPatient.name || !newPatient.cpf) {
       toast({
         title: 'Erro de Validação',
@@ -59,14 +50,40 @@ export default function PatientsList() {
       })
       return
     }
-    setPatients([...patients, { ...newPatient, id: Date.now() }])
-    setIsDialogOpen(false)
-    setNewPatient({ name: '', cpf: '', status: 'Ativo', lastConsultation: '-' })
-    toast({ title: 'Sucesso', description: 'Novo paciente adicionado com sucesso.' })
+
+    setIsSaving(true)
+
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .insert({
+          name: newPatient.name,
+          cpf: newPatient.cpf,
+          status: newPatient.status,
+          user_id: user?.id,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setPatients([data, ...patients])
+      setIsDialogOpen(false)
+      setNewPatient({ name: '', cpf: '', status: 'Ativo' })
+      toast({ title: 'Sucesso', description: 'Novo paciente adicionado com sucesso.' })
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message || 'Ocorreu um erro ao cadastrar o paciente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const filteredPatients = patients.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   return (
@@ -95,6 +112,7 @@ export default function PatientsList() {
                   value={newPatient.name}
                   onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
                   className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
+                  disabled={isSaving}
                 />
               </div>
               <div className="space-y-2">
@@ -104,6 +122,7 @@ export default function PatientsList() {
                   value={newPatient.cpf}
                   onChange={(e) => setNewPatient({ ...newPatient, cpf: e.target.value })}
                   className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
+                  disabled={isSaving}
                 />
               </div>
             </div>
@@ -112,13 +131,16 @@ export default function PatientsList() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
                 className="border-[#1E3A8A]/20"
+                disabled={isSaving}
               >
                 Cancelar
               </Button>
               <Button
                 className="bg-[#1E3A8A] text-white hover:bg-[#152865]"
                 onClick={handleAddPatient}
+                disabled={isSaving}
               >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Salvar Paciente
               </Button>
             </DialogFooter>
@@ -165,23 +187,29 @@ export default function PatientsList() {
                       <td className="px-6 py-4 text-slate-600">{patient.cpf}</td>
                       <td className="px-6 py-4">
                         <Badge
-                          variant={patient.status === 'Ativo' ? 'default' : 'secondary'}
+                          variant={
+                            patient.status?.toLowerCase() === 'ativo' ? 'default' : 'secondary'
+                          }
                           className={
-                            patient.status === 'Ativo'
+                            patient.status?.toLowerCase() === 'ativo'
                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none'
                               : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border-none'
                           }
                         >
-                          {patient.status}
+                          {patient.status || 'Ativo'}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-slate-600">{patient.lastConsultation}</td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {patient.last_consultation
+                          ? new Date(patient.last_consultation).toLocaleDateString('pt-BR')
+                          : '-'}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      Nenhum paciente encontrado com esse nome.
+                      Nenhum paciente encontrado.
                     </td>
                   </tr>
                 )}

@@ -169,15 +169,15 @@ export default function Step2Anamnesis() {
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={isAnalyzing}
-              style={{ backgroundColor: '#B8860B', color: '#FFFFFF' }}
-              className="hover:opacity-90"
+              style={{ backgroundColor: '#B8860B', color: '#1E3A8A' }}
+              className="hover:opacity-90 font-semibold"
             >
               {isAnalyzing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <UploadCloud className="mr-2 h-4 w-4" />
               )}
-              {isAnalyzing ? 'Processando...' : '📤 Upload Biorressonância'}
+              {isAnalyzing ? 'Processando...' : '📤 Upload PDF'}
             </Button>
             <p className="text-xs text-slate-500 mt-2">Apenas PDF (máx 10MB)</p>
           </div>
