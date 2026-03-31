@@ -15,6 +15,9 @@ import {
   ClipboardList,
   Stethoscope,
   History,
+  Filter,
+  Star,
+  User,
 } from 'lucide-react'
 
 export default function Layout() {
@@ -40,7 +43,9 @@ export default function Layout() {
 
   const adminLinks = [
     { to: '/', label: 'Dashboard Principal', icon: LayoutDashboard },
-    { to: '/crm', label: 'Pacientes', icon: Users },
+    { to: '/crm', label: 'CRM & Leads', icon: Filter },
+    { to: '/premium-consultation', label: 'Consulta Premium', icon: Star },
+    { to: '/patients', label: 'Paciente', icon: User },
     { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
     { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
     { to: '/prescriptions', label: 'Prescrições', icon: FileSignature },

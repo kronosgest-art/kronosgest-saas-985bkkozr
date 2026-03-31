@@ -10,6 +10,7 @@ import ConsultationWizard from '@/pages/consultation/ConsultationWizard'
 import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationWizard'
 import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
+import PatientsList from '@/pages/patients/PatientsList'
 import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/premium-consultation" element={<PremiumConsultationWizard />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/financial" element={<Financial />} />
+            <Route path="/patients" element={<PatientsList />} />
 
             {/* Profissional / Admin Routes */}
             <Route

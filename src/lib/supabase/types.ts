@@ -12,9 +12,11 @@ export type Database = {
       leads: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           msg: string | null
           name: string
+          phone: string | null
           source: string | null
           status: string
           updated_at: string
@@ -22,9 +24,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           msg?: string | null
           name: string
+          phone?: string | null
           source?: string | null
           status?: string
           updated_at?: string
@@ -32,9 +36,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           msg?: string | null
           name?: string
+          phone?: string | null
           source?: string | null
           status?: string
           updated_at?: string
@@ -198,6 +204,8 @@ export const Constants = {
 //   source: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   phone: text (nullable)
+//   email: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: leads
