@@ -12,6 +12,8 @@ Compreendo que a terapia ortomolecular e a bioressonância são práticas comple
 
 Autorizo o profissional responsável a realizar as práticas recomendadas e concordo com os termos descritos.`
 
+  const [text, setText] = useState(defaultText)
+
   return (
     <div className="space-y-6 animate-slide-in-right">
       <div>
@@ -21,7 +23,11 @@ Autorizo o profissional responsável a realizar as práticas recomendadas e conc
 
       <div className="space-y-4">
         <Label>Texto do Documento (Editável)</Label>
-        <Textarea defaultValue={defaultText} className="min-h-[250px] font-mono text-sm" />
+        <Textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="min-h-[250px] font-mono text-sm"
+        />
       </div>
 
       <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg border border-primary/20">

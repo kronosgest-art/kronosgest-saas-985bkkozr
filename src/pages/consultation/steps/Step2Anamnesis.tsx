@@ -13,6 +13,12 @@ export default function Step2Anamnesis() {
     { id: 3, type: 'radio', q: 'Faz uso de medicação contínua?' },
   ])
 
+  const [answers, setAnswers] = useState<Record<number, any>>({})
+
+  const handleAnswerChange = (id: number, value: any) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }))
+  }
+
   return (
     <div className="space-y-8 animate-slide-in-right">
       <div className="flex justify-between items-center">
@@ -39,11 +45,23 @@ export default function Step2Anamnesis() {
               {index + 1}. {item.q}
             </Label>
 
-            {item.type === 'text' && <Textarea placeholder="Resposta do paciente..." />}
+            {item.type === 'text' && (
+              <Textarea
+                placeholder="Resposta do paciente..."
+                value={answers[item.id] || ''}
+                onChange={(e) => handleAnswerChange(item.id, e.target.value)}
+              />
+            )}
 
             {item.type === 'scale' && (
               <div className="pt-4 px-2">
-                <Slider defaultValue={item.value} max={10} step={1} className="w-full" />
+                <Slider
+                  value={answers[item.id] || item.value}
+                  onValueChange={(val) => handleAnswerChange(item.id, val)}
+                  max={10}
+                  step={1}
+                  className="w-full"
+                />
                 <div className="flex justify-between text-xs text-muted-foreground mt-2">
                   <span>0 (Sem dor)</span>
                   <span>10 (Máxima)</span>
@@ -52,7 +70,11 @@ export default function Step2Anamnesis() {
             )}
 
             {item.type === 'radio' && (
-              <RadioGroup defaultValue="nao" className="flex space-x-4 mt-2">
+              <RadioGroup
+                value={answers[item.id] || 'nao'}
+                onValueChange={(val) => handleAnswerChange(item.id, val)}
+                className="flex space-x-4 mt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="sim" id={`sim-${item.id}`} />
                   <Label htmlFor={`sim-${item.id}`}>Sim</Label>

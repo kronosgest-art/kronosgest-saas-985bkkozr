@@ -21,6 +21,14 @@ const protocolDB: Record<string, { ativos: string; duracao: string }> = {
 
 export default function Step8Protocols() {
   const [selected, setSelected] = useState<string>('hepatica')
+  const [ativos, setAtivos] = useState<string>(protocolDB['hepatica']?.ativos || '')
+  const [duracao, setDuracao] = useState<string>(protocolDB['hepatica']?.duracao || '')
+
+  const handleSelect = (val: string) => {
+    setSelected(val)
+    setAtivos(protocolDB[val]?.ativos || '')
+    setDuracao(protocolDB[val]?.duracao || '')
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-right max-w-2xl">
@@ -32,7 +40,7 @@ export default function Step8Protocols() {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>Protocolo Base</Label>
-          <Select value={selected} onValueChange={setSelected}>
+          <Select value={selected} onValueChange={handleSelect}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione..." />
             </SelectTrigger>
@@ -46,12 +54,12 @@ export default function Step8Protocols() {
 
         <div className="space-y-2">
           <Label>Ativos Utilizados (Editável)</Label>
-          <Textarea value={protocolDB[selected]?.ativos} rows={3} />
+          <Textarea value={ativos} onChange={(e) => setAtivos(e.target.value)} rows={3} />
         </div>
 
         <div className="space-y-2">
           <Label>Duração do Tratamento</Label>
-          <Input value={protocolDB[selected]?.duracao} />
+          <Input value={duracao} onChange={(e) => setDuracao(e.target.value)} />
         </div>
       </div>
     </div>

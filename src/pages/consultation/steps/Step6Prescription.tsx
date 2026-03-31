@@ -1,9 +1,14 @@
+import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Printer, FileDown, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function Step6Prescription() {
+  const [prescriptionText, setPrescriptionText] = useState(
+    'RECEITUÁRIO\n\nPaciente: João da Silva\nData: 10/10/2023\n\nUso Oral:\n',
+  )
+
   const aiSuggestion = `Fórmula SBPC/ML sugerida:
 1. Vitamina D3 - 10.000 UI (1 cap/dia no almoço)
 2. Magnésio Dimalato - 250mg (1 cap/noite)
@@ -42,6 +47,7 @@ Orientações:
             <Button
               size="sm"
               className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              onClick={() => setPrescriptionText((prev) => prev + '\n\n' + aiSuggestion)}
             >
               Copiar para Receituário
             </Button>
@@ -54,7 +60,8 @@ Orientações:
             <Textarea
               className="min-h-[300px] font-mono p-4"
               placeholder="Descreva aqui os compostos, dosagens, frequência e anotações..."
-              defaultValue="RECEITUÁRIO&#10;&#10;Paciente: João da Silva&#10;Data: 10/10/2023&#10;&#10;Uso Oral:&#10;"
+              value={prescriptionText}
+              onChange={(e) => setPrescriptionText(e.target.value)}
             />
           </div>
         </div>
