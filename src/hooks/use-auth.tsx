@@ -28,23 +28,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      setTimeout(() => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }, 0)
     })
     supabase.auth
       .getSession()
       .then(({ data: { session }, error }) => {
-        if (error) {
-          console.error('Erro ao verificar sessão:', error.message)
-        }
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        setTimeout(() => {
+          if (error) {
+            console.error('Erro ao verificar sessão:', error.message)
+          }
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }, 0)
       })
       .catch((err) => {
-        console.error('Erro inesperado ao verificar sessão:', err)
-        setLoading(false)
+        setTimeout(() => {
+          console.error('Erro inesperado ao verificar sessão:', err)
+          setLoading(false)
+        }, 0)
       })
     return () => subscription.unsubscribe()
   }, [])
