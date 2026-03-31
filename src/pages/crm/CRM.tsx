@@ -12,7 +12,16 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Sparkles, MessageCircle, MoreVertical, Plus, Loader2, Trash2 } from 'lucide-react'
+import {
+  Sparkles,
+  MessageCircle,
+  MoreVertical,
+  Plus,
+  Loader2,
+  Trash2,
+  Phone,
+  Mail,
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,6 +67,8 @@ export default function CRM() {
 
   // Form states
   const [newName, setNewName] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newEmail, setNewEmail] = useState('')
   const [newMsg, setNewMsg] = useState('')
   const [newSource, setNewSource] = useState('WhatsApp')
 
@@ -99,6 +110,8 @@ export default function CRM() {
         {
           user_id: user?.id,
           name: newName,
+          phone: newPhone,
+          email: newEmail,
           msg: newMsg,
           source: newSource,
           status: 'novo',
@@ -115,6 +128,8 @@ export default function CRM() {
       setLeads([data, ...leads])
       setIsAddOpen(false)
       setNewName('')
+      setNewPhone('')
+      setNewEmail('')
       setNewMsg('')
       setNewSource('WhatsApp')
       toast({ title: 'Sucesso', description: 'Lead adicionado com sucesso.' })
@@ -122,17 +137,21 @@ export default function CRM() {
   }
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
+    // Atualização otimista
+    const previousLeads = [...leads]
+    setLeads(leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l)))
+
     const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', id)
 
     if (error) {
+      setLeads(previousLeads) // Reverte se falhar
       toast({
         title: 'Erro ao atualizar status',
         description: error.message,
         variant: 'destructive',
       })
     } else {
-      setLeads(leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l)))
-      toast({ title: 'Status atualizado com sucesso' })
+      toast({ title: 'Status atualizado' })
     }
   }
 
@@ -155,6 +174,26 @@ export default function CRM() {
     await handleUpdateStatus(selectedLead.id, 'contato')
     setIsUpdating(false)
     setSelectedLead(null)
+  }
+
+  // Funções de Drag and Drop
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('leadId', id)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault() // Necessário para permitir o drop
+  }
+
+  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault()
+    const id = e.dataTransfer.getData('leadId')
+    if (id) {
+      const lead = leads.find((l) => l.id === id)
+      if (lead && lead.status !== newStatus) {
+        handleUpdateStatus(id, newStatus)
+      }
+    }
   }
 
   const iaResponse = `Olá, ${selectedLead?.name}! Tudo bem? Recebemos seu contato. Como podemos ajudar hoje?`
@@ -186,7 +225,12 @@ export default function CRM() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-hidden">
           {columns.map((col) => (
-            <div key={col.id} className={`flex flex-col rounded-xl border ${col.color}`}>
+            <div
+              key={col.id}
+              className={`flex flex-col rounded-xl border ${col.color}`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, col.id)}
+            >
               <div className="p-3 font-semibold border-b border-inherit flex justify-between items-center">
                 {col.title}
                 <Badge variant="secondary" className="bg-background">
@@ -199,7 +243,9 @@ export default function CRM() {
                   .map((lead) => (
                     <Card
                       key={lead.id}
-                      className="cursor-pointer hover:shadow-md transition-all group relative"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, lead.id)}
+                      className="cursor-pointer hover:shadow-md transition-all group relative active:cursor-grabbing"
                       onClick={() => setSelectedLead(lead)}
                     >
                       <CardContent className="p-3">
@@ -245,6 +291,22 @@ export default function CRM() {
                             </DropdownMenu>
                           </div>
                         </div>
+
+                        {(lead.phone || lead.email) && (
+                          <div className="flex flex-col gap-1 text-xs text-muted-foreground mb-2">
+                            {lead.phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" /> {lead.phone}
+                              </div>
+                            )}
+                            {lead.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {lead.email}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <p className="text-xs text-muted-foreground line-clamp-2">
                           {lead.msg || 'Sem mensagem'}
                         </p>
@@ -317,6 +379,27 @@ export default function CRM() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  placeholder="(11) 99999-9999"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="source">Origem</Label>
