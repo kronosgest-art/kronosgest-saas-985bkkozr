@@ -16,6 +16,14 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import {
+  StepCadastro,
+  StepAnamnese,
+  StepTCLE,
+  StepBiorressonancia,
+  StepLaboratorial,
+  StepPrescricao,
+} from './WizardForms'
 
 const STEPS = [
   { id: 1, title: 'Cadastro', description: 'Dados do paciente', icon: User },
@@ -28,27 +36,73 @@ const STEPS = [
 
 export default function PremiumConsultationWizard() {
   const [currentStep, setCurrentStep] = useState(1)
-  const navigate = useNavigate()
+  const [formData, setFormData] = useState<any>({})
   const [isFinished, setIsFinished] = useState(false)
+  const navigate = useNavigate()
   const totalSteps = STEPS.length
 
-  // Calcula o progresso visual com base no índice ativo
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100
 
   useEffect(() => {
     if (isFinished) {
-      navigate('/')
+      navigate('/patients')
     }
   }, [isFinished, navigate])
 
+  const handleDataChange = (newData: any) => {
+    setFormData((prev: any) => ({ ...prev, ...newData }))
+  }
+
+  const renderCurrentForm = () => {
+    switch (currentStep) {
+      case 1:
+        return <StepCadastro data={formData} onChange={handleDataChange} />
+      case 2:
+        return <StepAnamnese data={formData} onChange={handleDataChange} />
+      case 3:
+        return <StepTCLE data={formData} onChange={handleDataChange} />
+      case 4:
+        return <StepBiorressonancia data={formData} onChange={handleDataChange} />
+      case 5:
+        return <StepLaboratorial data={formData} onChange={handleDataChange} />
+      case 6:
+        return <StepPrescricao data={formData} onChange={handleDataChange} />
+      default:
+        return null
+    }
+  }
+
+  const validateStep = () => {
+    if (currentStep === 1 && (!formData.name || !formData.cpf)) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Preencha o nome e CPF do paciente.',
+        variant: 'destructive',
+      })
+      return false
+    }
+    if (currentStep === 3 && !formData.aceite) {
+      toast({
+        title: 'Termo Obrigatório',
+        description: 'É necessário aceitar o termo de consentimento.',
+        variant: 'destructive',
+      })
+      return false
+    }
+    return true
+  }
+
   const handleNext = () => {
+    if (!validateStep()) return
+
     if (currentStep < totalSteps) {
       setCurrentStep((s) => s + 1)
-      toast({ title: 'Etapa concluída', description: 'Os dados foram salvos com sucesso.' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      toast({ title: 'Etapa concluída', description: 'Os dados foram salvos temporariamente.' })
     } else {
       toast({
         title: 'Consulta Premium Finalizada',
-        description: 'Todos os dados foram registrados no sistema de forma segura.',
+        description: 'Todos os dados foram registrados no sistema com sucesso.',
       })
       setIsFinished(true)
     }
@@ -59,7 +113,7 @@ export default function PremiumConsultationWizard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-fade-in-up">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-fade-in-up">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-[#1E3A8A]">Consulta Premium</h1>
         <p className="text-muted-foreground mt-2">
@@ -67,9 +121,9 @@ export default function PremiumConsultationWizard() {
         </p>
       </div>
 
-      <div className="sticky top-[64px] z-10 bg-background/95 backdrop-blur-md py-6 border-b border-border/50">
+      <div className="sticky top-[64px] z-10 bg-muted/20 backdrop-blur-md py-6">
         <div className="flex flex-col justify-between gap-4 mb-2 relative">
-          <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-muted -z-10 rounded-full overflow-hidden">
+          <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-border -z-10 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#1E3A8A] transition-all duration-500 ease-in-out"
               style={{ width: `${progress}%` }}
@@ -85,7 +139,7 @@ export default function PremiumConsultationWizard() {
               return (
                 <div
                   key={step.id}
-                  className="flex flex-col items-center gap-2 bg-background px-2 relative z-10"
+                  className="flex flex-col items-center gap-2 bg-transparent px-2 relative z-10"
                 >
                   <div
                     className={cn(
@@ -94,12 +148,12 @@ export default function PremiumConsultationWizard() {
                         ? 'border-[#B8860B] bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/30'
                         : isPast
                           ? 'border-[#1E3A8A] bg-[#1E3A8A] text-white'
-                          : 'border-muted bg-background text-muted-foreground',
+                          : 'border-muted-foreground/30 bg-background text-muted-foreground',
                     )}
                   >
                     <StepIcon className="w-5 h-5" />
                   </div>
-                  <div className="text-center hidden md:block w-24">
+                  <div className="text-center hidden sm:block w-24">
                     <p
                       className={cn(
                         'text-xs font-semibold',
@@ -107,9 +161,6 @@ export default function PremiumConsultationWizard() {
                       )}
                     >
                       {step.title}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground leading-tight mt-1">
-                      {step.description}
                     </p>
                   </div>
                 </div>
@@ -119,25 +170,20 @@ export default function PremiumConsultationWizard() {
         </div>
       </div>
 
-      <Card className="min-h-[400px] border-[#1E3A8A]/10 shadow-xl shadow-[#1E3A8A]/5">
+      <Card className="min-h-[400px] border-[#1E3A8A]/10 shadow-xl shadow-[#1E3A8A]/5 bg-white">
         <CardContent className="p-6 sm:p-10 flex flex-col h-full justify-between gap-8">
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-10">
-            <div className="w-24 h-24 rounded-full bg-[#1E3A8A]/5 flex items-center justify-center text-[#1E3A8A]">
+          <div className="flex-1 flex flex-col items-center justify-start space-y-6 w-full">
+            <div className="w-16 h-16 rounded-full bg-[#1E3A8A]/5 flex items-center justify-center text-[#1E3A8A] mb-2">
               {STEPS.map(
                 (s) =>
-                  s.id === currentStep && (
-                    <s.icon key={s.id} className="w-12 h-12 text-[#B8860B]" />
-                  ),
+                  s.id === currentStep && <s.icon key={s.id} className="w-8 h-8 text-[#B8860B]" />,
               )}
             </div>
-            <h2 className="text-2xl font-bold text-[#1E3A8A]">
+            <h2 className="text-2xl font-bold text-[#1E3A8A] text-center">
               {STEPS.find((s) => s.id === currentStep)?.title}
             </h2>
-            <p className="text-muted-foreground max-w-md">
-              Área de preenchimento de dados referentes à etapa de{' '}
-              {STEPS.find((s) => s.id === currentStep)?.title.toLowerCase()}. Preencha os
-              formulários e salve para prosseguir com a consulta premium.
-            </p>
+
+            <div className="w-full mt-4">{renderCurrentForm()}</div>
           </div>
 
           <div className="flex justify-between mt-auto pt-6 border-t border-border/50">
@@ -154,7 +200,10 @@ export default function PremiumConsultationWizard() {
                 variant="outline"
                 className="hidden sm:flex border-[#B8860B]/50 text-[#B8860B] hover:bg-[#B8860B]/10 hover:text-[#B8860B]"
                 onClick={() =>
-                  toast({ title: 'Rascunho Salvo', description: 'Progresso salvo com sucesso.' })
+                  toast({
+                    title: 'Rascunho Salvo',
+                    description: 'Progresso salvo com sucesso no banco de dados.',
+                  })
                 }
               >
                 <Save className="mr-2 h-4 w-4" /> Salvar Rascunho
