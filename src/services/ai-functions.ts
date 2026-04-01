@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://nbeowmkpgwjexntvlyla.supabase.co'
+const SUPABASE_URL = 'https://nbeowmkpgwjexntvlyla.supabase.co'
 
 async function fetchWithTimeout(
   resource: string,

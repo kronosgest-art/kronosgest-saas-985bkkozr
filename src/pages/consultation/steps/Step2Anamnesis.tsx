@@ -14,7 +14,11 @@ export default function Step2Anamnesis() {
     { id: 2, type: 'scale', q: 'Nível de dor (1 a 10)?', value: [5] },
     { id: 3, type: 'radio', q: 'Faz uso de medicação contínua?' },
   ])
-  const [answers, setAnswers] = useState<Record<number, any>>({})
+  const [answers, setAnswers] = useState<Record<number, any>>({
+    1: '',
+    2: [5],
+    3: 'nao',
+  })
 
   // IA Biorressonância States
   const [patientId, setPatientId] = useState<string>('00000000-0000-0000-0000-000000000000')
@@ -109,14 +113,14 @@ export default function Step2Anamnesis() {
             {item.type === 'text' && (
               <Textarea
                 placeholder="Resposta do paciente..."
-                value={answers[item.id] || ''}
+                value={answers[item.id]}
                 onChange={(e) => handleAnswerChange(item.id, e.target.value)}
               />
             )}
             {item.type === 'scale' && (
               <div className="pt-4 px-2">
                 <Slider
-                  value={answers[item.id] || item.value}
+                  value={answers[item.id]}
                   onValueChange={(val) => handleAnswerChange(item.id, val)}
                   max={10}
                   step={1}
@@ -130,7 +134,7 @@ export default function Step2Anamnesis() {
             )}
             {item.type === 'radio' && (
               <RadioGroup
-                value={answers[item.id] || 'nao'}
+                value={answers[item.id]}
                 onValueChange={(val) => handleAnswerChange(item.id, val)}
                 className="flex space-x-4 mt-2"
               >

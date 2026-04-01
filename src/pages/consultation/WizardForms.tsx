@@ -11,7 +11,7 @@ export function StepCadastro({ data, onChange }: any) {
           <Label>Nome Completo *</Label>
           <Input
             placeholder="Ex: João da Silva"
-            value={data.name || ''}
+            value={data.name}
             onChange={(e) => onChange({ name: e.target.value })}
             className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
           />
@@ -20,7 +20,7 @@ export function StepCadastro({ data, onChange }: any) {
           <Label>CPF *</Label>
           <Input
             placeholder="000.000.000-00"
-            value={data.cpf || ''}
+            value={data.cpf}
             onChange={(e) => onChange({ cpf: e.target.value })}
             className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
           />
@@ -30,7 +30,7 @@ export function StepCadastro({ data, onChange }: any) {
           <Input
             placeholder="joao@exemplo.com"
             type="email"
-            value={data.email || ''}
+            value={data.email}
             onChange={(e) => onChange({ email: e.target.value })}
             className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
           />
@@ -39,7 +39,7 @@ export function StepCadastro({ data, onChange }: any) {
           <Label>Telefone</Label>
           <Input
             placeholder="(00) 00000-0000"
-            value={data.phone || ''}
+            value={data.phone}
             onChange={(e) => onChange({ phone: e.target.value })}
             className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
           />
@@ -57,7 +57,7 @@ export function StepAnamnese({ data, onChange }: any) {
         <Textarea
           placeholder="Descreva o motivo principal da consulta..."
           className="min-h-[100px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.queixa || ''}
+          value={data.queixa}
           onChange={(e) => onChange({ queixa: e.target.value })}
         />
       </div>
@@ -66,7 +66,7 @@ export function StepAnamnese({ data, onChange }: any) {
         <Textarea
           placeholder="Doenças prévias, alergias, medicações em uso, histórico familiar..."
           className="min-h-[120px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.historico || ''}
+          value={data.historico}
           onChange={(e) => onChange({ historico: e.target.value })}
         />
       </div>
@@ -96,7 +96,7 @@ export function StepTCLE({ data, onChange }: any) {
       <div className="flex items-center space-x-3 bg-white p-4 rounded-lg border border-[#1E3A8A]/20 shadow-sm">
         <Checkbox
           id="tcle"
-          checked={data.aceite || false}
+          checked={data.aceite}
           onCheckedChange={(checked) => onChange({ aceite: checked })}
           className="data-[state=checked]:bg-[#1E3A8A] data-[state=checked]:border-[#1E3A8A]"
         />
@@ -116,7 +116,7 @@ export function StepBiorressonancia({ data, onChange }: any) {
         <Textarea
           placeholder="Registre os achados relevantes do exame de biorressonância, deficiências nutricionais, sobrecargas, etc..."
           className="min-h-[200px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.biorressonancia || ''}
+          value={data.biorressonancia}
           onChange={(e) => onChange({ biorressonancia: e.target.value })}
         />
       </div>
@@ -132,7 +132,7 @@ export function StepLaboratorial({ data, onChange }: any) {
         <Textarea
           placeholder="Hemograma, Glicemia, Perfil Lipídico, Hormônios, etc..."
           className="min-h-[200px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.laboratorial || ''}
+          value={data.laboratorial}
           onChange={(e) => onChange({ laboratorial: e.target.value })}
         />
       </div>
@@ -148,7 +148,7 @@ export function StepPrescricao({ data, onChange }: any) {
         <Textarea
           placeholder="Prescrição detalhada com posologia..."
           className="min-h-[150px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.prescricao || ''}
+          value={data.prescricao}
           onChange={(e) => onChange({ prescricao: e.target.value })}
         />
       </div>
@@ -157,7 +157,7 @@ export function StepPrescricao({ data, onChange }: any) {
         <Textarea
           placeholder="Dieta, hidratação, exercícios físicos, retorno..."
           className="min-h-[100px] border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-          value={data.orientacoes || ''}
+          value={data.orientacoes}
           onChange={(e) => onChange({ orientacoes: e.target.value })}
         />
       </div>

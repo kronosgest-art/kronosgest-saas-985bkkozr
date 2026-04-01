@@ -113,7 +113,7 @@ export default function PatientsList() {
                 <Label>Nome Completo</Label>
                 <Input
                   placeholder="Ex: Maria Souza"
-                  value={newPatient.name || ''}
+                  value={newPatient.name}
                   onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
                   className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
                   disabled={isSaving}
@@ -123,7 +123,7 @@ export default function PatientsList() {
                 <Label>CPF</Label>
                 <Input
                   placeholder="000.000.000-00"
-                  value={newPatient.cpf || ''}
+                  value={newPatient.cpf}
                   onChange={(e) => setNewPatient({ ...newPatient, cpf: e.target.value })}
                   className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
                   disabled={isSaving}
@@ -163,7 +163,7 @@ export default function PatientsList() {
                 type="search"
                 placeholder="Buscar por nome..."
                 className="w-full pl-8 border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-                value={searchTerm || ''}
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>

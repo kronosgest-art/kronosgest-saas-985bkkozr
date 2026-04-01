@@ -36,7 +36,19 @@ const STEPS = [
 
 export default function PremiumConsultationWizard() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<any>({})
+  const [formData, setFormData] = useState<any>({
+    name: '',
+    cpf: '',
+    email: '',
+    phone: '',
+    queixa: '',
+    historico: '',
+    aceite: false,
+    biorressonancia: '',
+    laboratorial: '',
+    prescricao: '',
+    orientacoes: '',
+  })
   const [isFinished, setIsFinished] = useState(false)
   const navigate = useNavigate()
   const totalSteps = STEPS.length
