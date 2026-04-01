@@ -83,7 +83,7 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Mock generating a new PDF with annotations
-    const mockPdfUrl = `https://example.com/bioresonance_annotated_${Date.now()}.pdf`
+    const mockPdfUrl = `https://nbeowmkpgwjexntvlyla.supabase.co/storage/v1/object/public/pdfs/bioresonance_annotated_${Date.now()}.pdf`
 
     let exameId = null
 

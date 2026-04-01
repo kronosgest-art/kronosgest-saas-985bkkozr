@@ -165,7 +165,7 @@ export default function Step5Exams() {
         <Input
           placeholder="Buscar exame histórico..."
           className="max-w-sm"
-          value={searchTerm}
+          value={searchTerm || ''}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>

@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const mockPdfUrl = `https://example.com/exame_interpretado_${Date.now()}.pdf`
+    const mockPdfUrl = `https://nbeowmkpgwjexntvlyla.supabase.co/storage/v1/object/public/pdfs/exame_interpretado_${Date.now()}.pdf`
 
     let exameId = null
 

@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const mockPdfUrl = `https://example.com/prescricao_${Date.now()}.pdf`
+    const mockPdfUrl = `https://nbeowmkpgwjexntvlyla.supabase.co/storage/v1/object/public/pdfs/prescricao_${Date.now()}.pdf`
 
     let prescricaoId = null
 
