@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, UserPlus, Loader2 } from 'lucide-react'
+import { Search, UserPlus, Loader2, RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -40,7 +40,7 @@ export default function PatientsList() {
     const { data } = await supabase
       .from('pacientes')
       .select('*')
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},organization_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
     if (data) setPatients(data)
   }
@@ -97,59 +97,68 @@ export default function PatientsList() {
           <h2 className="text-3xl font-bold tracking-tight text-[#1E3A8A]">Pacientes</h2>
           <p className="text-muted-foreground">Gerencie os pacientes da clínica.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#1E3A8A] text-white hover:bg-[#152865] transition-colors">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Novo Paciente
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-[#1E3A8A]">Adicionar Paciente</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome Completo</Label>
-                <Input
-                  placeholder="Ex: Maria Souza"
-                  value={newPatient.name}
-                  onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
-                  className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-                  disabled={isSaving}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CPF</Label>
-                <Input
-                  placeholder="000.000.000-00"
-                  value={newPatient.cpf}
-                  onChange={(e) => setNewPatient({ ...newPatient, cpf: e.target.value })}
-                  className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
-                  disabled={isSaving}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-                className="border-[#1E3A8A]/20"
-                disabled={isSaving}
-              >
-                Cancelar
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={fetchPatients}
+            className="border-[#1E3A8A]/20 text-[#1E3A8A] hover:bg-[#1E3A8A]/5"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" /> Recarregar
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#1E3A8A] text-white hover:bg-[#152865] transition-colors">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Novo Paciente
               </Button>
-              <Button
-                className="bg-[#1E3A8A] text-white hover:bg-[#152865]"
-                onClick={handleAddPatient}
-                disabled={isSaving}
-              >
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Salvar Paciente
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-[#1E3A8A]">Adicionar Paciente</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Nome Completo</Label>
+                  <Input
+                    placeholder="Ex: Maria Souza"
+                    value={newPatient.name}
+                    onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
+                    className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
+                    disabled={isSaving}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={newPatient.cpf}
+                    onChange={(e) => setNewPatient({ ...newPatient, cpf: e.target.value })}
+                    className="border-[#1E3A8A]/20 focus-visible:ring-[#B8860B]"
+                    disabled={isSaving}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="border-[#1E3A8A]/20"
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-[#1E3A8A] text-white hover:bg-[#152865]"
+                  onClick={handleAddPatient}
+                  disabled={isSaving}
+                >
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Salvar Paciente
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="border-[#1E3A8A]/10 shadow-sm bg-white">

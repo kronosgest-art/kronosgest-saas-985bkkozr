@@ -12,6 +12,7 @@ import {
   Loader2,
   Save,
   FileDown,
+  Printer,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -232,35 +233,128 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
       })
   }
 
-  const handleExportPDF = () => {
+  const [patient, setPatient] = useState<any>(null)
+
+  useEffect(() => {
+    if (patientId && patientId !== '00000000-0000-0000-0000-000000000000') {
+      supabase
+        .from('pacientes')
+        .select('*')
+        .eq('id', patientId)
+        .single()
+        .then(({ data }) => {
+          if (data) setPatient(data)
+        })
+    }
+  }, [patientId])
+
+  const handleExportPrint = (isPdf = false) => {
     if (!selectedTemplate) return
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
       toast({
         title: 'Erro',
-        description: 'Bloqueador de pop-ups bloqueou o PDF.',
+        description: 'Bloqueador de pop-ups bloqueou a visualização.',
         variant: 'destructive',
       })
       return
     }
-    let html = `<html><head><title>Anamnese</title><style>body{font-family:sans-serif;padding:40px;color:#1e293b;line-height:1.5;}h1{color:#1E3A8A;text-align:center;}h2{color:#1E3A8A;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-top:40px;font-size:18px;}.item{margin-bottom:12px;}.question{font-weight:600;font-size:14px;}.answer{margin-top:4px;background:#f8fafc;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;}</style></head><body><h1>${selectedTemplate.nome_template}</h1>`
+
+    const dataHora = new Date().toLocaleString('pt-BR')
+    const pacienteNome = patient?.nome_completo || data?.name || 'Não informado'
+    const pacienteCpf = patient?.cpf || data?.cpf || 'Não informado'
+
+    let html = `
+      <html>
+        <head>
+          <title>Anamnese - ${pacienteNome}</title>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo-text { color: #1E3A8A; margin: 0; font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+            .inst-info { text-align: right; font-size: 12px; color: #666; }
+            .title { color: #1E3A8A; text-align: center; margin-bottom: 30px; font-size: 20px; text-transform: uppercase; font-weight: bold; }
+            .info-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; justify-content: space-between; }
+            .info-box p { margin: 5px 0; font-size: 14px; }
+            h2 { color: #1E3A8A; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px; font-size: 16px; text-transform: uppercase; }
+            .item { margin-bottom: 12px; }
+            .question { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #475569; }
+            .answer { padding: 8px 12px; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; color: #0f172a; min-height: 18px; }
+            .signatures { display: flex; justify-content: space-around; margin-top: 80px; page-break-inside: avoid; }
+            .sig-box { text-align: center; width: 40%; }
+            .sig-line { border-top: 1px solid #000; margin-bottom: 10px; }
+            .sig-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+            .sig-role { font-size: 12px; color: #666; margin: 0; }
+            @media print {
+              body { padding: 0; }
+              @page { margin: 1.5cm; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          ${isPdf ? '<div class="no-print" style="background:#fef08a; padding:10px; text-align:center; margin-bottom:20px; font-size:14px; border-radius:4px; font-weight:bold;">Dica: No diálogo de impressão, escolha "Salvar como PDF" ou "Microsoft Print to PDF" como destino.</div>' : ''}
+          <div class="header">
+            <div>
+              <h1 class="logo-text">INSTITUTO KRONOS</h1>
+            </div>
+            <div class="inst-info">
+              <p>Data/Hora: ${dataHora}</p>
+              <p>Documento Oficial</p>
+            </div>
+          </div>
+          
+          <div class="title">${selectedTemplate.nome_template}</div>
+          
+          <div class="info-box">
+            <div>
+              <p><strong>Paciente:</strong> ${pacienteNome}</p>
+              <p><strong>CPF:</strong> ${pacienteCpf}</p>
+            </div>
+            <div style="text-align: right;">
+              <p><strong>ID:</strong> ${patientId.substring(0, 8)}...</p>
+            </div>
+          </div>
+    `
     sections.forEach((sec) => {
-      html += `<h2>${sec.titulo}</h2>`
+      let hasAnswers = false
+      let secHtml = `<h2>${sec.titulo}</h2>`
       sec.perguntas.forEach((q: any) => {
         const answer = answers[q.id]
         let display = '-'
         if (Array.isArray(answer)) display = answer.length > 0 ? answer.join(', ') : '-'
-        else if (answer) display = answer
-        html += `<div class="item"><div class="question">${q.titulo}</div><div class="answer">${display}</div></div>`
+        else if (answer !== undefined && answer !== null && answer !== '') display = answer
+
+        if (display !== '-') hasAnswers = true
+
+        secHtml += `<div class="item"><div class="question">${q.titulo}</div><div class="answer">${display}</div></div>`
       })
+      if (hasAnswers || true) {
+        html += secHtml
+      }
     })
-    html += `</body></html>`
+
+    html += `
+          <div class="signatures">
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <p class="sig-name">${pacienteNome}</p>
+              <p class="sig-role">Assinatura do Paciente</p>
+            </div>
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <p class="sig-name">Profissional Responsável</p>
+              <p class="sig-role">Assinatura / Carimbo</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
     printWindow.document.write(html)
     printWindow.document.close()
     printWindow.focus()
     setTimeout(() => {
       printWindow.print()
-      printWindow.close()
     }, 500)
   }
 
@@ -303,10 +397,27 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
               </Select>
             </div>
           )}
-          {selectedTemplate && (
-            <Button variant="outline" size="icon" onClick={handleExportPDF} title="Exportar PDF">
-              <FileDown className="w-4 h-4" />
-            </Button>
+          {selectedTemplate && Object.keys(answers).length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleExportPrint(true)}
+                title="Exportar em PDF"
+                className="gap-2 bg-white text-[#1E3A8A] border-[#1E3A8A]/20 hover:bg-[#1E3A8A]/5 shadow-sm"
+              >
+                <FileDown className="w-4 h-4" />{' '}
+                <span className="hidden sm:inline font-medium">Exportar PDF</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleExportPrint(false)}
+                title="Imprimir"
+                className="gap-2 bg-white text-[#1E3A8A] border-[#1E3A8A]/20 hover:bg-[#1E3A8A]/5 shadow-sm"
+              >
+                <Printer className="w-4 h-4" />{' '}
+                <span className="hidden sm:inline font-medium">Imprimir</span>
+              </Button>
+            </div>
           )}
         </div>
       </div>
