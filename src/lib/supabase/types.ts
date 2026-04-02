@@ -42,7 +42,7 @@ export type Database = {
             foreignKeyName: 'anamnese_patient_id_fkey'
             columns: ['patient_id']
             isOneToOne: false
-            referencedRelation: 'patients'
+            referencedRelation: 'pacientes'
             referencedColumns: ['id']
           },
           {
@@ -120,7 +120,7 @@ export type Database = {
             foreignKeyName: 'exames_patient_id_fkey'
             columns: ['patient_id']
             isOneToOne: false
-            referencedRelation: 'patients'
+            referencedRelation: 'pacientes'
             referencedColumns: ['id']
           },
         ]
@@ -170,8 +170,10 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_consultation: string | null
           nome_completo: string
           organization_id: string | null
+          status: string | null
           telefone: string | null
           updated_at: string
           user_id: string | null
@@ -181,8 +183,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_consultation?: string | null
           nome_completo: string
           organization_id?: string | null
+          status?: string | null
           telefone?: string | null
           updated_at?: string
           user_id?: string | null
@@ -192,8 +196,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_consultation?: string | null
           nome_completo?: string
           organization_id?: string | null
+          status?: string | null
           telefone?: string | null
           updated_at?: string
           user_id?: string | null
@@ -269,7 +275,7 @@ export type Database = {
             foreignKeyName: 'prescricoes_patient_id_fkey'
             columns: ['patient_id']
             isOneToOne: false
-            referencedRelation: 'patients'
+            referencedRelation: 'pacientes'
             referencedColumns: ['id']
           },
         ]
@@ -467,6 +473,8 @@ export const Constants = {
 //   telefone: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   status: text (nullable, default: 'Ativo'::text)
+//   last_consultation: timestamp with time zone (nullable)
 // Table: patients
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -488,14 +496,14 @@ export const Constants = {
 
 // --- CONSTRAINTS ---
 // Table: anamnese
-//   FOREIGN KEY anamnese_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   FOREIGN KEY anamnese_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY anamnese_pkey: PRIMARY KEY (anamnese_id)
 //   FOREIGN KEY anamnese_template_id_fkey: FOREIGN KEY (template_id) REFERENCES anamnese_templates(template_id) ON DELETE SET NULL
 // Table: anamnese_templates
 //   PRIMARY KEY anamnese_templates_pkey: PRIMARY KEY (template_id)
 //   FOREIGN KEY anamnese_templates_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
-//   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
@@ -509,7 +517,7 @@ export const Constants = {
 //   PRIMARY KEY patients_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY patients_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: prescricoes
-//   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---

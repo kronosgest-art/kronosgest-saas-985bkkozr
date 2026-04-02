@@ -27,6 +27,7 @@ export default function Step2Anamnesis({ data, onChange }: Step2AnamnesisProps) 
   const [answers, setAnswers] = useState<Record<string, any>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [anamneseId, setAnamneseId] = useState<string | null>(null)
+  const fetchedForPatient = useRef<string | null>(null)
 
   // IA Biorressonância States
   const [patientId, setPatientId] = useState<string>('00000000-0000-0000-0000-000000000000')
@@ -71,6 +72,51 @@ export default function Step2Anamnesis({ data, onChange }: Step2AnamnesisProps) 
     }
     fetchTemplates()
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchExistingAnamnesis = async () => {
+      if (!patientId || patientId === '00000000-0000-0000-0000-000000000000') return
+      if (fetchedForPatient.current === patientId) return
+
+      fetchedForPatient.current = patientId
+
+      const { data, error } = await supabase
+        .from('anamnese')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+
+      if (data && data.length > 0 && isMounted) {
+        setAnamneseId(data[0].anamnese_id)
+
+        const answersObj: Record<string, any> = {}
+        if (Array.isArray(data[0].respostas)) {
+          data[0].respostas.forEach((r: any) => {
+            answersObj[r.pergunta_id] = r.resposta
+          })
+        }
+        setAnswers(answersObj)
+
+        if (data[0].template_id && templates.length > 0) {
+          const found = templates.find((t) => t.template_id === data[0].template_id)
+          if (found) setSelectedTemplate(found)
+        }
+      } else if (isMounted) {
+        setAnamneseId(null)
+        setAnswers({})
+      }
+    }
+
+    if (templates.length > 0) {
+      fetchExistingAnamnesis()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [patientId, templates])
 
   const handleTemplateChange = (templateId: string) => {
     const newTemplate = templates.find((t) => t.template_id === templateId)
@@ -240,98 +286,126 @@ export default function Step2Anamnesis({ data, onChange }: Step2AnamnesisProps) 
 
       <div className="space-y-6">
         {selectedTemplate ? (
-          selectedTemplate.perguntas?.map((item: any, index: number) => (
-            <div key={item.id} className="p-4 border rounded-lg bg-card shadow-sm relative group">
-              <Label className="text-base font-medium mb-3 flex items-center gap-2">
-                {index + 1}. {item.titulo}
-                {item.obrigatoria && <span className="text-destructive">*</span>}
-              </Label>
+          selectedTemplate.perguntas?.map((item: any) => {
+            if (item.tipo === 'section') {
+              return (
+                <div key={item.id} className="mt-8 mb-4">
+                  <h3 className="text-xl font-bold text-[#1E3A8A] border-b border-blue-100 pb-2">
+                    {item.titulo}
+                  </h3>
+                </div>
+              )
+            }
 
-              {(item.tipo === 'text' || item.tipo === 'textarea' || !item.tipo) && (
-                <Textarea
-                  placeholder="Resposta do paciente..."
-                  value={answers[item.id] || ''}
-                  onChange={(e) => handleAnswerChange(item.id, e.target.value)}
-                  className="mt-2 min-h-[100px]"
-                />
-              )}
+            return (
+              <div key={item.id} className="p-4 border rounded-lg bg-card shadow-sm relative group">
+                <Label className="text-base font-medium mb-3 flex items-center gap-2">
+                  {item.titulo}
+                  {item.obrigatoria && <span className="text-destructive">*</span>}
+                </Label>
 
-              {item.tipo === 'select' && item.opcoes && (
-                <div className="mt-2">
-                  <Select
+                {(item.tipo === 'text' ||
+                  item.tipo === 'date' ||
+                  item.tipo === 'number' ||
+                  item.tipo === 'email' ||
+                  item.tipo === 'tel') && (
+                  <div className="mt-2">
+                    <input
+                      type={item.tipo}
+                      placeholder={item.placeholder || 'Resposta...'}
+                      value={answers[item.id] || ''}
+                      onChange={(e) => handleAnswerChange(item.id, e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                )}
+
+                {(item.tipo === 'textarea' || (!item.tipo && item.tipo !== 'section')) && (
+                  <Textarea
+                    placeholder={item.placeholder || 'Resposta do paciente...'}
+                    value={answers[item.id] || ''}
+                    onChange={(e) => handleAnswerChange(item.id, e.target.value)}
+                    className="mt-2 min-h-[100px]"
+                  />
+                )}
+
+                {item.tipo === 'select' && item.opcoes && (
+                  <div className="mt-2">
+                    <Select
+                      value={answers[item.id] || ''}
+                      onValueChange={(val) => handleAnswerChange(item.id, val)}
+                    >
+                      <SelectTrigger className="w-full sm:w-[300px]">
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {item.opcoes.map((op: string, i: number) => (
+                          <SelectItem key={i} value={op}>
+                            {op}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {item.tipo === 'radio' && item.opcoes && (
+                  <RadioGroup
                     value={answers[item.id] || ''}
                     onValueChange={(val) => handleAnswerChange(item.id, val)}
+                    className="flex flex-col space-y-2 mt-2"
                   >
-                    <SelectTrigger className="w-full sm:w-[300px]">
-                      <SelectValue placeholder="Selecione uma opção" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {item.opcoes.map((op: string, i: number) => (
-                        <SelectItem key={i} value={op}>
-                          {op}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                    {item.opcoes.map((op: string, i: number) => (
+                      <div key={i} className="flex items-center space-x-2">
+                        <RadioGroupItem value={op} id={`${item.id}-op-${i}`} />
+                        <Label htmlFor={`${item.id}-op-${i}`}>{op}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )}
 
-              {item.tipo === 'radio' && item.opcoes && (
-                <RadioGroup
-                  value={answers[item.id] || ''}
-                  onValueChange={(val) => handleAnswerChange(item.id, val)}
-                  className="flex flex-col space-y-2 mt-2"
-                >
-                  {item.opcoes.map((op: string, i: number) => (
-                    <div key={i} className="flex items-center space-x-2">
-                      <RadioGroupItem value={op} id={`${item.id}-op-${i}`} />
-                      <Label htmlFor={`${item.id}-op-${i}`}>{op}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              )}
-
-              {item.tipo === 'checkbox' && (
-                <div className="flex flex-col space-y-2 mt-2">
-                  {item.opcoes && item.opcoes.length > 0 ? (
-                    item.opcoes.map((op: string, i: number) => {
-                      const isChecked = (answers[item.id] || []).includes(op)
-                      return (
-                        <div key={i} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${item.id}-cb-${i}`}
-                            checked={isChecked}
-                            onCheckedChange={(checked) => {
-                              const currentArr = answers[item.id] || []
-                              let newArr
-                              if (checked) {
-                                newArr = [...currentArr, op]
-                              } else {
-                                newArr = currentArr.filter((v: string) => v !== op)
-                              }
-                              handleAnswerChange(item.id, newArr)
-                            }}
-                          />
-                          <Label htmlFor={`${item.id}-cb-${i}`}>{op}</Label>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${item.id}-cb-single`}
-                        checked={answers[item.id] === 'Sim' || answers[item.id] === true}
-                        onCheckedChange={(checked) => {
-                          handleAnswerChange(item.id, checked ? 'Sim' : 'Não')
-                        }}
-                      />
-                      <Label htmlFor={`${item.id}-cb-single`}>Sim</Label>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
+                {item.tipo === 'checkbox' && (
+                  <div className="flex flex-col space-y-2 mt-2">
+                    {item.opcoes && item.opcoes.length > 0 ? (
+                      item.opcoes.map((op: string, i: number) => {
+                        const isChecked = (answers[item.id] || []).includes(op)
+                        return (
+                          <div key={i} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`${item.id}-cb-${i}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                const currentArr = answers[item.id] || []
+                                let newArr
+                                if (checked) {
+                                  newArr = [...currentArr, op]
+                                } else {
+                                  newArr = currentArr.filter((v: string) => v !== op)
+                                }
+                                handleAnswerChange(item.id, newArr)
+                              }}
+                            />
+                            <Label htmlFor={`${item.id}-cb-${i}`}>{op}</Label>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${item.id}-cb-single`}
+                          checked={answers[item.id] === 'Sim' || answers[item.id] === true}
+                          onCheckedChange={(checked) => {
+                            handleAnswerChange(item.id, checked ? 'Sim' : 'Não')
+                          }}
+                        />
+                        <Label htmlFor={`${item.id}-cb-single`}>Sim</Label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })
         ) : (
           <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
             Nenhum modelo de anamnese selecionado ou disponível.
