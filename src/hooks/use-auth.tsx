@@ -28,25 +28,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESH_FAILED') {
+        // Limpa as chaves do supabase do localStorage para evitar loop de erros
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+        setSession(null)
+        setUser(null)
+      } else {
+        setSession(session)
+        setUser(session?.user ?? null)
+      }
+      setLoading(false)
+    })
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Fallback para limpar token se getSession falhar logo de inicio
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     })
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session }, error }) => {
-        if (error) {
-          console.error('Erro ao verificar sessão:', error.message)
-        }
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
-      })
-      .catch((err) => {
-        console.error('Erro inesperado ao verificar sessão:', err)
-        setLoading(false)
-      })
 
     return () => subscription.unsubscribe()
   }, [])
@@ -59,11 +69,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
     return { error }
   }
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error }
   }
+
   const signOut = async () => {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase')) {
+        localStorage.removeItem(key)
+      }
+    })
     const { error } = await supabase.auth.signOut()
     return { error }
   }

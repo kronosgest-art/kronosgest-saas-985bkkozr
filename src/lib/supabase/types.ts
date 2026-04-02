@@ -9,6 +9,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      anamnese: {
+        Row: {
+          anamnese_id: string
+          atualizado_em: string
+          criado_em: string
+          organization_id: string | null
+          patient_id: string | null
+          respostas: Json
+          template_id: string | null
+        }
+        Insert: {
+          anamnese_id?: string
+          atualizado_em?: string
+          criado_em?: string
+          organization_id?: string | null
+          patient_id?: string | null
+          respostas?: Json
+          template_id?: string | null
+        }
+        Update: {
+          anamnese_id?: string
+          atualizado_em?: string
+          criado_em?: string
+          organization_id?: string | null
+          patient_id?: string | null
+          respostas?: Json
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'anamnese_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'patients'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'anamnese_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'anamnese_templates'
+            referencedColumns: ['template_id']
+          },
+        ]
+      }
       anamnese_templates: {
         Row: {
           atualizado_em: string
@@ -340,6 +385,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: anamnese
+//   anamnese_id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (nullable)
+//   organization_id: uuid (nullable)
+//   template_id: uuid (nullable)
+//   respostas: jsonb (not null, default: '[]'::jsonb)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: anamnese_templates
 //   template_id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (nullable)
@@ -388,6 +441,10 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
+// Table: anamnese
+//   FOREIGN KEY anamnese_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+//   PRIMARY KEY anamnese_pkey: PRIMARY KEY (anamnese_id)
+//   FOREIGN KEY anamnese_template_id_fkey: FOREIGN KEY (template_id) REFERENCES anamnese_templates(template_id) ON DELETE SET NULL
 // Table: anamnese_templates
 //   PRIMARY KEY anamnese_templates_pkey: PRIMARY KEY (template_id)
 //   FOREIGN KEY anamnese_templates_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -405,6 +462,10 @@ export const Constants = {
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: anamnese
+//   Policy "authenticated_all_anamnese" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: anamnese_templates
 //   Policy "Users can delete their own templates" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
