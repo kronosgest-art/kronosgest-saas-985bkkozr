@@ -329,7 +329,7 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
 
         secHtml += `<div class="item"><div class="question">${q.titulo}</div><div class="answer">${display}</div></div>`
       })
-      if (hasAnswers || true) {
+      if (hasAnswers) {
         html += secHtml
       }
     })
