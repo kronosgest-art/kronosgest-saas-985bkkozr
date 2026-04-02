@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
 const formSchema = z.object({
-  nome: z.string().min(3, 'Nome muito curto'),
+  nome_completo: z.string().min(3, 'Nome muito curto'),
   cpf: z.string().min(11, 'CPF inválido'),
   dataNascimento: z.string(),
   sexo: z.string(),
@@ -27,7 +27,7 @@ const formSchema = z.object({
 export default function Step1Client() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { nome: '', cpf: '', email: '', telefone: '' },
+    defaultValues: { nome_completo: '', cpf: '', email: '', telefone: '' },
   })
 
   return (
@@ -41,12 +41,12 @@ export default function Step1Client() {
         <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="nome"
+            name="nome_completo"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nome Completo</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: João da Silva" {...field} />
+                  <Input id="nome_completo" placeholder="Ex: João da Silva" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -59,7 +59,7 @@ export default function Step1Client() {
               <FormItem>
                 <FormLabel>CPF</FormLabel>
                 <FormControl>
-                  <Input placeholder="000.000.000-00" {...field} />
+                  <Input id="cpf" placeholder="000.000.000-00" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,7 +98,7 @@ export default function Step1Client() {
               <FormItem className="md:col-span-2">
                 <FormLabel>E-mail</FormLabel>
                 <FormControl>
-                  <Input placeholder="joao@exemplo.com" {...field} />
+                  <Input id="email" placeholder="joao@exemplo.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
