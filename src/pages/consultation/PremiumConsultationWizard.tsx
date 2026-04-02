@@ -20,12 +20,12 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
   StepCadastro,
-  StepAnamnese,
   StepTCLE,
   StepBiorressonancia,
   StepLaboratorial,
   StepPrescricao,
 } from './WizardForms'
+import Step2Anamnese from './steps/Step2Anamnese'
 
 const STEPS = [
   { id: 1, title: 'Cadastro', description: 'Selecionar Paciente', icon: User },
@@ -74,7 +74,7 @@ export default function PremiumConsultationWizard() {
       case 1:
         return <StepCadastro data={formData} onChange={handleDataChange} />
       case 2:
-        return <StepAnamnese data={formData} onChange={handleDataChange} />
+        return <Step2Anamnese data={formData} onChange={handleDataChange} />
       case 3:
         return <StepTCLE data={formData} onChange={handleDataChange} />
       case 4:
