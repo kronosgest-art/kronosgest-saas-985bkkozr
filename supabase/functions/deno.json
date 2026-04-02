@@ -2,6 +2,7 @@
   "_versions": {
     "analyze-bioresonance": 3,
     "analyze-exames": 3,
-    "generate-prescription": 3
+    "generate-prescription": 3,
+    "create-paciente": 1
   }
 }
