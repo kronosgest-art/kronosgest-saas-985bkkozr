@@ -11,6 +11,7 @@ import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationW
 import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
 import PatientsList from '@/pages/patients/PatientsList'
+import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/financial" element={<Financial />} />
             <Route path="/patients" element={<PatientsList />} />
+            <Route path="/settings/anamnesis-templates" element={<AnamneseTemplates />} />
 
             {/* Profissional / Admin Routes */}
             <Route

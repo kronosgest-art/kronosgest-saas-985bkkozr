@@ -53,6 +53,7 @@ export default function Layout() {
     { to: '/sessions', label: 'Sessões', icon: Calendar },
     { to: '/financial', label: 'Financeiro', icon: FileText },
     { to: '/reports', label: 'Relatórios', icon: PieChart },
+    { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
   ]
 
   const patientLinks = [
