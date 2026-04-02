@@ -2,23 +2,31 @@ import { useState, useRef, useEffect } from 'react'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Slider } from '@/components/ui/slider'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { PlusCircle, Trash2, Loader2, UploadCloud, FileText } from 'lucide-react'
+import { Loader2, UploadCloud, FileText, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { analyzeBioresonance } from '@/services/ai-functions'
+import { toast } from '@/hooks/use-toast'
 
-export default function Step2Anamnesis() {
-  const [questions, setQuestions] = useState([
-    { id: 1, type: 'text', q: 'Qual a queixa principal?' },
-    { id: 2, type: 'scale', q: 'Nível de dor (1 a 10)?', value: [5] },
-    { id: 3, type: 'radio', q: 'Faz uso de medicação contínua?' },
-  ])
-  const [answers, setAnswers] = useState<Record<number, any>>({
-    1: '',
-    2: [5],
-    3: 'nao',
-  })
+interface Step2AnamnesisProps {
+  data?: any
+  onChange?: (data: any) => void
+}
+
+export default function Step2Anamnesis({ data, onChange }: Step2AnamnesisProps) {
+  const [templates, setTemplates] = useState<any[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
+  const [answers, setAnswers] = useState<Record<string, any>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [anamneseId, setAnamneseId] = useState<string | null>(null)
 
   // IA Biorressonância States
   const [patientId, setPatientId] = useState<string>('00000000-0000-0000-0000-000000000000')
@@ -29,18 +37,133 @@ export default function Step2Anamnesis() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // Busca um paciente válido para testes de integração caso não seja passado via props
-    supabase
-      .from('patients')
-      .select('id')
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) setPatientId(data[0].id)
-      })
+    if (data?.patient_id || data?.id) {
+      setPatientId(data.patient_id || data.id)
+    } else {
+      supabase
+        .from('patients')
+        .select('id')
+        .limit(1)
+        .then(({ data: pts }) => {
+          if (pts && pts.length > 0) setPatientId(pts[0].id)
+        })
+    }
+  }, [data])
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) return
+
+      const { data: tmplData } = await supabase
+        .from('anamnese_templates')
+        .select('*')
+        .eq('profissional_id', session.user.id)
+        .order('eh_padrao', { ascending: false })
+
+      if (tmplData && tmplData.length > 0) {
+        setTemplates(tmplData)
+        const defaultTemplate = tmplData.find((t: any) => t.eh_padrao) || tmplData[0]
+        setSelectedTemplate(defaultTemplate)
+      }
+    }
+    fetchTemplates()
   }, [])
 
-  const handleAnswerChange = (id: number, value: any) => {
-    setAnswers((prev) => ({ ...prev, [id]: value }))
+  const handleTemplateChange = (templateId: string) => {
+    const newTemplate = templates.find((t) => t.template_id === templateId)
+    if (newTemplate) {
+      setSelectedTemplate(newTemplate)
+    }
+  }
+
+  const handleAnswerChange = (id: string, value: any) => {
+    setAnswers((prev) => {
+      const newAnswers = { ...prev, [id]: value }
+      if (onChange) {
+        onChange({ anamnese_respostas_temporarias: newAnswers })
+      }
+      return newAnswers
+    })
+  }
+
+  const handleSaveAnamnese = async () => {
+    if (!selectedTemplate) return
+    if (!patientId || patientId === '00000000-0000-0000-0000-000000000000') {
+      toast({
+        title: 'Paciente inválido',
+        description: 'Selecione ou cadastre um paciente no passo 1 antes de salvar a anamnese.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const perguntas = selectedTemplate.perguntas || []
+    for (const q of perguntas) {
+      if (q.obrigatoria) {
+        const val = answers[q.id]
+        if (
+          val === undefined ||
+          val === null ||
+          val === '' ||
+          (Array.isArray(val) && val.length === 0)
+        ) {
+          toast({
+            title: 'Campo obrigatório',
+            description: `A pergunta "${q.titulo}" é obrigatória.`,
+            variant: 'destructive',
+          })
+          return
+        }
+      }
+    }
+
+    const respostasToSave = perguntas.map((q: any) => ({
+      pergunta_id: q.id,
+      resposta: answers[q.id] || '',
+    }))
+
+    setIsSaving(true)
+    try {
+      const payload = {
+        patient_id: patientId,
+        template_id: selectedTemplate.template_id,
+        respostas: respostasToSave,
+        atualizado_em: new Date().toISOString(),
+      }
+
+      if (anamneseId) {
+        const { error } = await supabase
+          .from('anamnese')
+          .update(payload)
+          .eq('anamnese_id', anamneseId)
+        if (error) throw error
+      } else {
+        const { data: insData, error } = await supabase
+          .from('anamnese')
+          .insert(payload)
+          .select('anamnese_id')
+          .single()
+        if (error) throw error
+        if (insData) {
+          setAnamneseId(insData.anamnese_id)
+          if (onChange) {
+            onChange({ anamnese_id: insData.anamnese_id, anamnese_respostas: respostasToSave })
+          }
+        }
+      }
+
+      toast({
+        title: 'Anamnese salva',
+        description: 'Os dados foram salvos com sucesso no prontuário do paciente.',
+      })
+    } catch (error: any) {
+      toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,72 +208,153 @@ export default function Step2Anamnesis() {
 
   return (
     <div className="space-y-8 animate-slide-in-right">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-semibold" style={{ color: '#1E3A8A' }}>
-            Anamnese Editável
+            Anamnese
           </h2>
-          <p className="text-muted-foreground">Avaliação clínica detalhada do paciente.</p>
+          <p className="text-muted-foreground">Avaliação clínica baseada em modelo.</p>
         </div>
-        <Button variant="outline" size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Pergunta
-        </Button>
+
+        {templates.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Modelo:</span>
+            <Select
+              value={selectedTemplate?.template_id || ''}
+              onValueChange={handleTemplateChange}
+            >
+              <SelectTrigger className="w-[200px] border-[#B8860B] text-[#B8860B] focus:ring-[#B8860B]">
+                <SelectValue placeholder="Escolher Modelo" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.template_id} value={t.template_id}>
+                    {t.nome_template}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
-        {questions.map((item, index) => (
-          <div key={item.id} className="p-4 border rounded-lg bg-card relative group">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-            <Label className="text-base font-medium mb-3 block">
-              {index + 1}. {item.q}
-            </Label>
-            {item.type === 'text' && (
-              <Textarea
-                placeholder="Resposta do paciente..."
-                value={answers[item.id]}
-                onChange={(e) => handleAnswerChange(item.id, e.target.value)}
-              />
-            )}
-            {item.type === 'scale' && (
-              <div className="pt-4 px-2">
-                <Slider
-                  value={answers[item.id]}
-                  onValueChange={(val) => handleAnswerChange(item.id, val)}
-                  max={10}
-                  step={1}
-                  className="w-full"
+        {selectedTemplate ? (
+          selectedTemplate.perguntas?.map((item: any, index: number) => (
+            <div key={item.id} className="p-4 border rounded-lg bg-card shadow-sm relative group">
+              <Label className="text-base font-medium mb-3 flex items-center gap-2">
+                {index + 1}. {item.titulo}
+                {item.obrigatoria && <span className="text-destructive">*</span>}
+              </Label>
+
+              {(item.tipo === 'text' || item.tipo === 'textarea' || !item.tipo) && (
+                <Textarea
+                  placeholder="Resposta do paciente..."
+                  value={answers[item.id] || ''}
+                  onChange={(e) => handleAnswerChange(item.id, e.target.value)}
+                  className="mt-2 min-h-[100px]"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>0 (Sem dor)</span>
-                  <span>10 (Máxima)</span>
+              )}
+
+              {item.tipo === 'select' && item.opcoes && (
+                <div className="mt-2">
+                  <Select
+                    value={answers[item.id] || ''}
+                    onValueChange={(val) => handleAnswerChange(item.id, val)}
+                  >
+                    <SelectTrigger className="w-full sm:w-[300px]">
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {item.opcoes.map((op: string, i: number) => (
+                        <SelectItem key={i} value={op}>
+                          {op}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-            )}
-            {item.type === 'radio' && (
-              <RadioGroup
-                value={answers[item.id]}
-                onValueChange={(val) => handleAnswerChange(item.id, val)}
-                className="flex space-x-4 mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sim" id={`sim-${item.id}`} />
-                  <Label htmlFor={`sim-${item.id}`}>Sim</Label>
+              )}
+
+              {item.tipo === 'radio' && item.opcoes && (
+                <RadioGroup
+                  value={answers[item.id] || ''}
+                  onValueChange={(val) => handleAnswerChange(item.id, val)}
+                  className="flex flex-col space-y-2 mt-2"
+                >
+                  {item.opcoes.map((op: string, i: number) => (
+                    <div key={i} className="flex items-center space-x-2">
+                      <RadioGroupItem value={op} id={`${item.id}-op-${i}`} />
+                      <Label htmlFor={`${item.id}-op-${i}`}>{op}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
+
+              {item.tipo === 'checkbox' && (
+                <div className="flex flex-col space-y-2 mt-2">
+                  {item.opcoes && item.opcoes.length > 0 ? (
+                    item.opcoes.map((op: string, i: number) => {
+                      const isChecked = (answers[item.id] || []).includes(op)
+                      return (
+                        <div key={i} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`${item.id}-cb-${i}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              const currentArr = answers[item.id] || []
+                              let newArr
+                              if (checked) {
+                                newArr = [...currentArr, op]
+                              } else {
+                                newArr = currentArr.filter((v: string) => v !== op)
+                              }
+                              handleAnswerChange(item.id, newArr)
+                            }}
+                          />
+                          <Label htmlFor={`${item.id}-cb-${i}`}>{op}</Label>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${item.id}-cb-single`}
+                        checked={answers[item.id] === 'Sim' || answers[item.id] === true}
+                        onCheckedChange={(checked) => {
+                          handleAnswerChange(item.id, checked ? 'Sim' : 'Não')
+                        }}
+                      />
+                      <Label htmlFor={`${item.id}-cb-single`}>Sim</Label>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="nao" id={`nao-${item.id}`} />
-                  <Label htmlFor={`nao-${item.id}`}>Não</Label>
-                </div>
-              </RadioGroup>
-            )}
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+            Nenhum modelo de anamnese selecionado ou disponível.
           </div>
-        ))}
+        )}
       </div>
+
+      {selectedTemplate && selectedTemplate.perguntas && selectedTemplate.perguntas.length > 0 && (
+        <div className="flex justify-end mt-4">
+          <Button
+            onClick={handleSaveAnamnese}
+            disabled={isSaving}
+            className="bg-[#1E3A8A] hover:bg-[#152865] text-white px-8"
+          >
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {isSaving ? 'Salvando...' : 'Salvar Anamnese'}
+          </Button>
+        </div>
+      )}
 
       {/* IA Biorressonância Upload */}
       <div className="mt-12 border-t pt-8">

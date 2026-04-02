@@ -9,6 +9,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      anamnese_templates: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          eh_padrao: boolean | null
+          nome_template: string
+          organization_id: string | null
+          perguntas: Json
+          profissional_id: string | null
+          template_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          eh_padrao?: boolean | null
+          nome_template: string
+          organization_id?: string | null
+          perguntas?: Json
+          profissional_id?: string | null
+          template_id?: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          eh_padrao?: boolean | null
+          nome_template?: string
+          organization_id?: string | null
+          perguntas?: Json
+          profissional_id?: string | null
+          template_id?: string
+        }
+        Relationships: []
+      }
       exames: {
         Row: {
           arquivo_pdf_url: string | null
@@ -307,6 +340,15 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: anamnese_templates
+//   template_id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (nullable)
+//   profissional_id: uuid (nullable)
+//   nome_template: text (not null)
+//   eh_padrao: boolean (nullable, default: false)
+//   perguntas: jsonb (not null, default: '[]'::jsonb)
+//   criado_em: timestamp with time zone (not null, default: now())
+//   atualizado_em: timestamp with time zone (not null, default: now())
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -346,6 +388,9 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
+// Table: anamnese_templates
+//   PRIMARY KEY anamnese_templates_pkey: PRIMARY KEY (template_id)
+//   FOREIGN KEY anamnese_templates_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
@@ -360,6 +405,15 @@ export const Constants = {
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: anamnese_templates
+//   Policy "Users can delete their own templates" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = profissional_id)
+//   Policy "Users can insert their own templates" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = profissional_id)
+//   Policy "Users can update their own templates" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = profissional_id)
+//   Policy "Users can view their own templates" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = profissional_id)
 // Table: exames
 //   Policy "authenticated_all_exames" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -384,6 +438,33 @@ export const Constants = {
 //     WITH CHECK: true
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION handle_new_profissional_template()
+//   CREATE OR REPLACE FUNCTION public.handle_new_profissional_template()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     INSERT INTO public.anamnese_templates (profissional_id, nome_template, eh_padrao, perguntas)
+//     VALUES (
+//       NEW.id,
+//       'Padrão Morgana',
+//       true,
+//       '[
+//         {"id": "1", "titulo": "Dados Pessoais", "tipo": "text", "obrigatoria": true},
+//         {"id": "2", "titulo": "Queixa Principal", "tipo": "text", "obrigatoria": true},
+//         {"id": "3", "titulo": "Histórico de Saúde", "tipo": "text", "obrigatoria": false},
+//         {"id": "4", "titulo": "Avaliação por Sistemas", "tipo": "text", "obrigatoria": false},
+//         {"id": "5", "titulo": "Estilo de Vida", "tipo": "text", "obrigatoria": false},
+//         {"id": "6", "titulo": "Queixas Estéticas", "tipo": "text", "obrigatoria": false},
+//         {"id": "7", "titulo": "Observações do Profissional", "tipo": "text", "obrigatoria": false},
+//         {"id": "8", "titulo": "Tem órgãos amputados? (Biorressonância não identifica órgãos ausentes)", "tipo": "select", "opcoes": ["Sim", "Não"], "obrigatoria": true}
+//       ]'::jsonb
+//     );
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION update_leads_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_leads_updated_at()
 //    RETURNS trigger
