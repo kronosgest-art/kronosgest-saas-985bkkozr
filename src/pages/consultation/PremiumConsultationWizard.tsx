@@ -41,6 +41,8 @@ const STEPS = [
 export default function PremiumConsultationWizard() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<any>({
+    id: null,
+    patient_id: null,
     name: '',
     cpf: '',
     email: '',

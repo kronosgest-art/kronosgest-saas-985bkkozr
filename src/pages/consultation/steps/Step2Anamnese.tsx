@@ -44,18 +44,10 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
           if (p?.organization_id) setOrganizationId(p.organization_id)
         })
     } else {
-      supabase
-        .from('pacientes')
-        .select('id, organization_id')
-        .limit(1)
-        .then(({ data: pts }) => {
-          if (pts && pts.length > 0) {
-            setPatientId(pts[0].id)
-            setOrganizationId(pts[0].organization_id)
-          }
-        })
+      setPatientId('00000000-0000-0000-0000-000000000000')
+      setOrganizationId(null)
     }
-  }, [data])
+  }, [data?.patient_id, data?.id])
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -67,13 +59,16 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
       const { data: tmplData } = await supabase
         .from('anamnese_templates')
         .select('*')
-        .eq('profissional_id', session.user.id)
+        .or(`profissional_id.eq.${session.user.id},profissional_id.is.null`)
         .order('eh_padrao', { ascending: false })
 
       if (tmplData && tmplData.length > 0) {
         setTemplates(tmplData)
         const defaultTemplate = tmplData.find((t: any) => t.eh_padrao) || tmplData[0]
         setSelectedTemplate(defaultTemplate)
+      } else {
+        setTemplates([])
+        setSelectedTemplate(null)
       }
     }
     fetchTemplates()
@@ -350,9 +345,9 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
           <p className="text-muted-foreground">Avaliação clínica baseada em modelo.</p>
         </div>
 
-        {templates.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Modelo:</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Modelo:</span>
+          {templates.length > 0 ? (
             <Select
               value={selectedTemplate?.template_id || ''}
               onValueChange={handleTemplateChange}
@@ -368,8 +363,24 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center gap-2">
+              <Select disabled>
+                <SelectTrigger className="w-[250px] border-muted text-muted-foreground">
+                  <SelectValue placeholder="Nenhum modelo disponível" />
+                </SelectTrigger>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/settings/anamnesis-templates', '_blank')}
+                className="border-[#1E3A8A] text-[#1E3A8A]"
+              >
+                Criar Novo
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
