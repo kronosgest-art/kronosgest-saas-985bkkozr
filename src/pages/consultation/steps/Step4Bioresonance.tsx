@@ -1,113 +1,207 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { UploadCloud, FileText, Sparkles, AlertTriangle } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { UploadCloud, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
-export default function Step4Bioresonance() {
-  const [uploaded, setUploaded] = useState(false)
-  const [analyzing, setAnalyzing] = useState(false)
+export default function Step4Bioresonance({ data }: { data?: any }) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [interpretation, setInterpretation] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleUpload = () => {
-    setAnalyzing(true)
-    setTimeout(() => {
-      setAnalyzing(false)
-      setUploaded(true)
-    }, 2000)
+  if (!data?.patient_id) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Atenção</AlertTitle>
+        <AlertDescription>Cadastre o paciente no Passo 1 primeiro.</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!data?.tcle_assinado) {
+    return (
+      <div className="space-y-6 animate-slide-in-right">
+        <div>
+          <h2 className="text-2xl font-semibold text-primary">Upload de Biorressonância</h2>
+          <p className="text-muted-foreground">
+            Envie o PDF para análise via Inteligência Artificial.
+          </p>
+        </div>
+        <Alert variant="destructive" className="bg-red-50 text-red-900 border-red-200">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg">Atenção: TCLE Pendente</AlertTitle>
+          <AlertDescription className="text-base mt-2">
+            Para realizar o upload e análise de <strong>Biorressonância</strong>, é obrigatório que
+            o paciente tenha assinado o TCLE no <strong>Passo 3</strong>.<br />
+            <br />
+            Se você não vai realizar Biorressonância nesta consulta, pode{' '}
+            <strong>pular este passo</strong> clicando em "Próximo" para ir direto aos exames
+            Laboratoriais.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.type !== 'application/pdf') return setError('Apenas arquivos PDF são aceitos.')
+    if (file.size > 10 * 1024 * 1024) return setError('Arquivo excede o limite de 10MB.')
+
+    setError(null)
+    setIsUploading(true)
+
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = async () => {
+      const base64 = reader.result as string
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
+          'uploadExame',
+          {
+            body: {
+              patient_id: data.patient_id,
+              tipo_exame: 'biorressonancia',
+              arquivo_pdf: base64,
+            },
+          },
+        )
+        if (uploadError) throw new Error('Erro ao fazer upload. Tente novamente.')
+
+        setIsUploading(false)
+        setIsAnalyzing(true)
+
+        const { data: analyzeData, error: analyzeError } = await supabase.functions.invoke(
+          'interpretarExame',
+          {
+            body: {
+              exame_id: uploadData.exame_id,
+              tipo_exame: 'biorressonancia',
+              arquivo_pdf_url: uploadData.url,
+            },
+          },
+        )
+        if (analyzeError) throw new Error('Erro ao interpretar exame. Tente novamente.')
+
+        setInterpretation(analyzeData.interpretacao_ia)
+        toast({ title: 'Sucesso', description: 'Exame analisado com sucesso!' })
+      } catch (err: any) {
+        setError(err.message || 'Erro inesperado')
+      } finally {
+        setIsUploading(false)
+        setIsAnalyzing(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const formatInterpretation = (text: string) => {
+    return text.split('\n').map((line, i) => {
+      if (line.includes('ENCAMINHAR AO MÉDICO')) {
+        return (
+          <span
+            key={i}
+            className="bg-yellow-200 text-yellow-900 font-semibold px-2 py-1 rounded block my-2"
+          >
+            {line}
+          </span>
+        )
+      }
+      if (line.toLowerCase().includes('acompanhamento')) {
+        return (
+          <span
+            key={i}
+            className="bg-green-200 text-green-900 font-semibold px-2 py-1 rounded block my-2"
+          >
+            {line}
+          </span>
+        )
+      }
+      return (
+        <span key={i} className="block my-1">
+          {line}
+        </span>
+      )
+    })
   }
 
   return (
     <div className="space-y-6 animate-slide-in-right">
       <div>
-        <h2 className="text-2xl font-semibold text-primary">Upload de Bioressonância</h2>
+        <h2 className="text-2xl font-semibold text-primary">Upload de Biorressonância</h2>
         <p className="text-muted-foreground">
           Envie o PDF para análise via Inteligência Artificial.
         </p>
       </div>
 
-      {!uploaded ? (
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {!interpretation ? (
         <div
-          onClick={handleUpload}
-          className="border-2 border-dashed border-primary/30 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/5 transition-colors"
+          onClick={() => !isUploading && !isAnalyzing && fileInputRef.current?.click()}
+          className={`border-2 border-dashed border-primary/30 bg-primary/5 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors ${isUploading || isAnalyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          {analyzing ? (
+          <input
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleUpload}
+          />
+          {isUploading || isAnalyzing ? (
             <div className="space-y-4">
-              <Sparkles className="h-12 w-12 text-secondary animate-pulse mx-auto" />
-              <p className="text-lg font-medium">IA do Gemini analisando documento...</p>
+              <Sparkles className="h-12 w-12 text-primary animate-pulse mx-auto" />
+              <p className="text-lg font-medium text-primary">
+                {isUploading ? 'Fazendo upload do PDF...' : 'IA analisando documento...'}
+              </p>
             </div>
           ) : (
             <>
-              <UploadCloud className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">Arraste o PDF ou clique para selecionar</h3>
+              <UploadCloud className="h-12 w-12 text-primary mb-4" />
+              <h3 className="text-lg font-medium text-primary">
+                Arraste o PDF ou clique para selecionar
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">Máximo 10MB</p>
             </>
           )}
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 dark:bg-green-950/20 border-green-200">
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-green-600" />
-              <div>
-                <p className="font-medium text-green-800 dark:text-green-400">
-                  relatorio_biorressonancia_joao.pdf
-                </p>
-                <p className="text-xs text-green-600/80">Analisado por IA com sucesso</p>
-              </div>
+        <Card className="border-primary/20 bg-primary/5 shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-semibold flex items-center gap-2 mb-4 text-primary text-lg">
+              <Sparkles className="h-5 w-5" /> Interpretação da IA (Biorressonância)
+            </h3>
+            <div className="text-sm space-y-2 bg-white p-5 rounded-lg border border-primary/10 shadow-inner max-h-[400px] overflow-y-auto">
+              {formatInterpretation(interpretation)}
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setUploaded(false)}>
-              Remover
-            </Button>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold flex items-center gap-2 mb-4 text-destructive">
-                  <AlertTriangle className="h-5 w-5" /> Órgãos Alterados
-                </h3>
-                <ScrollArea className="h-[150px]">
-                  <ul className="space-y-3">
-                    <li className="flex justify-between border-b pb-2">
-                      <span className="font-medium">Fígado</span>
-                      <Badge variant="destructive">Gordura Nível 2</Badge>
-                    </li>
-                    <li className="flex justify-between border-b pb-2">
-                      <span className="font-medium">Intestino</span>
-                      <Badge variant="outline" className="text-orange-500 border-orange-500">
-                        Disbiose
-                      </Badge>
-                    </li>
-                    <li className="flex justify-between">
-                      <span className="font-medium">Tireoide</span>
-                      <Badge variant="secondary">Lentidão</Badge>
-                    </li>
-                  </ul>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold flex items-center gap-2 mb-4 text-secondary">
-                  <Sparkles className="h-5 w-5" /> Recomendações IA
-                </h3>
-                <ScrollArea className="h-[150px]">
-                  <ul className="list-disc pl-5 space-y-2 text-sm">
-                    <li>Iniciar protocolo de Limpeza Hepática.</li>
-                    <li>Suplementação de Coenzima Q10 (50mg).</li>
-                    <li>Redução drástica de carboidratos refinados.</li>
-                  </ul>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="bg-muted p-4 rounded-lg text-xs text-muted-foreground border-l-4 border-secondary">
-            <strong>Aviso Legal:</strong> A análise por IA é sugestiva e não substitui a avaliação
-            clínica do profissional responsável.
-          </div>
-        </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setInterpretation(null)} variant="outline" className="mr-3">
+                Fazer novo upload
+              </Button>
+              <Button
+                onClick={() =>
+                  toast({
+                    title: 'Salvo',
+                    description: 'Interpretação salva no prontuário do paciente.',
+                  })
+                }
+                className="gap-2 bg-primary hover:bg-primary/90 text-white"
+              >
+                <CheckCircle2 className="w-4 h-4" /> Salvar interpretação
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

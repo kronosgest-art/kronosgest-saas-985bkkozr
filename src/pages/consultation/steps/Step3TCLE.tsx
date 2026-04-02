@@ -3,22 +3,34 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 
-export default function Step3TCLE() {
-  const [agreed, setAgreed] = useState(false)
+interface Step3TCLEProps {
+  data?: any
+  onChange?: (data: any) => void
+}
+
+export default function Step3TCLE({ data, onChange }: Step3TCLEProps) {
+  const [agreed, setAgreed] = useState(data?.tcle_assinado || false)
   const defaultText = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO (TCLE)
 
-Eu, abaixo assinado, declaro ter sido informado(a) de forma clara e objetiva sobre a natureza dos procedimentos, exames e terapias propostos na KronosGest. 
+Eu, abaixo assinado, declaro ter sido informado(a) de forma clara e objetiva sobre a natureza dos procedimentos, exames e terapias propostos. 
 Compreendo que a terapia ortomolecular e a bioressonância são práticas complementares e não substituem o tratamento médico convencional.
 
 Autorizo o profissional responsável a realizar as práticas recomendadas e concordo com os termos descritos.`
 
   const [text, setText] = useState(defaultText)
 
+  const handleCheck = (c: boolean) => {
+    setAgreed(c)
+    onChange?.({ tcle_assinado: c })
+  }
+
   return (
     <div className="space-y-6 animate-slide-in-right">
       <div>
         <h2 className="text-2xl font-semibold text-primary">Termo de Consentimento</h2>
-        <p className="text-muted-foreground">Obrigatório para prosseguir com o tratamento.</p>
+        <p className="text-muted-foreground">
+          Obrigatório para o upload e análise de exames de Biorressonância.
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -30,10 +42,10 @@ Autorizo o profissional responsável a realizar as práticas recomendadas e conc
         />
       </div>
 
-      <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg border border-primary/20">
-        <Checkbox id="terms" checked={agreed} onCheckedChange={(c) => setAgreed(c as boolean)} />
-        <Label htmlFor="terms" className="text-base font-medium cursor-pointer">
-          O paciente leu e concorda com os termos acima.
+      <div className="flex items-center space-x-3 p-6 bg-muted/50 rounded-xl border border-primary/20 hover:bg-muted/80 transition-colors">
+        <Checkbox id="terms" checked={agreed} onCheckedChange={handleCheck} className="w-6 h-6" />
+        <Label htmlFor="terms" className="text-base font-medium cursor-pointer flex-1">
+          O paciente leu e concorda integralmente com os termos acima.
         </Label>
       </div>
     </div>

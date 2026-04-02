@@ -18,25 +18,27 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import {
-  StepCadastro,
-  StepTCLE,
-  StepBiorressonancia,
-  StepLaboratorial,
-  StepPrescricao,
-} from './WizardForms'
+
+import Step1Client from './steps/Step1Client'
 import Step2Anamnese from './steps/Step2Anamnese'
-import StepUploadExame from './steps/StepUploadExame'
+import Step3TCLE from './steps/Step3TCLE'
+import Step4Bioresonance from './steps/Step4Bioresonance'
+import Step5Exams from './steps/Step5Exams'
+import Step6Interpretation from './steps/Step6Interpretation'
+import Step6Prescription from './steps/Step6Prescription'
+import Step7Referral from './steps/Step7Referral'
+import Step9FollowUp from './steps/Step9FollowUp'
 
 const STEPS = [
-  { id: 1, title: 'Cadastro', description: 'Selecionar Paciente', icon: User },
+  { id: 1, title: 'Cadastro', description: 'Dados Pessoais', icon: User },
   { id: 2, title: 'Anamnese', description: 'Histórico clínico', icon: FileText },
-  { id: 3, title: 'Biorressonância', description: 'Upload de Exame', icon: Upload },
-  { id: 4, title: 'Laboratorial', description: 'Upload de Exame', icon: Upload },
-  { id: 5, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
-  { id: 6, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
-  { id: 7, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
-  { id: 8, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
+  { id: 3, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
+  { id: 4, title: 'Biorressonância', description: 'Upload de Exame', icon: Upload },
+  { id: 5, title: 'Laboratorial', description: 'Upload de Exame', icon: Upload },
+  { id: 6, title: 'Interpretação', description: 'Análise da IA', icon: BrainCircuit },
+  { id: 7, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
+  { id: 8, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
+  { id: 9, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
 ]
 
 export default function PremiumConsultationWizard() {
@@ -46,15 +48,7 @@ export default function PremiumConsultationWizard() {
     patient_id: null,
     name: '',
     cpf: '',
-    email: '',
-    phone: '',
-    queixa: '',
-    historico: '',
-    aceite: false,
-    biorressonancia: '',
-    laboratorial: '',
-    prescricao: '',
-    orientacoes: '',
+    tcle_assinado: false,
   })
   const [isFinished, setIsFinished] = useState(false)
   const navigate = useNavigate()
@@ -75,59 +69,33 @@ export default function PremiumConsultationWizard() {
   const renderCurrentForm = () => {
     switch (currentStep) {
       case 1:
-        return <StepCadastro data={formData} onChange={handleDataChange} />
+        return <Step1Client data={formData} onChange={handleDataChange} />
       case 2:
         return <Step2Anamnese data={formData} onChange={handleDataChange} />
       case 3:
-        return (
-          <StepUploadExame
-            tipoExame="biorressonancia"
-            patientId={formData.patient_id}
-            onNext={handleNext}
-          />
-        )
+        return <Step3TCLE data={formData} onChange={handleDataChange} />
       case 4:
-        return (
-          <StepUploadExame
-            tipoExame="laboratorial"
-            patientId={formData.patient_id}
-            onNext={handleNext}
-          />
-        )
+        return <Step4Bioresonance data={formData} />
       case 5:
-        return <StepTCLE data={formData} onChange={handleDataChange} />
+        return <Step5Exams data={formData} />
       case 6:
-        return <StepPrescricao data={formData} onChange={handleDataChange} />
+        return <Step6Interpretation data={formData} />
       case 7:
-        return (
-          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-            Módulo de Encaminhamento em desenvolvimento...
-          </div>
-        )
+        return <Step6Prescription />
       case 8:
-        return (
-          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-            Módulo de Agendamento em desenvolvimento...
-          </div>
-        )
+        return <Step7Referral />
+      case 9:
+        return <Step9FollowUp />
       default:
         return null
     }
   }
 
   const validateStep = () => {
-    if (currentStep === 1 && (!formData.name || !formData.cpf)) {
+    if (currentStep === 1 && !formData.patient_id) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha o nome e CPF do paciente.',
-        variant: 'destructive',
-      })
-      return false
-    }
-    if (currentStep === 5 && !formData.aceite) {
-      toast({
-        title: 'Termo Obrigatório',
-        description: 'É necessário aceitar o termo de consentimento.',
+        description: 'Cadastre o paciente para continuar.',
         variant: 'destructive',
       })
       return false
@@ -182,7 +150,12 @@ export default function PremiumConsultationWizard() {
               return (
                 <div
                   key={step.id}
-                  className="flex flex-col items-center gap-2 bg-transparent px-2 relative z-10"
+                  className="flex flex-col items-center gap-2 bg-transparent px-2 relative z-10 cursor-pointer"
+                  onClick={() => {
+                    if (isPast || formData.patient_id) {
+                      setCurrentStep(step.id)
+                    }
+                  }}
                 >
                   <div
                     className={cn(

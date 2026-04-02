@@ -92,8 +92,12 @@ export type Database = {
           arquivo_pdf_url: string | null
           created_at: string
           id: string
+          interpretacao_ia: string | null
+          observacoes_profissional: string | null
+          organization_id: string | null
           patient_id: string
           resultado_json: Json | null
+          status: string | null
           tipo: string
           updated_at: string
         }
@@ -101,8 +105,12 @@ export type Database = {
           arquivo_pdf_url?: string | null
           created_at?: string
           id?: string
+          interpretacao_ia?: string | null
+          observacoes_profissional?: string | null
+          organization_id?: string | null
           patient_id: string
           resultado_json?: Json | null
+          status?: string | null
           tipo: string
           updated_at?: string
         }
@@ -110,8 +118,12 @@ export type Database = {
           arquivo_pdf_url?: string | null
           created_at?: string
           id?: string
+          interpretacao_ia?: string | null
+          observacoes_profissional?: string | null
+          organization_id?: string | null
           patient_id?: string
           resultado_json?: Json | null
+          status?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -452,6 +464,10 @@ export const Constants = {
 //   arquivo_pdf_url: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   organization_id: uuid (nullable)
+//   interpretacao_ia: text (nullable)
+//   status: text (nullable, default: 'pendente'::text)
+//   observacoes_profissional: text (nullable)
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

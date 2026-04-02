@@ -1,207 +1,179 @@
-import { useState, useRef, useEffect } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { UploadCloud, Search, Loader2, FileText } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { UploadCloud, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { supabase } from '@/lib/supabase/client'
-import { analyzeExames } from '@/services/ai-functions'
+import { toast } from '@/hooks/use-toast'
 
-const mockExams = [
-  { test: 'Glicemia de Jejum', value: 115, ref: '70-99 mg/dL', status: 'Alto', critical: true },
-  { test: 'Colesterol Total', value: 180, ref: '< 190 mg/dL', status: 'Normal', critical: false },
-  { test: 'Vitamina D3', value: 22, ref: '30-100 ng/mL', status: 'Baixo', critical: true },
-  { test: 'TSH', value: 2.5, ref: '0.4-4.0 mIU/L', status: 'Normal', critical: false },
-]
-
-export default function Step5Exams() {
-  const [searchTerm, setSearchTerm] = useState('')
-
-  // IA Exames States
-  const [patientId, setPatientId] = useState<string>('00000000-0000-0000-0000-000000000000')
+export default function Step5Exams({ data }: { data?: any }) {
+  const [isUploading, setIsUploading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [analysisResult, setAnalysisResult] = useState<any>(null)
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [interpretation, setInterpretation] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    supabase
-      .from('patients')
-      .select('id')
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) setPatientId(data[0].id)
-      })
-  }, [])
+  if (!data?.patient_id) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Atenção</AlertTitle>
+        <AlertDescription>Cadastre o paciente no Passo 1 primeiro.</AlertDescription>
+      </Alert>
+    )
+  }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Arquivo excede o limite de 10MB.')
-      return
-    }
-    if (file.type !== 'application/pdf') {
-      setError('Por favor, envie apenas arquivos no formato PDF.')
-      return
-    }
+    if (file.type !== 'application/pdf') return setError('Apenas arquivos PDF são aceitos.')
+    if (file.size > 10 * 1024 * 1024) return setError('Arquivo excede o limite de 10MB.')
 
     setError(null)
-    setIsAnalyzing(true)
+    setIsUploading(true)
 
     const reader = new FileReader()
     reader.readAsDataURL(file)
     reader.onload = async () => {
+      const base64 = reader.result as string
       try {
-        const base64String = (reader.result as string).split(',')[1]
-        const res = await analyzeExames(base64String, patientId, 'laboratorial')
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
+          'uploadExame',
+          {
+            body: { patient_id: data.patient_id, tipo_exame: 'laboratorial', arquivo_pdf: base64 },
+          },
+        )
+        if (uploadError) throw new Error('Erro ao fazer upload. Tente novamente.')
 
-        if (res.error) {
-          setError('Erro de conexão ao processar arquivo.')
-        } else if (res.data?.error) {
-          setError(res.data.error)
-        } else {
-          setAnalysisResult(res.data?.data)
-          setPdfUrl(res.data?.pdf_url)
-        }
-      } catch (err) {
-        setError('Erro inesperado ao analisar o exame.')
+        setIsUploading(false)
+        setIsAnalyzing(true)
+
+        const { data: analyzeData, error: analyzeError } = await supabase.functions.invoke(
+          'interpretarExame',
+          {
+            body: {
+              exame_id: uploadData.exame_id,
+              tipo_exame: 'laboratorial',
+              arquivo_pdf_url: uploadData.url,
+            },
+          },
+        )
+        if (analyzeError) throw new Error('Erro ao interpretar exame. Tente novamente.')
+
+        setInterpretation(analyzeData.interpretacao_ia)
+        toast({ title: 'Sucesso', description: 'Exame analisado com sucesso!' })
+      } catch (err: any) {
+        setError(err.message || 'Erro inesperado')
       } finally {
+        setIsUploading(false)
         setIsAnalyzing(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
       }
     }
   }
 
+  const formatInterpretation = (text: string) => {
+    return text.split('\n').map((line, i) => {
+      if (line.includes('ENCAMINHAR AO MÉDICO')) {
+        return (
+          <span
+            key={i}
+            className="bg-yellow-200 text-yellow-900 font-semibold px-2 py-1 rounded block my-2"
+          >
+            {line}
+          </span>
+        )
+      }
+      if (line.toLowerCase().includes('acompanhamento')) {
+        return (
+          <span
+            key={i}
+            className="bg-green-200 text-green-900 font-semibold px-2 py-1 rounded block my-2"
+          >
+            {line}
+          </span>
+        )
+      }
+      return (
+        <span key={i} className="block my-1">
+          {line}
+        </span>
+      )
+    })
+  }
+
   return (
     <div className="space-y-6 animate-slide-in-right">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold" style={{ color: '#1E3A8A' }}>
-            Exames Laboratoriais
-          </h2>
-          <p className="text-muted-foreground">Integração de resultados via PDF com IA.</p>
-        </div>
-        <div>
+      <div>
+        <h2 className="text-2xl font-semibold text-primary">Upload de Exames Laboratoriais</h2>
+        <p className="text-muted-foreground">
+          Envie o PDF dos exames bioquímicos para análise exata de referências via IA.
+        </p>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {!interpretation ? (
+        <div
+          onClick={() => !isUploading && !isAnalyzing && fileInputRef.current?.click()}
+          className={`border-2 border-dashed border-primary/30 bg-primary/5 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors ${isUploading || isAnalyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
           <input
             type="file"
             accept="application/pdf"
             className="hidden"
             ref={fileInputRef}
-            onChange={handleFileUpload}
+            onChange={handleUpload}
           />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isAnalyzing}
-            style={{ backgroundColor: '#B8860B', color: '#1E3A8A' }}
-            className="hover:opacity-90 font-semibold"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <UploadCloud className="mr-2 h-4 w-4" />
-            )}
-            {isAnalyzing ? 'Processando...' : '📤 Upload PDF'}
-          </Button>
-          <p className="text-xs text-right text-slate-500 mt-1">Apenas PDF (máx 10MB)</p>
-        </div>
-      </div>
-
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-100">{error}</p>
-      )}
-
-      {analysisResult && (
-        <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 mt-6 animate-fade-in-up">
-          <h4 className="font-medium flex items-center mb-4" style={{ color: '#1E3A8A' }}>
-            <FileText className="w-5 h-5 mr-2" /> Interpretação da IA
-          </h4>
-          <div className="space-y-4 text-sm">
-            {analysisResult.alerta && (
-              <div className="bg-red-50 text-red-800 p-3 rounded-md border border-red-200 font-medium">
-                🚨 Alerta: {analysisResult.alerta}
-              </div>
-            )}
-            <div>
-              <strong className="block text-slate-700 mb-1">Valores Alterados:</strong>
-              <ul className="list-disc pl-5 text-slate-600 space-y-1">
-                {analysisResult.valores_alterados?.map((item: string, i: number) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <strong className="block text-slate-700 mb-1">Interpretação Clínica:</strong>
-              <p className="text-slate-600 bg-white p-3 rounded border">
-                {analysisResult.interpretacao}
+          {isUploading || isAnalyzing ? (
+            <div className="space-y-4">
+              <Sparkles className="h-12 w-12 text-primary animate-pulse mx-auto" />
+              <p className="text-lg font-medium text-primary">
+                {isUploading ? 'Fazendo upload do PDF...' : 'IA analisando documento...'}
               </p>
             </div>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 pt-4 border-t gap-4">
-            <span className="text-xs font-medium" style={{ color: '#1E3A8A' }}>
-              ⚠️ Resultados devem ser interpretados por profissional habilitado
-            </span>
-            {pdfUrl && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={pdfUrl} target="_blank" rel="noreferrer">
-                  📥 Download PDF Analisado
-                </a>
-              </Button>
-            )}
-          </div>
+          ) : (
+            <>
+              <UploadCloud className="h-12 w-12 text-primary mb-4" />
+              <h3 className="text-lg font-medium text-primary">
+                Arraste o PDF ou clique para selecionar
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Máximo 10MB</p>
+            </>
+          )}
         </div>
+      ) : (
+        <Card className="border-primary/20 bg-primary/5 shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-semibold flex items-center gap-2 mb-4 text-primary text-lg">
+              <Sparkles className="h-5 w-5" /> Interpretação da IA (Laboratorial)
+            </h3>
+            <div className="text-sm space-y-2 bg-white p-5 rounded-lg border border-primary/10 shadow-inner max-h-[400px] overflow-y-auto">
+              {formatInterpretation(interpretation)}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setInterpretation(null)} variant="outline" className="mr-3">
+                Fazer novo upload
+              </Button>
+              <Button
+                onClick={() =>
+                  toast({
+                    title: 'Salvo',
+                    description: 'Interpretação salva no prontuário do paciente.',
+                  })
+                }
+                className="gap-2 bg-primary hover:bg-primary/90 text-white"
+              >
+                <CheckCircle2 className="w-4 h-4" /> Salvar interpretação
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
-
-      <div className="flex items-center space-x-2 mt-8">
-        <Search className="h-5 w-5 text-muted-foreground" />
-        <Input
-          placeholder="Buscar exame histórico..."
-          className="max-w-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      <div className="border rounded-lg overflow-hidden mt-4">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead>Teste</TableHead>
-              <TableHead>Valor Encontrado</TableHead>
-              <TableHead>Referência Ideal</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockExams
-              .filter((e) => e.test.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map((exam, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{exam.test}</TableCell>
-                  <TableCell className={exam.critical ? 'text-destructive font-bold' : ''}>
-                    {exam.value}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">{exam.ref}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${exam.status === 'Normal' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                    >
-                      {exam.status}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
     </div>
   )
 }
