@@ -17,6 +17,74 @@ async function fetchWithTimeout(
   return response
 }
 
+export const uploadExame = async (
+  patientId: string,
+  tipoExame: string,
+  arquivoPdfBase64: string,
+  organizationId?: string,
+) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token
+
+    const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/uploadExame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        patient_id: patientId,
+        tipo_exame: tipoExame,
+        arquivo_pdf: arquivoPdfBase64,
+        organization_id: organizationId,
+      }),
+      timeout: 60000,
+    })
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Erro na requisição')
+    return { data, error: null }
+  } catch (error: any) {
+    return { data: null, error: error.message }
+  }
+}
+
+export const interpretarExame = async (
+  exameId: string,
+  tipoExame: string,
+  arquivoPdfUrl: string,
+) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token
+
+    const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/interpretarExame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        exame_id: exameId,
+        tipo_exame: tipoExame,
+        arquivo_pdf_url: arquivoPdfUrl,
+      }),
+      timeout: 90000,
+    })
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Erro na requisição')
+    return { data, error: null }
+  } catch (error: any) {
+    return { data: null, error: error.message }
+  }
+}
+
 export const analyzeBioresonance = async (pdfBase64: string, patientId: string) => {
   try {
     const {

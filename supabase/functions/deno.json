@@ -3,6 +3,8 @@
     "analyze-bioresonance": 3,
     "analyze-exames": 3,
     "generate-prescription": 3,
-    "create-paciente": 2
+    "create-paciente": 2,
+    "uploadExame": 1,
+    "interpretarExame": 1
   }
 }

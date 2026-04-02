@@ -26,13 +26,14 @@ import {
   StepPrescricao,
 } from './WizardForms'
 import Step2Anamnese from './steps/Step2Anamnese'
+import StepUploadExame from './steps/StepUploadExame'
 
 const STEPS = [
   { id: 1, title: 'Cadastro', description: 'Selecionar Paciente', icon: User },
   { id: 2, title: 'Anamnese', description: 'Histórico clínico', icon: FileText },
-  { id: 3, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
-  { id: 4, title: 'Upload Exames', description: 'Arquivos PDF', icon: Upload },
-  { id: 5, title: 'Interpretação', description: 'Análise de resultados', icon: BrainCircuit },
+  { id: 3, title: 'Biorressonância', description: 'Upload de Exame', icon: Upload },
+  { id: 4, title: 'Laboratorial', description: 'Upload de Exame', icon: Upload },
+  { id: 5, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
   { id: 6, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
   { id: 7, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
   { id: 8, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
@@ -78,11 +79,23 @@ export default function PremiumConsultationWizard() {
       case 2:
         return <Step2Anamnese data={formData} onChange={handleDataChange} />
       case 3:
-        return <StepTCLE data={formData} onChange={handleDataChange} />
+        return (
+          <StepUploadExame
+            tipoExame="biorressonancia"
+            patientId={formData.patient_id}
+            onNext={handleNext}
+          />
+        )
       case 4:
-        return <StepBiorressonancia data={formData} onChange={handleDataChange} />
+        return (
+          <StepUploadExame
+            tipoExame="laboratorial"
+            patientId={formData.patient_id}
+            onNext={handleNext}
+          />
+        )
       case 5:
-        return <StepLaboratorial data={formData} onChange={handleDataChange} />
+        return <StepTCLE data={formData} onChange={handleDataChange} />
       case 6:
         return <StepPrescricao data={formData} onChange={handleDataChange} />
       case 7:
@@ -111,7 +124,7 @@ export default function PremiumConsultationWizard() {
       })
       return false
     }
-    if (currentStep === 3 && !formData.aceite) {
+    if (currentStep === 5 && !formData.aceite) {
       toast({
         title: 'Termo Obrigatório',
         description: 'É necessário aceitar o termo de consentimento.',
