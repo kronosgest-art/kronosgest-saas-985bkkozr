@@ -9,9 +9,11 @@ import {
   User,
   FileText,
   ShieldCheck,
-  Activity,
-  TestTube,
+  Upload,
+  BrainCircuit,
   FileSignature,
+  Share2,
+  CalendarDays,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
@@ -26,12 +28,14 @@ import {
 } from './WizardForms'
 
 const STEPS = [
-  { id: 1, title: 'Cadastro', description: 'Dados do paciente', icon: User },
+  { id: 1, title: 'Cadastro', description: 'Selecionar Paciente', icon: User },
   { id: 2, title: 'Anamnese', description: 'Histórico clínico', icon: FileText },
   { id: 3, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
-  { id: 4, title: 'Biorressonância', description: 'Análise quântica', icon: Activity },
-  { id: 5, title: 'Laboratorial', description: 'Exames e laudos', icon: TestTube },
+  { id: 4, title: 'Upload Exames', description: 'Arquivos PDF', icon: Upload },
+  { id: 5, title: 'Interpretação', description: 'Análise de resultados', icon: BrainCircuit },
   { id: 6, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
+  { id: 7, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
+  { id: 8, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
 ]
 
 export default function PremiumConsultationWizard() {
@@ -79,6 +83,18 @@ export default function PremiumConsultationWizard() {
         return <StepLaboratorial data={formData} onChange={handleDataChange} />
       case 6:
         return <StepPrescricao data={formData} onChange={handleDataChange} />
+      case 7:
+        return (
+          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+            Módulo de Encaminhamento em desenvolvimento...
+          </div>
+        )
+      case 8:
+        return (
+          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+            Módulo de Agendamento em desenvolvimento...
+          </div>
+        )
       default:
         return null
     }
