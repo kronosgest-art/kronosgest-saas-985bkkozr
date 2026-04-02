@@ -53,19 +53,22 @@ export default function Step1Client() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      const { error } = await supabase.functions.invoke('create-paciente', {
+      const { data, error } = await supabase.functions.invoke('create-paciente', {
         body: {
           ...values,
           user_id: user?.id,
+          organization_id: null,
         },
       })
 
       if (error) throw error
+      if (data && data.error) throw new Error(data.error)
 
       toast({
         title: 'Sucesso',
         description: 'Paciente salvo com sucesso!',
       })
+      form.reset()
     } catch (error: any) {
       console.error(error)
       toast({

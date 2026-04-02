@@ -43,6 +43,7 @@ Deno.serve(async (req: Request) => {
         telefone: telefone || null,
         user_id: user_id || null,
         organization_id: organization_id || null,
+        status: 'Ativo',
       })
       .select()
       .single()

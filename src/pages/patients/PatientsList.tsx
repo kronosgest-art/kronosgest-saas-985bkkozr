@@ -38,7 +38,7 @@ export default function PatientsList() {
   const fetchPatients = async () => {
     if (!user?.id) return
     const { data } = await supabase
-      .from('patients')
+      .from('pacientes')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -59,9 +59,9 @@ export default function PatientsList() {
 
     try {
       const { data, error } = await supabase
-        .from('patients')
+        .from('pacientes')
         .insert({
-          name: newPatient.name,
+          nome_completo: newPatient.name,
           cpf: newPatient.cpf,
           status: newPatient.status,
           user_id: user?.id,
@@ -87,7 +87,7 @@ export default function PatientsList() {
   }
 
   const filteredPatients = patients.filter((p) =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+    p.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   return (
@@ -187,15 +187,19 @@ export default function PatientsList() {
                       key={patient.id}
                       className="border-b border-[#1E3A8A]/5 last:border-0 hover:bg-[#1E3A8A]/5 transition-colors"
                     >
-                      <td className="px-6 py-4 font-medium text-slate-800">{patient.name}</td>
+                      <td className="px-6 py-4 font-medium text-slate-800">
+                        {patient.nome_completo}
+                      </td>
                       <td className="px-6 py-4 text-slate-600">{patient.cpf}</td>
                       <td className="px-6 py-4">
                         <Badge
                           variant={
-                            patient.status?.toLowerCase() === 'ativo' ? 'default' : 'secondary'
+                            (patient.status || 'Ativo').toLowerCase() === 'ativo'
+                              ? 'default'
+                              : 'secondary'
                           }
                           className={
-                            patient.status?.toLowerCase() === 'ativo'
+                            (patient.status || 'Ativo').toLowerCase() === 'ativo'
                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none'
                               : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border-none'
                           }
