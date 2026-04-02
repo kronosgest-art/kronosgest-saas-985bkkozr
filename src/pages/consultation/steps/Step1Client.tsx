@@ -11,6 +11,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
+import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 
 const formSchema = z.object({
   nome_completo: z.string().min(3, 'Nome muito curto'),
@@ -25,10 +31,52 @@ const formSchema = z.object({
 })
 
 export default function Step1Client() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
+  const { user } = useAuth()
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { nome_completo: '', cpf: '', email: '', telefone: '' },
+    defaultValues: {
+      nome_completo: '',
+      cpf: '',
+      email: '',
+      telefone: '',
+      dataNascimento: '',
+      sexo: '',
+      endereco: '',
+      profissao: '',
+      obs: '',
+    },
   })
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true)
+    try {
+      const { error } = await supabase.functions.invoke('create-paciente', {
+        body: {
+          ...values,
+          user_id: user?.id,
+        },
+      })
+
+      if (error) throw error
+
+      toast({
+        title: 'Sucesso',
+        description: 'Paciente salvo com sucesso!',
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar paciente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-right">
@@ -38,7 +86,11 @@ export default function Step1Client() {
       </div>
 
       <Form {...form}>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form
+          id="step1-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           <FormField
             control={form.control}
             name="nome_completo"
@@ -135,6 +187,12 @@ export default function Step1Client() {
               </FormItem>
             )}
           />
+          <div className="md:col-span-2 flex justify-end mt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

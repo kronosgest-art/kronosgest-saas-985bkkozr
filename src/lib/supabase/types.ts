@@ -164,6 +164,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pacientes: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome_completo: string
+          organization_id: string | null
+          telefone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_completo: string
+          organization_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_completo?: string
+          organization_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           cpf: string | null
@@ -421,6 +457,16 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   phone: text (nullable)
 //   email: text (nullable)
+// Table: pacientes
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   nome_completo: text (not null)
+//   cpf: text (nullable)
+//   email: text (nullable)
+//   telefone: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: patients
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -454,6 +500,11 @@ export const Constants = {
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: pacientes
+//   UNIQUE pacientes_cpf_key: UNIQUE (cpf)
+//   UNIQUE pacientes_email_key: UNIQUE (email)
+//   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY pacientes_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: patients
 //   PRIMARY KEY patients_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY patients_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -489,6 +540,10 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can view their own leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: pacientes
+//   Policy "authenticated_all_pacientes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: patients
 //   Policy "authenticated_all_patients" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -541,3 +596,8 @@ export const Constants = {
 // --- TRIGGERS ---
 // Table: leads
 //   update_leads_updated_at_trigger: CREATE TRIGGER update_leads_updated_at_trigger BEFORE UPDATE ON public.leads FOR EACH ROW EXECUTE FUNCTION update_leads_updated_at()
+
+// --- INDEXES ---
+// Table: pacientes
+//   CREATE UNIQUE INDEX pacientes_cpf_key ON public.pacientes USING btree (cpf)
+//   CREATE UNIQUE INDEX pacientes_email_key ON public.pacientes USING btree (email)
