@@ -127,6 +127,17 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
     return secs
   }, [selectedTemplate])
 
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    if (Object.keys(answers).length > 0 && onChangeRef.current) {
+      onChangeRef.current({ anamnese_respostas_temporarias: answers })
+    }
+  }, [answers])
+
   const handleAnswerChange = (id: string, value: any) => {
     setAnswers((prev) => {
       const newAnswers = { ...prev, [id]: value }
@@ -150,7 +161,6 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
           newAnswers['dp_rcq'] = (cint / quad).toFixed(2)
         else newAnswers['dp_rcq'] = ''
       }
-      if (onChange) onChange({ anamnese_respostas_temporarias: newAnswers })
       return newAnswers
     })
   }
