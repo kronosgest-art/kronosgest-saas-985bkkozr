@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { UploadCloud, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { uploadExame, interpretarExame } from '@/services/ai-functions'
 
 export default function Step5Exams({ data }: { data?: any }) {
   const [isUploading, setIsUploading] = useState(false)
@@ -37,28 +37,25 @@ export default function Step5Exams({ data }: { data?: any }) {
     reader.onload = async () => {
       const base64 = reader.result as string
       try {
-        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
-          'uploadExame',
-          {
-            body: { patient_id: data.patient_id, tipo_exame: 'laboratorial', arquivo_pdf: base64 },
-          },
+        const { data: uploadData, error: uploadError } = await uploadExame(
+          data.patient_id,
+          'laboratorial',
+          base64,
+          data.organization_id,
         )
-        if (uploadError) throw new Error('Erro ao fazer upload. Tente novamente.')
+        if (uploadError || !uploadData)
+          throw new Error(uploadError || 'Erro ao fazer upload. Tente novamente.')
 
         setIsUploading(false)
         setIsAnalyzing(true)
 
-        const { data: analyzeData, error: analyzeError } = await supabase.functions.invoke(
-          'interpretarExame',
-          {
-            body: {
-              exame_id: uploadData.exame_id,
-              tipo_exame: 'laboratorial',
-              arquivo_pdf_url: uploadData.url,
-            },
-          },
+        const { data: analyzeData, error: analyzeError } = await interpretarExame(
+          uploadData.exame_id,
+          'laboratorial',
+          uploadData.url,
         )
-        if (analyzeError) throw new Error('Erro ao interpretar exame. Tente novamente.')
+        if (analyzeError || !analyzeData)
+          throw new Error(analyzeError || 'Erro ao interpretar exame. Tente novamente.')
 
         setInterpretation(analyzeData.interpretacao_ia)
         toast({ title: 'Sucesso', description: 'Exame analisado com sucesso!' })
