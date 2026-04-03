@@ -1,10 +1,10 @@
 {
   "_versions": {
-    "analyze-bioresonance": 3,
-    "analyze-exames": 3,
-    "generate-prescription": 3,
+    "analyze-bioresonance": 4,
+    "analyze-exames": 4,
+    "generate-prescription": 4,
     "create-paciente": 2,
     "uploadExame": 1,
-    "interpretarExame": 2
+    "interpretarExame": 3
   }
 }

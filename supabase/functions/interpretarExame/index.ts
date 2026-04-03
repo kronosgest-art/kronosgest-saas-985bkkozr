@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
         : 'Você é especialista em exames laboratoriais. Liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico.'
 
     const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

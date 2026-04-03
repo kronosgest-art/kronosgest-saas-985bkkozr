@@ -9,9 +9,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          criado_em: string
+          data: string
+          horario: string
+          id: string
+          observacoes: string | null
+          patient_id: string
+          tipo_consulta: string
+        }
+        Insert: {
+          criado_em?: string
+          data: string
+          horario: string
+          id?: string
+          observacoes?: string | null
+          patient_id: string
+          tipo_consulta: string
+        }
+        Update: {
+          criado_em?: string
+          data?: string
+          horario?: string
+          id?: string
+          observacoes?: string | null
+          patient_id?: string
+          tipo_consulta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'agendamentos_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       anamnese: {
         Row: {
           anamnese_id: string
+          assinatura_paciente: Json | null
           atualizado_em: string
           criado_em: string
           organization_id: string | null
@@ -21,6 +60,7 @@ export type Database = {
         }
         Insert: {
           anamnese_id?: string
+          assinatura_paciente?: Json | null
           atualizado_em?: string
           criado_em?: string
           organization_id?: string | null
@@ -30,6 +70,7 @@ export type Database = {
         }
         Update: {
           anamnese_id?: string
+          assinatura_paciente?: Json | null
           atualizado_em?: string
           criado_em?: string
           organization_id?: string | null
@@ -292,6 +333,41 @@ export type Database = {
           },
         ]
       }
+      tcle_assinado: {
+        Row: {
+          assinatura: string
+          created_at: string
+          data_assinatura: string
+          id: string
+          patient_id: string
+          tipo_assinatura: string
+        }
+        Insert: {
+          assinatura: string
+          created_at?: string
+          data_assinatura?: string
+          id?: string
+          patient_id: string
+          tipo_assinatura: string
+        }
+        Update: {
+          assinatura?: string
+          created_at?: string
+          data_assinatura?: string
+          id?: string
+          patient_id?: string
+          tipo_assinatura?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tcle_assinado_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -439,6 +515,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: agendamentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (not null)
+//   data: date (not null)
+//   horario: time without time zone (not null)
+//   tipo_consulta: text (not null)
+//   observacoes: text (nullable)
+//   criado_em: timestamp with time zone (not null, default: now())
 // Table: anamnese
 //   anamnese_id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (nullable)
@@ -447,6 +531,7 @@ export const Constants = {
 //   respostas: jsonb (not null, default: '[]'::jsonb)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+//   assinatura_paciente: jsonb (nullable)
 // Table: anamnese_templates
 //   template_id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (nullable)
@@ -509,8 +594,18 @@ export const Constants = {
 //   arquivo_pdf_url: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+// Table: tcle_assinado
+//   id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (not null)
+//   assinatura: text (not null)
+//   data_assinatura: timestamp with time zone (not null, default: now())
+//   tipo_assinatura: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
+// Table: agendamentos
+//   FOREIGN KEY agendamentos_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY agendamentos_pkey: PRIMARY KEY (id)
 // Table: anamnese
 //   FOREIGN KEY anamnese_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY anamnese_pkey: PRIMARY KEY (anamnese_id)
@@ -535,8 +630,15 @@ export const Constants = {
 // Table: prescricoes
 //   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
+// Table: tcle_assinado
+//   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: agendamentos
+//   Policy "authenticated_all_agendamentos" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: anamnese
 //   Policy "authenticated_all_anamnese" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -574,6 +676,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: prescricoes
 //   Policy "authenticated_all_prescricoes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: tcle_assinado
+//   Policy "authenticated_all_tcle_assinado" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 
