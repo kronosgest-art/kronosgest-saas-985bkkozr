@@ -1,61 +1,147 @@
+import { useState } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { PenTool } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Card } from '@/components/ui/card'
+import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
+import { Loader2, CheckCircle2 } from 'lucide-react'
 
-export default function Step9FollowUp() {
+interface Step9FollowUpProps {
+  data?: any
+}
+
+export default function Step9FollowUp({ data }: Step9FollowUpProps) {
+  const [date, setDate] = useState<Date | undefined>(
+    new Date(new Date().setDate(new Date().getDate() + 35)),
+  )
+  const [time, setTime] = useState('')
+  const [type, setType] = useState('Presencial')
+  const [notes, setNotes] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+
+  const handleSchedule = async () => {
+    if (!data?.patient_id) {
+      toast({ title: 'Erro', description: 'Paciente não identificado.', variant: 'destructive' })
+      return
+    }
+    if (!date || !time) {
+      toast({
+        title: 'Erro de Validação',
+        description: 'Selecione a data e o horário.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const { error } = await supabase.from('agendamentos').insert({
+        patient_id: data.patient_id,
+        data: date.toISOString().split('T')[0],
+        horario: time,
+        tipo_consulta: type,
+        observacoes: notes,
+      })
+
+      if (error) throw error
+
+      setIsSuccess(true)
+      toast({
+        title: `✓ Próxima consulta agendada para ${date.toLocaleDateString('pt-BR')} às ${time}.`,
+      })
+    } catch (err: any) {
+      toast({ title: 'Erro ao agendar', description: err.message, variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 space-y-6 animate-in zoom-in fade-in">
+        <CheckCircle2 className="w-20 h-20 text-green-500" />
+        <h2 className="text-3xl font-bold text-primary">Consulta Finalizada</h2>
+        <p className="text-lg text-muted-foreground text-center">
+          O agendamento para {date?.toLocaleDateString('pt-BR')} às {time} foi registrado com
+          sucesso.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 animate-slide-in-right">
       <div>
-        <h2 className="text-2xl font-semibold text-primary">Acompanhamento e Assinatura</h2>
+        <h2 className="text-2xl font-semibold text-primary">Agendamento de Retorno</h2>
         <p className="text-muted-foreground">
-          Agende o retorno e colha a assinatura digital do paciente.
+          Agende a próxima consulta do paciente para acompanhamento.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label>Data Sugerida para Retorno (35 dias)</Label>
-            <Card className="p-4 inline-block">
-              <Calendar
-                mode="single"
-                selected={new Date(new Date().setDate(new Date().getDate() + 35))}
-                className="rounded-md border"
-              />
+            <Label>Data da próxima consulta</Label>
+            <Card className="p-4 inline-block shadow-sm">
+              <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md" />
             </Card>
-          </div>
-          <div className="space-y-2">
-            <Label>Evolução Clínica (Interno)</Label>
-            <Textarea placeholder="Paciente respondeu bem à primeira etapa..." rows={4} />
           </div>
         </div>
 
-        <div className="space-y-4">
-          <Label>Assinatura Digital do Paciente</Label>
-          <div className="border-2 border-dashed border-border rounded-xl h-[200px] bg-muted/20 relative flex items-center justify-center cursor-crosshair">
-            <span className="text-muted-foreground opacity-50 flex items-center gap-2 select-none">
-              <PenTool className="h-5 w-5" /> Assine aqui
-            </span>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm">
-              Limpar Assinatura
-            </Button>
-            <Button variant="secondary" size="sm">
-              Salvar Assinatura
-            </Button>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label>Horário</Label>
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full max-w-[200px]"
+            />
           </div>
 
-          <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20">
-            <h4 className="font-medium mb-2 text-sm text-primary">Notificações Automáticas</h4>
-            <p className="text-xs text-muted-foreground">
-              Um lembrete via WhatsApp e E-mail será agendado automaticamente 3 dias antes da data
-              selecionada acima.
-            </p>
+          <div className="space-y-2">
+            <Label>Tipo de Consulta</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="w-full max-w-[200px]">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Presencial">Presencial</SelectItem>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="Híbrida">Híbrida</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label>Observações (Opcional)</Label>
+            <Textarea
+              placeholder="Ex: Trazer novos exames solicitados..."
+              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg mt-4"
+            onClick={handleSchedule}
+            disabled={isSaving}
+          >
+            {isSaving ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
+            Agendar Próxima Consulta
+          </Button>
         </div>
       </div>
     </div>

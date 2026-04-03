@@ -2,8 +2,37 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, UserPlus, Loader2, RefreshCw } from 'lucide-react'
+import {
+  Search,
+  UserPlus,
+  Loader2,
+  RefreshCw,
+  Eye,
+  Trash2,
+  CalendarDays,
+  FileText,
+  FileSignature,
+  BrainCircuit,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +57,11 @@ export default function PatientsList() {
     cpf: '',
     status: 'Ativo',
   })
+
+  const [deletingPatient, setDeletingPatient] = useState<any>(null)
+  const [viewingPatient, setViewingPatient] = useState<any>(null)
+  const [patientRecord, setPatientRecord] = useState<any>(null)
+  const [isLoadingRecord, setIsLoadingRecord] = useState(false)
 
   useEffect(() => {
     if (user?.id) {
@@ -83,6 +117,52 @@ export default function PatientsList() {
       })
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDeletePatient = async () => {
+    if (!deletingPatient) return
+    try {
+      const { error } = await supabase.from('pacientes').delete().eq('id', deletingPatient.id)
+      if (error) throw error
+      setPatients(patients.filter((p) => p.id !== deletingPatient.id))
+      toast({ title: 'Sucesso', description: '✓ Paciente excluído com sucesso.' })
+    } catch (err: any) {
+      toast({ title: 'Erro ao excluir', description: err.message, variant: 'destructive' })
+    } finally {
+      setDeletingPatient(null)
+    }
+  }
+
+  const handleViewPatient = async (patient: any) => {
+    setViewingPatient(patient)
+    setIsLoadingRecord(true)
+    try {
+      const { data: anamneses } = await supabase
+        .from('anamnese')
+        .select('*')
+        .eq('patient_id', patient.id)
+        .order('criado_em', { ascending: false })
+      const { data: exames } = await supabase
+        .from('exames')
+        .select('*')
+        .eq('patient_id', patient.id)
+        .order('created_at', { ascending: false })
+      const { data: agendamentos } = await supabase
+        .from('agendamentos')
+        .select('*')
+        .eq('patient_id', patient.id)
+        .order('data', { ascending: false })
+
+      setPatientRecord({ anamneses, exames, agendamentos })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao carregar prontuário',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoadingRecord(false)
     }
   }
 
@@ -187,6 +267,7 @@ export default function PatientsList() {
                   <th className="px-6 py-4 font-semibold">CPF</th>
                   <th className="px-6 py-4 font-semibold">Status</th>
                   <th className="px-6 py-4 font-semibold">Última Consulta</th>
+                  <th className="px-6 py-4 font-semibold text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,6 +302,26 @@ export default function PatientsList() {
                           ? new Date(patient.last_consultation).toLocaleDateString('pt-BR')
                           : '-'}
                       </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewPatient(patient)}
+                            title="Ver Prontuário"
+                          >
+                            <Eye className="w-4 h-4 text-primary" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeletingPatient(patient)}
+                            title="Excluir Paciente"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -235,6 +336,156 @@ export default function PatientsList() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deletingPatient} onOpenChange={() => setDeletingPatient(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Paciente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o paciente{' '}
+              <strong>{deletingPatient?.nome_completo}</strong>? Esta ação é irreversível e apagará
+              todos os dados associados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePatient}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Sheet open={!!viewingPatient} onOpenChange={(o) => !o && setViewingPatient(null)}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-primary/20">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-2xl text-primary flex items-center gap-2">
+              <FileText className="w-6 h-6" /> Prontuário Eletrônico
+            </SheetTitle>
+            <SheetDescription>Visualização unificada do histórico do paciente.</SheetDescription>
+          </SheetHeader>
+
+          <ScrollArea className="h-[calc(100vh-140px)] pr-4">
+            {isLoadingRecord ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : patientRecord ? (
+              <div className="space-y-8 pb-8">
+                <div className="p-4 bg-muted/40 rounded-xl border border-primary/10 space-y-2">
+                  <h3 className="font-semibold text-lg">{viewingPatient?.nome_completo}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>CPF:</strong> {viewingPatient?.cpf || 'Não informado'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Email:</strong> {viewingPatient?.email || 'Não informado'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Telefone:</strong> {viewingPatient?.telefone || 'Não informado'}
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2 border-b pb-2">
+                    <CalendarDays className="w-4 h-4 text-primary" /> Consultas Agendadas
+                  </h4>
+                  {patientRecord.agendamentos?.length > 0 ? (
+                    <ul className="space-y-3">
+                      {patientRecord.agendamentos.map((a: any) => (
+                        <li key={a.id} className="p-3 bg-white border rounded-lg shadow-sm">
+                          <p className="font-medium">
+                            {new Date(a.data).toLocaleDateString('pt-BR')} às {a.horario}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Tipo: {a.tipo_consulta}</p>
+                          {a.observacoes && (
+                            <p className="text-xs mt-1 italic">"{a.observacoes}"</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhum agendamento.</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2 border-b pb-2">
+                    <FileSignature className="w-4 h-4 text-primary" /> Anamneses
+                  </h4>
+                  {patientRecord.anamneses?.length > 0 ? (
+                    <ul className="space-y-3">
+                      {patientRecord.anamneses.map((a: any) => (
+                        <li
+                          key={a.anamnese_id}
+                          className="p-3 bg-white border rounded-lg shadow-sm"
+                        >
+                          <p className="font-medium text-sm">
+                            Data: {new Date(a.criado_em).toLocaleDateString('pt-BR')}
+                          </p>
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            {a.assinatura_paciente ? 'Assinada' : 'Pendente Assinatura'}
+                          </Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhuma anamnese preenchida.</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2 border-b pb-2">
+                    <BrainCircuit className="w-4 h-4 text-primary" /> Exames e Interpretações IA
+                  </h4>
+                  {patientRecord.exames?.length > 0 ? (
+                    <ul className="space-y-3">
+                      {patientRecord.exames.map((e: any) => (
+                        <li
+                          key={e.id}
+                          className="p-3 bg-white border border-l-4 border-l-primary rounded-lg shadow-sm space-y-2"
+                        >
+                          <div className="flex justify-between items-start">
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                              {e.tipo}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(e.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          {e.interpretacao_ia ? (
+                            <div className="bg-muted/30 p-2 rounded text-xs text-slate-700 whitespace-pre-wrap max-h-40 overflow-y-auto mt-2">
+                              {e.interpretacao_ia}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">
+                              Sem interpretação gerada.
+                            </p>
+                          )}
+                          {e.arquivo_pdf_url && (
+                            <a
+                              href={e.arquivo_pdf_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-600 hover:underline block mt-2"
+                            >
+                              Ver Arquivo Original
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhum exame anexado.</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

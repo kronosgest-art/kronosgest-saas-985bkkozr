@@ -85,7 +85,7 @@ export default function PremiumConsultationWizard() {
       case 8:
         return <Step7Referral />
       case 9:
-        return <Step9FollowUp />
+        return <Step9FollowUp data={formData} />
       default:
         return null
     }
@@ -100,6 +100,14 @@ export default function PremiumConsultationWizard() {
       })
       return false
     }
+    if (currentStep === 3 && !formData.tcle_assinado) {
+      toast({
+        title: 'Assinatura Pendente',
+        description: 'Assine o TCLE ou clique no ícone Laboratorial para pular a Biorressonância.',
+        variant: 'destructive',
+      })
+      return false
+    }
     return true
   }
 
@@ -107,7 +115,16 @@ export default function PremiumConsultationWizard() {
     if (!validateStep()) return
 
     if (currentStep < totalSteps) {
-      setCurrentStep((s) => s + 1)
+      let nextStep = currentStep + 1
+      if (nextStep === 4 && !formData.tcle_assinado) {
+        toast({
+          title: 'Atenção',
+          description: 'Assine o TCLE no Passo 3 antes de acessar a Biorressonância.',
+          variant: 'destructive',
+        })
+        return
+      }
+      setCurrentStep(nextStep)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       toast({ title: 'Etapa concluída', description: 'Os dados foram salvos temporariamente.' })
     } else {
@@ -153,6 +170,16 @@ export default function PremiumConsultationWizard() {
                   className="flex flex-col items-center gap-2 bg-transparent px-2 relative z-10 cursor-pointer"
                   onClick={() => {
                     if (isPast || formData.patient_id) {
+                      if (step.id === 4 && !formData.tcle_assinado) {
+                        toast({
+                          title: 'TCLE Pendente',
+                          description:
+                            'Assine o TCLE no Passo 3 antes de acessar a Biorressonância.',
+                          variant: 'destructive',
+                        })
+                        setCurrentStep(3)
+                        return
+                      }
                       setCurrentStep(step.id)
                     }
                   }}

@@ -29,6 +29,7 @@ import {
   shouldShowQuestion,
   validateSection,
 } from './anamnesis/utils'
+import { SignaturePad } from '@/components/SignaturePad'
 
 interface Step2AnamneseProps {
   data?: any
@@ -137,6 +138,34 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
       onChangeRef.current({ anamnese_respostas_temporarias: answers })
     }
   }, [answers])
+
+  const handleSign = async (sig: { type: 'click' | 'draw'; data: string }) => {
+    if (!anamneseId) {
+      await performSave(false)
+      if (!anamneseId) return
+    }
+
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from('anamnese')
+        .update({ assinatura_paciente: sig })
+        .eq('anamnese_id', anamneseId)
+
+      if (error) throw error
+
+      toast({ title: '✓ Anamnese assinada com sucesso.' })
+      if (onChange) onChange({ anamnese_assinada: true })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao salvar assinatura',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const handleAnswerChange = (id: string, value: any) => {
     setAnswers((prev) => {
@@ -517,11 +546,31 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
               </div>
             </div>
           ) : (
-            <AnamnesisSummary
-              sections={sections}
-              answers={answers}
-              onEdit={(idx) => setCurrentStep(idx)}
-            />
+            <div className="space-y-8">
+              <AnamnesisSummary
+                sections={sections}
+                answers={answers}
+                onEdit={(idx) => setCurrentStep(idx)}
+              />
+
+              <div className="border-t border-border pt-8 mt-8">
+                <h3 className="text-xl font-bold text-primary mb-4">Assinatura do Paciente</h3>
+                {data?.anamnese_assinada ? (
+                  <div className="p-6 bg-green-50 border border-green-200 rounded-xl flex items-center gap-4 text-green-800">
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <div>
+                      <h4 className="font-semibold text-lg">Anamnese Assinada</h4>
+                      <p className="text-sm opacity-90">A assinatura foi registrada com sucesso.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <SignaturePad
+                    onSign={handleSign}
+                    patientName={patient?.nome_completo || data?.name || 'Paciente'}
+                  />
+                )}
+              </div>
+            </div>
           )}
 
           <div className="flex justify-between items-center pt-8 border-t">
