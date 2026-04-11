@@ -26,6 +26,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 const formSchema = z.object({
@@ -191,9 +192,9 @@ export default function Step1Client({ data, onChange }: Step1ClientProps) {
       </div>
 
       <div className="bg-card border rounded-lg p-4 shadow-sm">
-        <FormLabel className="text-base mb-2 block">
+        <Label className="text-base mb-2 block">
           Selecione um Paciente Existente ou Cadastre um Novo
-        </FormLabel>
+        </Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button

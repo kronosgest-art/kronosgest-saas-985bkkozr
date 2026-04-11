@@ -221,11 +221,16 @@ export type Database = {
         Row: {
           cpf: string | null
           created_at: string
+          data_nascimento: string | null
           email: string | null
+          endereco: string | null
           id: string
           last_consultation: string | null
           nome_completo: string
+          observacoes: string | null
           organization_id: string | null
+          profissao: string | null
+          sexo: string | null
           status: string | null
           telefone: string | null
           updated_at: string
@@ -234,11 +239,16 @@ export type Database = {
         Insert: {
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
+          endereco?: string | null
           id?: string
           last_consultation?: string | null
           nome_completo: string
+          observacoes?: string | null
           organization_id?: string | null
+          profissao?: string | null
+          sexo?: string | null
           status?: string | null
           telefone?: string | null
           updated_at?: string
@@ -247,11 +257,16 @@ export type Database = {
         Update: {
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
+          endereco?: string | null
           id?: string
           last_consultation?: string | null
           nome_completo?: string
+          observacoes?: string | null
           organization_id?: string | null
+          profissao?: string | null
+          sexo?: string | null
           status?: string | null
           telefone?: string | null
           updated_at?: string
@@ -576,6 +591,11 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   status: text (nullable, default: 'Ativo'::text)
 //   last_consultation: timestamp with time zone (nullable)
+//   data_nascimento: date (nullable)
+//   sexo: text (nullable)
+//   endereco: text (nullable)
+//   profissao: text (nullable)
+//   observacoes: text (nullable)
 // Table: patients
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
