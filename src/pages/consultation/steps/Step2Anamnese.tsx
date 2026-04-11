@@ -282,7 +282,32 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
         .eq('id', patientId)
         .single()
         .then(({ data }) => {
-          if (data) setPatient(data)
+          if (data) {
+            setPatient(data)
+            setAnswers((prev) => {
+              const newAnswers = { ...prev }
+              const anyData = data as any
+              let modified = false
+              if (!newAnswers['dp_nome'] && anyData.nome_completo) {
+                newAnswers['dp_nome'] = anyData.nome_completo
+                modified = true
+              }
+              if (!newAnswers['dp_email'] && anyData.email) {
+                newAnswers['dp_email'] = anyData.email
+                modified = true
+              }
+              if (!newAnswers['dp_tel'] && anyData.telefone) {
+                newAnswers['dp_tel'] = anyData.telefone
+                modified = true
+              }
+              if (!newAnswers['dp_nasc'] && anyData.data_nascimento) {
+                newAnswers['dp_nasc'] = anyData.data_nascimento
+                modified = true
+              }
+
+              return modified ? newAnswers : prev
+            })
+          }
         })
     }
   }, [patientId])

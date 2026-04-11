@@ -636,13 +636,13 @@ export const Constants = {
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: agendamentos
-//   Policy "authenticated_all_agendamentos" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "agendamentos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
 // Table: anamnese
-//   Policy "authenticated_all_anamnese" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "anamnese_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = anamnese.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = anamnese.patient_id) AND (pacientes.user_id = auth.uid()))))
 // Table: anamnese_templates
 //   Policy "Users can delete their own templates" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
@@ -653,9 +653,9 @@ export const Constants = {
 //   Policy "Users can view their own templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
 // Table: exames
-//   Policy "authenticated_all_exames" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "exames_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))
 // Table: leads
 //   Policy "Users can delete their own leads" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
@@ -667,21 +667,21 @@ export const Constants = {
 //   Policy "Users can view their own leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
 // Table: pacientes
-//   Policy "authenticated_all_pacientes" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
 // Table: patients
-//   Policy "authenticated_all_patients" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "patients_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
 // Table: prescricoes
-//   Policy "authenticated_all_prescricoes" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "prescricoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
 // Table: tcle_assinado
-//   Policy "authenticated_all_tcle_assinado" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION handle_new_profissional_template()

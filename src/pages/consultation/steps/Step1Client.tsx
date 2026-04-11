@@ -15,8 +15,18 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
-import { useState } from 'react'
-import { Loader2, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Loader2, User, Check, ChevronsUpDown } from 'lucide-react'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 const formSchema = z.object({
   nome_completo: z.string().min(3, 'Nome muito curto'),
@@ -37,8 +47,25 @@ interface Step1ClientProps {
 
 export default function Step1Client({ data, onChange }: Step1ClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [existingPatients, setExistingPatients] = useState<any[]>([])
+  const [selectedExistingId, setSelectedExistingId] = useState<string>('new')
+  const [open, setOpen] = useState(false)
+
   const { toast } = useToast()
   const { user } = useAuth()
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (!user) return
+      const { data } = await supabase
+        .from('pacientes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('nome_completo')
+      if (data) setExistingPatients(data)
+    }
+    fetchPatients()
+  }, [user])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,28 +85,53 @@ export default function Step1Client({ data, onChange }: Step1ClientProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      const { data: responseData, error } = await supabase.functions.invoke('create-paciente', {
-        body: {
-          ...values,
-          user_id: user?.id,
-          organization_id: null,
-        },
-      })
+      if (selectedExistingId !== 'new') {
+        const { data: updateData, error } = await supabase
+          .from('pacientes')
+          .update({
+            nome_completo: values.nome_completo,
+            cpf: values.cpf || null,
+            email: values.email || null,
+            telefone: values.telefone || null,
+            data_nascimento: values.dataNascimento || null,
+            sexo: values.sexo || null,
+            endereco: values.endereco || null,
+            profissao: values.profissao || null,
+            observacoes: values.obs || null,
+          })
+          .eq('id', selectedExistingId)
+          .select()
+          .single()
 
-      if (error) throw error
-      if (responseData && responseData.error) throw new Error(responseData.error)
+        if (error) throw error
 
-      toast({
-        title: 'Sucesso',
-        description: 'Paciente salvo com sucesso!',
-      })
-
-      if (responseData && responseData.data) {
+        toast({ title: 'Sucesso', description: 'Dados do paciente atualizados com sucesso!' })
         onChange?.({
-          patient_id: responseData.data.id,
-          name: responseData.data.nome_completo,
-          cpf: responseData.data.cpf,
+          patient_id: updateData.id,
+          name: updateData.nome_completo,
+          cpf: updateData.cpf,
         })
+      } else {
+        const { data: responseData, error } = await supabase.functions.invoke('create-paciente', {
+          body: {
+            ...values,
+            user_id: user?.id,
+            organization_id: null,
+          },
+        })
+
+        if (error) throw error
+        if (responseData && responseData.error) throw new Error(responseData.error)
+
+        toast({ title: 'Sucesso', description: 'Paciente salvo com sucesso!' })
+
+        if (responseData && responseData.data) {
+          onChange?.({
+            patient_id: responseData.data.id,
+            name: responseData.data.nome_completo,
+            cpf: responseData.data.cpf,
+          })
+        }
       }
     } catch (error: any) {
       console.error(error)
@@ -115,6 +167,7 @@ export default function Step1Client({ data, onChange }: Step1ClientProps) {
             onClick={() => {
               onChange?.({ patient_id: null, name: '', cpf: '' })
               form.reset()
+              setSelectedExistingId('new')
             }}
             variant="outline"
             className="mt-6 border-green-300 text-green-700 hover:bg-green-100 hover:text-green-800"
@@ -128,11 +181,103 @@ export default function Step1Client({ data, onChange }: Step1ClientProps) {
 
   return (
     <div className="space-y-6 animate-slide-in-right">
-      <div>
-        <h2 className="text-2xl font-semibold text-primary">Cadastro de Cliente</h2>
-        <p className="text-muted-foreground">
-          Preencha os dados básicos do paciente para iniciar o prontuário.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-primary">Cadastro de Cliente</h2>
+          <p className="text-muted-foreground">
+            Preencha os dados básicos do paciente para iniciar o prontuário.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-card border rounded-lg p-4 shadow-sm">
+        <FormLabel className="text-base mb-2 block">
+          Selecione um Paciente Existente ou Cadastre um Novo
+        </FormLabel>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between md:w-[400px] h-12 bg-white"
+            >
+              {selectedExistingId === 'new'
+                ? 'Novo Paciente (Cadastrar)'
+                : existingPatients.find((p) => p.id === selectedExistingId)?.nome_completo ||
+                  'Selecione o paciente...'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full md:w-[400px] p-0">
+            <Command>
+              <CommandInput placeholder="Buscar paciente..." />
+              <CommandList>
+                <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="novo paciente cadastrar"
+                    onSelect={() => {
+                      setSelectedExistingId('new')
+                      form.reset({
+                        nome_completo: '',
+                        cpf: '',
+                        email: '',
+                        telefone: '',
+                        dataNascimento: '',
+                        sexo: '',
+                        endereco: '',
+                        profissao: '',
+                        obs: '',
+                      })
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        selectedExistingId === 'new' ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    Novo Paciente (Cadastrar)
+                  </CommandItem>
+                  {existingPatients.map((p) => {
+                    const anyP = p as any
+                    return (
+                      <CommandItem
+                        key={p.id}
+                        value={`${p.nome_completo} ${p.cpf || ''}`}
+                        onSelect={() => {
+                          setSelectedExistingId(p.id)
+                          form.reset({
+                            nome_completo: anyP.nome_completo || '',
+                            cpf: anyP.cpf || '',
+                            email: anyP.email || '',
+                            telefone: anyP.telefone || '',
+                            dataNascimento: anyP.data_nascimento || '',
+                            sexo: anyP.sexo || '',
+                            endereco: anyP.endereco || '',
+                            profissao: anyP.profissao || '',
+                            obs: anyP.observacoes || '',
+                          })
+                          setOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            selectedExistingId === p.id ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
+                        {p.nome_completo} {p.cpf ? `(${p.cpf})` : ''}
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Form {...form}>
