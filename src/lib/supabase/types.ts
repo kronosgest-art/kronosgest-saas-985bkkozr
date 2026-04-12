@@ -436,6 +436,7 @@ export type Database = {
           contraindicacoes: string | null
           created_at: string
           criado_por: string | null
+          desconto_progressivo: string | null
           descricao: string | null
           duracao: string | null
           duracao_sessao: string | null
@@ -453,6 +454,7 @@ export type Database = {
           tipo_tcle: string | null
           updated_at: string
           user_id: string | null
+          valor_sessao_avulsa: number | null
           valor_total: number | null
           vezes_prescrito: number | null
         }
@@ -462,6 +464,7 @@ export type Database = {
           contraindicacoes?: string | null
           created_at?: string
           criado_por?: string | null
+          desconto_progressivo?: string | null
           descricao?: string | null
           duracao?: string | null
           duracao_sessao?: string | null
@@ -479,6 +482,7 @@ export type Database = {
           tipo_tcle?: string | null
           updated_at?: string
           user_id?: string | null
+          valor_sessao_avulsa?: number | null
           valor_total?: number | null
           vezes_prescrito?: number | null
         }
@@ -488,6 +492,7 @@ export type Database = {
           contraindicacoes?: string | null
           created_at?: string
           criado_por?: string | null
+          desconto_progressivo?: string | null
           descricao?: string | null
           duracao?: string | null
           duracao_sessao?: string | null
@@ -505,6 +510,7 @@ export type Database = {
           tipo_tcle?: string | null
           updated_at?: string
           user_id?: string | null
+          valor_sessao_avulsa?: number | null
           valor_total?: number | null
           vezes_prescrito?: number | null
         }
@@ -821,6 +827,8 @@ export const Constants = {
 //   beneficios_esperados: text (nullable)
 //   apenas_pacote_fechado: boolean (nullable, default: true)
 //   criado_por: uuid (nullable)
+//   valor_sessao_avulsa: numeric (nullable)
+//   desconto_progressivo: text (nullable)
 // Table: tcle_assinado
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)

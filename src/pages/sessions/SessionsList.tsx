@@ -7,7 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Calendar, Clock, User, CheckCircle2, XCircle, Clock3, Edit2, Loader2 } from 'lucide-react'
+import {
+  Calendar,
+  Clock,
+  User,
+  CheckCircle2,
+  XCircle,
+  Clock3,
+  Edit2,
+  Loader2,
+  Lightbulb,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -15,6 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { Link } from 'react-router-dom'
 import {
   Select,
   SelectContent,
@@ -32,6 +43,23 @@ export default function SessionsList() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingSession, setEditingSession] = useState<any>(null)
+  const [protocols, setProtocols] = useState<any[]>([])
+
+  useEffect(() => {
+    const loadProtocols = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('protocolos')
+          .select('id, nome, valor_total, valor_sessao_avulsa, numero_sessoes')
+          .not('valor_sessao_avulsa', 'is', null)
+          .not('valor_total', 'is', null)
+          .not('numero_sessoes', 'is', null)
+
+        if (data) setProtocols(data)
+      }
+    }
+    loadProtocols()
+  }, [user])
 
   useEffect(() => {
     if (user) loadSessions()
@@ -97,6 +125,43 @@ export default function SessionsList() {
       setSaving(false)
     }
   }
+
+  const getSuggestionData = () => {
+    if (!editingSession || protocols.length === 0) return null
+
+    let match = protocols.find((p) =>
+      p.nome.toLowerCase().includes(editingSession.tipo_consulta?.toLowerCase() || ''),
+    )
+
+    if (!match) {
+      match = protocols[0]
+    }
+
+    if (!match) return null
+
+    const avulsa = Number(match.valor_sessao_avulsa)
+    const total = Number(match.valor_total)
+    const sessoes = Number(match.numero_sessoes)
+
+    if (!avulsa || !total || !sessoes) return null
+
+    const custoPorSessaoPacote = total / sessoes
+    const economia = avulsa * sessoes - total
+
+    if (economia <= 0) return null
+
+    return {
+      nome: match.nome,
+      sessoes,
+      total,
+      avulsa,
+      custoPorSessaoPacote,
+      economia,
+      id: match.id,
+    }
+  }
+
+  const suggestion = getSuggestionData()
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -235,6 +300,47 @@ export default function SessionsList() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {suggestion && (
+                <div className="mt-6 p-4 rounded-lg bg-[#1E3A8A]/5 border border-[#1E3A8A]/20 animate-fade-in-up">
+                  <div className="flex gap-3 items-start">
+                    <div className="mt-1">
+                      <Lightbulb className="h-6 w-6 text-[#B8860B]" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        <strong className="text-[#1E3A8A] font-semibold block mb-1 text-base">
+                          💡 Sugestão: Protocolo {suggestion.nome}
+                        </strong>
+                        - {suggestion.sessoes} sessões por R${' '}
+                        {suggestion.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (R${' '}
+                        {suggestion.custoPorSessaoPacote.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                        })}
+                        /sessão) vs. Sessão Avulsa R${' '}
+                        {suggestion.avulsa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.
+                        <br />
+                        <strong className="text-[#B8860B] font-semibold mt-1 inline-block">
+                          Economize R${' '}
+                          {suggestion.economia.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                          })}{' '}
+                          comprando o pacote!
+                        </strong>
+                      </p>
+                      <div className="pt-2">
+                        <Button
+                          asChild
+                          size="sm"
+                          className="bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 transition-colors"
+                        >
+                          <Link to="/protocols">Ver Protocolo</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

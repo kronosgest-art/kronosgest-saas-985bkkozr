@@ -14,6 +14,11 @@ export interface Protocol {
   is_padrao: boolean
   vezes_prescrito?: number
   created_at?: string
+  valor_total?: number
+  valor_sessao_avulsa?: number
+  desconto_progressivo?: string
+  beneficios_esperados?: string
+  numero_sessoes?: number
 }
 
 export function useProtocols() {
