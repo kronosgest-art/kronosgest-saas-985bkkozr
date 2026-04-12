@@ -34,9 +34,32 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    let promptContext = `Gerar sugestão de prescrição médica baseada em evidências, seguindo as diretrizes da SBPC/ML e SPC para o paciente.\n\n`
+    const authHeader = req.headers.get('Authorization')
+    let userId = null
+    let profissionalContext = ''
 
-    // Buscar histórico do paciente
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser(token)
+      if (user) {
+        userId = user.id
+        const { data: prof } = await supabase
+          .from('profissionais')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+
+        if (prof) {
+          profissionalContext = `Profissional: ${prof.nome_completo}\nEspecialidade: ${prof.especialidade || 'Não informada'}\nRegistro: ${prof.tipo_registro} ${prof.numero_registro || prof.cpf || ''}\n\n`
+        }
+      }
+    }
+
+    let promptContext = `Gerar sugestão de prescrição suplementar baseada em evidências, seguindo as diretrizes da SBPC/ML e SPC para o paciente.\n\n`
+    promptContext += profissionalContext
+
     const { data: patientData } = await supabase
       .from('pacientes')
       .select('*')
@@ -50,7 +73,6 @@ Deno.serve(async (req: Request) => {
       promptContext += `Dados do Paciente:\nNome: ${patientData.nome_completo}\nIdade: ${age}\nSexo: ${patientData.sexo || 'N/A'}\nHistórico/Observações: ${patientData.observacoes || 'N/A'}\n\n`
     }
 
-    // Buscar anamnese
     if (anamnese_id) {
       const { data: anamneseData } = await supabase
         .from('anamnese')
@@ -63,7 +85,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Buscar interpretação dos exames
     if (exames_ids && exames_ids.length > 0) {
       const { data: examesData } = await supabase
         .from('exames')
@@ -80,9 +101,12 @@ Deno.serve(async (req: Request) => {
       throw new Error('OPENAI_API_KEY não configurada no servidor.')
     }
 
-    const prompt = `Você é um médico especialista. A partir dos dados clínicos abaixo, gere uma sugestão de prescrição médica baseada nas diretrizes da SBPC/ML (Sociedade Brasileira de Patologia Clínica/Medicina Laboratorial) e SPC (Sociedade Paulista de Cardiologia ou diretrizes cardiológicas pertinentes).
+    const prompt = `Você é um especialista. A partir dos dados clínicos abaixo, gere uma sugestão de prescrição baseada nas diretrizes da SBPC/ML e SPC.
     
-    Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
+    REGRAS CRÍTICAS DE PRESCRIÇÃO:
+    1. NUNCA sugira medicamentos alopáticos ou prescritos (ex: antibióticos, anti-hipertensivos, etc).
+    2. O foco deve ser EXCLUSIVAMENTE em SUPLEMENTAÇÃO (vitaminas, minerais, nutracêuticos, fitoterápicos) e orientações de estilo de vida.
+    3. Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
     Não use marcações markdown como \`\`\` nos extremos, apenas o texto puro formatado para leitura.\n\n${promptContext}`
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

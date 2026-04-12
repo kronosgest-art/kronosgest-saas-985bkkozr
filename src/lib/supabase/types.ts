@@ -274,39 +274,6 @@ export type Database = {
         }
         Relationships: []
       }
-      patients: {
-        Row: {
-          cpf: string | null
-          created_at: string
-          id: string
-          last_consultation: string | null
-          name: string
-          status: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          cpf?: string | null
-          created_at?: string
-          id?: string
-          last_consultation?: string | null
-          name: string
-          status?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          cpf?: string | null
-          created_at?: string
-          id?: string
-          last_consultation?: string | null
-          name?: string
-          status?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       prescricoes: {
         Row: {
           anamnese_id: string | null
@@ -596,15 +563,6 @@ export const Constants = {
 //   endereco: text (nullable)
 //   profissao: text (nullable)
 //   observacoes: text (nullable)
-// Table: patients
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (nullable)
-//   name: text (not null)
-//   cpf: text (nullable)
-//   status: text (nullable, default: 'ativo'::text)
-//   last_consultation: timestamp with time zone (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
 // Table: prescricoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -644,9 +602,6 @@ export const Constants = {
 //   UNIQUE pacientes_email_key: UNIQUE (email)
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY pacientes_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-// Table: patients
-//   PRIMARY KEY patients_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY patients_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: prescricoes
 //   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
@@ -688,10 +643,6 @@ export const Constants = {
 //     USING: (auth.uid() = user_id)
 // Table: pacientes
 //   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (user_id = auth.uid())
-//     WITH CHECK: (user_id = auth.uid())
-// Table: patients
-//   Policy "patients_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
 // Table: prescricoes
