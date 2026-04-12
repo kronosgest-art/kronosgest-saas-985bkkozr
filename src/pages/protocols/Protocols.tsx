@@ -37,6 +37,10 @@ const protocolSchema = z
     frequencia: z.string().min(1, 'A frequência é obrigatória'),
     duracao_sessao: z.string().min(1, 'A duração da sessão é obrigatória'),
     valor_total: z.string().min(1, 'O valor total é obrigatório'),
+    valor_sessao_avulsa: z.string().optional(),
+    desconto_progressivo: z.string().optional(),
+    beneficios_esperados: z.string().optional(),
+    contraindicacoes: z.string().optional(),
     tipo_tcle: z.string().min(1, 'Selecione um TCLE'),
     tcle_outro: z.string().optional(),
   })
@@ -68,6 +72,10 @@ type Protocol = {
   frequencia: string | null
   duracao_sessao: string | null
   valor_total: number | null
+  valor_sessao_avulsa: number | null
+  desconto_progressivo: string | null
+  beneficios_esperados: string | null
+  contraindicacoes: string | null
   tipo_tcle: string | null
   tcle_outro: string | null
 }
@@ -89,6 +97,10 @@ export default function Protocols() {
       frequencia: '',
       duracao_sessao: '',
       valor_total: '',
+      valor_sessao_avulsa: '',
+      desconto_progressivo: '',
+      beneficios_esperados: '',
+      contraindicacoes: '',
       tipo_tcle: '',
       tcle_outro: '',
     },
@@ -121,6 +133,9 @@ export default function Protocols() {
     if (!user) return
 
     const valorNumerico = parseFloat(data.valor_total.replace(/\./g, '').replace(',', '.') || '0')
+    const valorAvulsoNumerico = data.valor_sessao_avulsa
+      ? parseFloat(data.valor_sessao_avulsa.replace(/\./g, '').replace(',', '.'))
+      : null
 
     const payload = {
       nome: data.nome_protocolo,
@@ -131,6 +146,10 @@ export default function Protocols() {
       frequencia: data.frequencia,
       duracao_sessao: data.duracao_sessao,
       valor_total: valorNumerico,
+      valor_sessao_avulsa: valorAvulsoNumerico,
+      desconto_progressivo: data.desconto_progressivo,
+      beneficios_esperados: data.beneficios_esperados,
+      contraindicacoes: data.contraindicacoes,
       tipo_tcle: data.tipo_tcle,
       tcle_outro: data.tcle_outro,
       criado_por: user.id,
@@ -173,6 +192,12 @@ export default function Protocols() {
       valor_total: protocol.valor_total
         ? protocol.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
         : '',
+      valor_sessao_avulsa: protocol.valor_sessao_avulsa
+        ? protocol.valor_sessao_avulsa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+        : '',
+      desconto_progressivo: protocol.desconto_progressivo || '',
+      beneficios_esperados: protocol.beneficios_esperados || '',
+      contraindicacoes: protocol.contraindicacoes || '',
       tipo_tcle: protocol.tipo_tcle || '',
       tcle_outro: protocol.tcle_outro || '',
     })
@@ -343,16 +368,87 @@ export default function Protocols() {
                     )}
                   />
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-1 md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="valor_total"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-semibold text-[#B8860B]">
+                            Valor Total (Pacote R$) *
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="ex: 2500,00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="valor_sessao_avulsa"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-semibold text-slate-700">
+                            Valor Sessão Avulsa (R$)
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="ex: 350,00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="valor_total"
+                    name="desconto_progressivo"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold text-[#B8860B]">
-                          Valor Total (Pacote R$) *
+                      <FormItem className="col-span-1 md:col-span-2">
+                        <FormLabel className="font-semibold text-slate-700">
+                          Desconto Progressivo / Regras
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="ex: 2500,00" {...field} />
+                          <Input placeholder="ex: 5 sessões = 10% desc" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="beneficios_esperados"
+                    render={({ field }) => (
+                      <FormItem className="col-span-1 md:col-span-2">
+                        <FormLabel className="font-semibold text-slate-700">
+                          Benefícios Esperados
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Descreva os benefícios esperados deste protocolo..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contraindicacoes"
+                    render={({ field }) => (
+                      <FormItem className="col-span-1 md:col-span-2">
+                        <FormLabel className="font-semibold text-slate-700">
+                          Contraindicações
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Liste as contraindicações deste protocolo..."
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -511,19 +607,49 @@ export default function Protocols() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <p className="inline-flex items-center text-xs bg-[#B8860B]/10 text-[#B8860B] px-2 py-1 rounded-md font-medium">
-                      <FileText className="w-3 h-3 mr-1.5" />
-                      {p.tipo_tcle === 'Outro (especificar)'
-                        ? p.tcle_outro
-                        : p.tipo_tcle || 'Nenhum TCLE'}
-                    </p>
-                    <p className="font-bold text-[#1E3A8A]">
-                      R${' '}
-                      {p.valor_total
-                        ? p.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                        : '0,00'}
-                    </p>
+                  <div className="pt-3 mt-3 border-t space-y-3">
+                    <div className="flex flex-col gap-1.5 bg-slate-50/80 p-3 rounded-lg border border-slate-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Pacote ({p.numero_sessoes || 0}x)
+                        </span>
+                        <span className="font-bold text-[#1E3A8A] text-base">
+                          R${' '}
+                          {p.valor_total
+                            ? p.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                            : '0,00'}
+                        </span>
+                      </div>
+
+                      {p.valor_sessao_avulsa && (
+                        <div className="flex justify-between items-center border-t border-slate-200/60 pt-1.5">
+                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            Sessão Avulsa
+                          </span>
+                          <span className="font-semibold text-slate-700">
+                            R${' '}
+                            {p.valor_sessao_avulsa.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
+                      )}
+
+                      {p.desconto_progressivo && (
+                        <div className="text-xs text-[#B8860B] bg-[#B8860B]/5 py-1 px-2 rounded mt-1 font-medium border border-[#B8860B]/10">
+                          {p.desconto_progressivo}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="inline-flex items-center text-xs bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-md font-medium">
+                        <FileText className="w-3 h-3 mr-1.5" />
+                        {p.tipo_tcle === 'Outro (especificar)'
+                          ? p.tcle_outro
+                          : p.tipo_tcle || 'Nenhum TCLE'}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

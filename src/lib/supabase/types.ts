@@ -431,45 +431,81 @@ export type Database = {
       }
       protocolos: {
         Row: {
+          apenas_pacote_fechado: boolean | null
+          beneficios_esperados: string | null
           contraindicacoes: string | null
           created_at: string
+          criado_por: string | null
           descricao: string | null
           duracao: string | null
+          duracao_sessao: string | null
+          frequencia: string | null
           id: string
+          indicacao: string | null
           is_padrao: boolean | null
           nome: string
+          nome_protocolo: string | null
+          numero_sessoes: number | null
           suplementos: string | null
+          tcle_outro: string | null
           tipo: string | null
+          tipo_aplicacao: string | null
+          tipo_tcle: string | null
           updated_at: string
           user_id: string | null
+          valor_total: number | null
           vezes_prescrito: number | null
         }
         Insert: {
+          apenas_pacote_fechado?: boolean | null
+          beneficios_esperados?: string | null
           contraindicacoes?: string | null
           created_at?: string
+          criado_por?: string | null
           descricao?: string | null
           duracao?: string | null
+          duracao_sessao?: string | null
+          frequencia?: string | null
           id?: string
+          indicacao?: string | null
           is_padrao?: boolean | null
           nome: string
+          nome_protocolo?: string | null
+          numero_sessoes?: number | null
           suplementos?: string | null
+          tcle_outro?: string | null
           tipo?: string | null
+          tipo_aplicacao?: string | null
+          tipo_tcle?: string | null
           updated_at?: string
           user_id?: string | null
+          valor_total?: number | null
           vezes_prescrito?: number | null
         }
         Update: {
+          apenas_pacote_fechado?: boolean | null
+          beneficios_esperados?: string | null
           contraindicacoes?: string | null
           created_at?: string
+          criado_por?: string | null
           descricao?: string | null
           duracao?: string | null
+          duracao_sessao?: string | null
+          frequencia?: string | null
           id?: string
+          indicacao?: string | null
           is_padrao?: boolean | null
           nome?: string
+          nome_protocolo?: string | null
+          numero_sessoes?: number | null
           suplementos?: string | null
+          tcle_outro?: string | null
           tipo?: string | null
+          tipo_aplicacao?: string | null
+          tipo_tcle?: string | null
           updated_at?: string
           user_id?: string | null
+          valor_total?: number | null
           vezes_prescrito?: number | null
         }
         Relationships: []
@@ -773,6 +809,18 @@ export const Constants = {
 //   vezes_prescrito: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   nome_protocolo: text (nullable)
+//   indicacao: text (nullable)
+//   numero_sessoes: integer (nullable)
+//   tipo_aplicacao: text (nullable)
+//   frequencia: text (nullable)
+//   duracao_sessao: text (nullable)
+//   valor_total: numeric (nullable)
+//   tipo_tcle: text (nullable)
+//   tcle_outro: text (nullable)
+//   beneficios_esperados: text (nullable)
+//   apenas_pacote_fechado: boolean (nullable, default: true)
+//   criado_por: uuid (nullable)
 // Table: tcle_assinado
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -815,6 +863,7 @@ export const Constants = {
 //   PRIMARY KEY profissionais_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY profissionais_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: protocolos
+//   FOREIGN KEY protocolos_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: tcle_assinado
@@ -877,8 +926,8 @@ export const Constants = {
 //     USING: true
 // Table: protocolos
 //   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: ((user_id = auth.uid()) OR (is_padrao = true))
-//     WITH CHECK: ((user_id = auth.uid()) OR (is_padrao = true))
+//     USING: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
+//     WITH CHECK: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
 // Table: tcle_assinado
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
