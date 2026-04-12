@@ -429,6 +429,51 @@ export type Database = {
           },
         ]
       }
+      protocolos: {
+        Row: {
+          contraindicacoes: string | null
+          created_at: string
+          descricao: string | null
+          duracao: string | null
+          id: string
+          is_padrao: boolean | null
+          nome: string
+          suplementos: string | null
+          tipo: string | null
+          updated_at: string
+          user_id: string | null
+          vezes_prescrito: number | null
+        }
+        Insert: {
+          contraindicacoes?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          is_padrao?: boolean | null
+          nome: string
+          suplementos?: string | null
+          tipo?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vezes_prescrito?: number | null
+        }
+        Update: {
+          contraindicacoes?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          is_padrao?: boolean | null
+          nome?: string
+          suplementos?: string | null
+          tipo?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vezes_prescrito?: number | null
+        }
+        Relationships: []
+      }
       tcle_assinado: {
         Row: {
           assinatura: string
@@ -715,6 +760,19 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   google_calendar_id: text (nullable)
+// Table: protocolos
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   nome: text (not null)
+//   tipo: text (nullable)
+//   duracao: text (nullable)
+//   descricao: text (nullable)
+//   suplementos: text (nullable)
+//   contraindicacoes: text (nullable)
+//   is_padrao: boolean (nullable, default: false)
+//   vezes_prescrito: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: tcle_assinado
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -756,6 +814,9 @@ export const Constants = {
 //   FOREIGN KEY profissionais_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY profissionais_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY profissionais_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: protocolos
+//   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: tcle_assinado
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
@@ -814,6 +875,10 @@ export const Constants = {
 //     USING: true
 //   Policy "authenticated_update_prof" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: protocolos
+//   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((user_id = auth.uid()) OR (is_padrao = true))
+//     WITH CHECK: ((user_id = auth.uid()) OR (is_padrao = true))
 // Table: tcle_assinado
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))

@@ -12,6 +12,7 @@ import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
 import PatientsList from '@/pages/patients/PatientsList'
 import PrescriptionsList from '@/pages/prescriptions/PrescriptionsList'
+import Protocols from '@/pages/protocols/Protocols'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import Settings from '@/pages/settings/Settings'
 import SessionsList from '@/pages/sessions/SessionsList'
@@ -42,7 +43,7 @@ const App = () => (
             <Route path="/exams/biochemical" element={<BiochemicalExams />} />
             <Route path="/exams/biophysical" element={<BiophysicalExams />} />
             <Route path="/prescriptions" element={<PrescriptionsList />} />
-            <Route path="/protocols" element={<FeaturePlaceholder title="Protocolos" />} />
+            <Route path="/protocols" element={<Protocols />} />
             <Route path="/sessions" element={<SessionsList />} />
             <Route path="/reports" element={<FeaturePlaceholder title="Relatórios" />} />
 
