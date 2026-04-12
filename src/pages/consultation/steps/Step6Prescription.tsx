@@ -76,6 +76,58 @@ export default function Step6Prescription({
     }
   }
 
+  const handlePrint = () => {
+    if (!prescriptionText.trim()) {
+      toast({ title: 'Aviso', description: 'O receituário está vazio.', variant: 'destructive' })
+      return
+    }
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receituário Médico</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+              .header { text-align: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 20px; margin-bottom: 30px; }
+              .header h1 { margin: 0; color: #1E3A8A; }
+              .content { white-space: pre-wrap; font-size: 14px; }
+              .footer { margin-top: 50px; text-align: center; border-top: 1px solid #ccc; padding-top: 20px; font-size: 12px; color: #666; }
+              .signature { margin-top: 80px; text-align: center; }
+              .signature-line { width: 300px; border-bottom: 1px solid #333; margin: 0 auto 10px auto; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Receituário</h1>
+              <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+            </div>
+            <div class="content">${prescriptionText}</div>
+            <div class="signature">
+              <div class="signature-line"></div>
+              <p>Assinatura e Carimbo do Profissional</p>
+            </div>
+            <div class="footer">
+              Este documento é de uso pessoal e intransferível.
+            </div>
+            <script>
+              window.onload = () => { window.print(); window.close(); }
+            </script>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+    }
+  }
+
+  const handlePdf = () => {
+    toast({
+      title: 'Dica',
+      description: 'Na janela de impressão, escolha "Salvar como PDF" como destino.',
+    })
+    handlePrint()
+  }
+
   const handleSave = async () => {
     if (!activePatientId) {
       toast({ title: 'Aviso', description: 'Nenhum paciente selecionado.', variant: 'destructive' })
@@ -121,10 +173,10 @@ export default function Step6Prescription({
             )}
             Gerar Sugestão IA
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" /> Imprimir
           </Button>
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={handlePdf}>
             <FileDown className="mr-2 h-4 w-4" /> PDF
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>

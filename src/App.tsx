@@ -11,6 +11,7 @@ import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationW
 import CRM from '@/pages/crm/CRM'
 import Financial from '@/pages/financial/Financial'
 import PatientsList from '@/pages/patients/PatientsList'
+import PrescriptionsList from '@/pages/prescriptions/PrescriptionsList'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import Settings from '@/pages/settings/Settings'
 import BiophysicalExams from '@/pages/exams/BiophysicalExams'
@@ -41,7 +42,7 @@ const App = () => (
               element={<FeaturePlaceholder title="Exames Bioquímicos" />}
             />
             <Route path="/exams/biophysical" element={<BiophysicalExams />} />
-            <Route path="/prescriptions" element={<FeaturePlaceholder title="Prescrições" />} />
+            <Route path="/prescriptions" element={<PrescriptionsList />} />
             <Route path="/protocols" element={<FeaturePlaceholder title="Protocolos" />} />
             <Route path="/sessions" element={<FeaturePlaceholder title="Sessões" />} />
             <Route path="/reports" element={<FeaturePlaceholder title="Relatórios" />} />

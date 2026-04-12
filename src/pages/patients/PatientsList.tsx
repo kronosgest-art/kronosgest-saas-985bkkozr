@@ -13,6 +13,7 @@ import {
   FileText,
   FileSignature,
   BrainCircuit,
+  Pill,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -153,8 +154,13 @@ export default function PatientsList() {
         .select('*')
         .eq('patient_id', patient.id)
         .order('data', { ascending: false })
+      const { data: prescricoes } = await supabase
+        .from('prescricoes')
+        .select('*')
+        .eq('patient_id', patient.id)
+        .order('created_at', { ascending: false })
 
-      setPatientRecord({ anamneses, exames, agendamentos })
+      setPatientRecord({ anamneses, exames, agendamentos, prescricoes })
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar prontuário',
@@ -408,6 +414,36 @@ export default function PatientsList() {
                     </ul>
                   ) : (
                     <p className="text-sm text-muted-foreground">Nenhum agendamento.</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2 border-b pb-2">
+                    <Pill className="w-4 h-4 text-primary" /> Prescrições
+                  </h4>
+                  {patientRecord.prescricoes?.length > 0 ? (
+                    <ul className="space-y-3">
+                      {patientRecord.prescricoes.map((p: any) => (
+                        <li
+                          key={p.id}
+                          className="p-3 bg-white border border-l-4 border-l-amber-500 rounded-lg shadow-sm space-y-2"
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="font-medium text-sm">Receituário</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          {p.conteudo_json?.prescricao && (
+                            <div className="bg-muted/30 p-2 rounded text-xs text-slate-700 whitespace-pre-wrap max-h-40 overflow-y-auto mt-2 font-mono">
+                              {p.conteudo_json.prescricao}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhuma prescrição salva.</p>
                   )}
                 </div>
 
