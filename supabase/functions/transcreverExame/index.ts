@@ -37,7 +37,12 @@ Deno.serve(async (req: Request) => {
     }
     const pdfBlob = await pdfResponse.blob()
     const pdfArrayBuffer = await pdfBlob.arrayBuffer()
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)))
+    const bytes = new Uint8Array(pdfArrayBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const base64Pdf = btoa(binary)
 
     const prompt =
       'Extraia e transcreva todo o texto deste documento PDF, preservando a estrutura dos dados do exame laboratorial de forma fiel.'

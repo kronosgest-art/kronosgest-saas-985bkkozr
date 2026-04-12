@@ -6,6 +6,6 @@
     "create-paciente": 3,
     "uploadExame": 1,
     "interpretarExame": 4,
-    "transcreverExame": 1
+    "transcreverExame": 2
   }
 }
