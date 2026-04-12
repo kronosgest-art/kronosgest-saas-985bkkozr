@@ -1,4 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { Buffer } from 'node:buffer'
+import pdfParse from 'npm:pdf-parse@1.1.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,52 +28,45 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY não configurada no servidor.')
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openAiApiKey) {
+      throw new Error('OPENAI_API_KEY não configurada no servidor.')
     }
 
     const pdfResponse = await fetch(arquivo_pdf_url)
     if (!pdfResponse.ok) {
       throw new Error('Não foi possível baixar o PDF do Storage.')
     }
-    const pdfBlob = await pdfResponse.blob()
-    const pdfArrayBuffer = await pdfBlob.arrayBuffer()
-    const bytes = new Uint8Array(pdfArrayBuffer)
-    let binary = ''
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i])
-    }
-    const base64Pdf = btoa(binary)
 
-    const prompt =
-      'Extraia e transcreva todo o texto deste documento PDF, preservando a estrutura dos dados do exame laboratorial de forma fiel.'
+    // Extraindo texto do PDF utilizando pdf-parse, pois a API de Chat Completions do GPT-4
+    // não suporta o envio direto de arquivos base64 (diferente do Gemini).
+    const pdfArrayBuffer = await pdfResponse.arrayBuffer()
+    const pdfBuffer = Buffer.from(pdfArrayBuffer)
+    const pdfData = await pdfParse(pdfBuffer)
+    const rawText = pdfData.text || ''
 
-    const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: prompt },
-                { inlineData: { mimeType: 'application/pdf', data: base64Pdf } },
-              ],
-            },
-          ],
-        }),
+    const prompt = `Extraia e transcreva todo o texto a seguir (proveniente de um exame laboratorial em PDF), preservando a estrutura dos dados de forma fiel. Corrija eventuais erros de espaçamento da extração original.\n\nTexto original:\n${rawText}`
+
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openAiApiKey}`,
       },
-    )
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+      }),
+    })
 
     if (!aiResponse.ok) {
       const err = await aiResponse.text()
-      throw new Error(`Erro na API do Gemini: ${err}`)
+      throw new Error(`Erro na API da OpenAI: ${err}`)
     }
 
     const data = await aiResponse.json()
-    const texto_extraido = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const texto_extraido = data.choices?.[0]?.message?.content || ''
 
     return new Response(JSON.stringify({ sucesso: true, texto_extraido }), {
       status: 200,

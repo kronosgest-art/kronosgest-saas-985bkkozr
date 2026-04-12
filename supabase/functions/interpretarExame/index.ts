@@ -24,9 +24,9 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY não configurada no servidor.')
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openAiApiKey) {
+      throw new Error('OPENAI_API_KEY não configurada no servidor.')
     }
 
     const prompt =
@@ -34,29 +34,27 @@ Deno.serve(async (req: Request) => {
         ? `Você é especialista em biorressonância. A partir dos seguintes dados do exame transcritos abaixo, liste as principais manifestações energéticas alteradas (usando linguagem de probabilidade) e recomende acompanhamento:\n\n${texto_exame}`
         : `Você é especialista em exames laboratoriais. A partir dos seguintes resultados transcritos abaixo, liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico:\n\n${texto_exame}`
 
-    const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openAiApiKey}`,
       },
-    )
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+      }),
+    })
 
     if (!aiResponse.ok) {
       const err = await aiResponse.text()
-      throw new Error(`Erro na API do Gemini: ${err}`)
+      throw new Error(`Erro na API da OpenAI: ${err}`)
     }
 
     const data = await aiResponse.json()
     const interpretacao_ia =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || 'Interpretação não retornou dados.'
+      data.choices?.[0]?.message?.content || 'Interpretação não retornou dados.'
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey =
