@@ -217,6 +217,48 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          horario_funcionamento: string | null
+          id: string
+          logo_url: string | null
+          nome: string
+          owner_id: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          horario_funcionamento?: string | null
+          id?: string
+          logo_url?: string | null
+          nome: string
+          owner_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          horario_funcionamento?: string | null
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          owner_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pacientes: {
         Row: {
           cpf: string | null
@@ -311,6 +353,59 @@ export type Database = {
             columns: ['patient_id']
             isOneToOne: false
             referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profissionais: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          especialidade: string | null
+          foto_url: string | null
+          id: string
+          nome_completo: string
+          numero_registro: string | null
+          organization_id: string | null
+          status: boolean | null
+          tipo_registro: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome_completo: string
+          numero_registro?: string | null
+          organization_id?: string | null
+          status?: boolean | null
+          tipo_registro?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome_completo?: string
+          numero_registro?: string | null
+          organization_id?: string | null
+          status?: boolean | null
+          tipo_registro?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profissionais_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -546,6 +641,18 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   phone: text (nullable)
 //   email: text (nullable)
+// Table: organizations
+//   id: uuid (not null, default: gen_random_uuid())
+//   owner_id: uuid (nullable)
+//   nome: text (not null)
+//   cnpj: text (nullable)
+//   telefone: text (nullable)
+//   email: text (nullable)
+//   endereco: text (nullable)
+//   horario_funcionamento: text (nullable)
+//   logo_url: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: pacientes
 //   id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (nullable)
@@ -570,6 +677,19 @@ export const Constants = {
 //   exames_ids: _uuid (nullable)
 //   conteudo_json: jsonb (nullable)
 //   arquivo_pdf_url: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+// Table: profissionais
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   organization_id: uuid (nullable)
+//   nome_completo: text (not null)
+//   cpf: text (nullable)
+//   tipo_registro: text (nullable)
+//   numero_registro: text (nullable)
+//   especialidade: text (nullable)
+//   foto_url: text (nullable)
+//   status: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 // Table: tcle_assinado
@@ -597,6 +717,9 @@ export const Constants = {
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: organizations
+//   FOREIGN KEY organizations_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: pacientes
 //   UNIQUE pacientes_cpf_key: UNIQUE (cpf)
 //   UNIQUE pacientes_email_key: UNIQUE (email)
@@ -605,6 +728,10 @@ export const Constants = {
 // Table: prescricoes
 //   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
+// Table: profissionais
+//   FOREIGN KEY profissionais_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY profissionais_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY profissionais_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: tcle_assinado
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
@@ -641,6 +768,13 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can view their own leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: organizations
+//   Policy "authenticated_insert_org" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_select_org" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_update_org" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: pacientes
 //   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
@@ -649,6 +783,13 @@ export const Constants = {
 //   Policy "prescricoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
+// Table: profissionais
+//   Policy "authenticated_insert_prof" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_select_prof" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_update_prof" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: tcle_assinado
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))

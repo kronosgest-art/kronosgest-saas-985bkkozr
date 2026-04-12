@@ -18,6 +18,7 @@ import {
   Filter,
   Star,
   User,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 
 export default function Layout() {
@@ -53,6 +54,7 @@ export default function Layout() {
     { to: '/sessions', label: 'Sessões', icon: Calendar },
     { to: '/financial', label: 'Financeiro', icon: FileText },
     { to: '/reports', label: 'Relatórios', icon: PieChart },
+    { to: '/settings', label: 'Configurações', icon: SettingsIcon },
     { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
   ]
 

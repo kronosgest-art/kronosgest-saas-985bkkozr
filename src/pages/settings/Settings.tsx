@@ -1,22 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { supabase } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -25,493 +12,329 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-
-const orgSchema = z.object({
-  id: z.string().optional(),
-  nome: z.string().min(1, 'Nome é obrigatório'),
-  cnpj: z.string().optional(),
-  telefone: z.string().optional(),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  endereco: z.string().optional(),
-  horario_funcionamento: z.string().optional(),
-  logo_url: z.string().optional(),
-})
-
-const profSchema = z.object({
-  id: z.string().optional(),
-  nome_completo: z.string().min(1, 'Nome é obrigatório'),
-  cpf: z.string().optional(),
-  tipo_registro: z.string().min(1, 'Tipo de registro é obrigatório'),
-  numero_registro: z.string().optional(),
-  especialidade: z.string().optional(),
-  foto_url: z.string().optional(),
-  status: z.boolean().default(true),
-})
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Settings() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [uploadingOrg, setUploadingOrg] = useState(false)
-  const [uploadingProf, setUploadingProf] = useState(false)
 
-  const orgForm = useForm<z.infer<typeof orgSchema>>({
-    resolver: zodResolver(orgSchema),
-    defaultValues: {
-      nome: '',
-      cnpj: '',
-      telefone: '',
-      email: '',
-      endereco: '',
-      horario_funcionamento: '',
-      logo_url: '',
-    },
+  const [orgId, setOrgId] = useState<string | null>(null)
+  const [clinicForm, setClinicForm] = useState({
+    nome: '',
+    cnpj: '',
+    telefone: '',
+    email: '',
+    endereco: '',
+    horario_funcionamento: '',
+    logo_url: '',
   })
 
-  const profForm = useForm<z.infer<typeof profSchema>>({
-    resolver: zodResolver(profSchema),
-    defaultValues: {
-      nome_completo: '',
-      cpf: '',
-      tipo_registro: 'Conselho de Classe',
-      numero_registro: '',
-      especialidade: '',
-      foto_url: '',
-      status: true,
-    },
+  const [profId, setProfId] = useState<string | null>(null)
+  const [profForm, setProfForm] = useState({
+    nome_completo: '',
+    cpf: '',
+    tipo_registro: 'Apenas CPF',
+    numero_registro: '',
+    especialidade: '',
+    foto_url: '',
+    status: true,
   })
-
-  const tipoRegistro = profForm.watch('tipo_registro')
 
   useEffect(() => {
-    if (!user) return
-
-    const loadData = async () => {
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('owner_id', user.id)
-        .single()
-
-      if (org) {
-        orgForm.reset({
-          id: org.id,
-          nome: org.nome || '',
-          cnpj: org.cnpj || '',
-          telefone: org.telefone || '',
-          email: org.email || '',
-          endereco: org.endereco || '',
-          horario_funcionamento: org.horario_funcionamento || '',
-          logo_url: org.logo_url || '',
-        })
-      }
-
-      const { data: prof } = await supabase
-        .from('profissionais')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (prof) {
-        profForm.reset({
-          id: prof.id,
-          nome_completo: prof.nome_completo || '',
-          cpf: prof.cpf || '',
-          tipo_registro: prof.tipo_registro || 'Conselho de Classe',
-          numero_registro: prof.numero_registro || '',
-          especialidade: prof.especialidade || '',
-          foto_url: prof.foto_url || '',
-          status: prof.status !== false,
-        })
-      }
+    if (user) {
+      loadData()
     }
-
-    loadData()
   }, [user])
 
-  const onSubmitOrg = async (values: z.infer<typeof orgSchema>) => {
-    if (!user) return
-    setLoading(true)
+  const loadData = async () => {
     try {
-      const payload = {
-        owner_id: user.id,
-        nome: values.nome,
-        cnpj: values.cnpj,
-        telefone: values.telefone,
-        email: values.email,
-        endereco: values.endereco,
-        horario_funcionamento: values.horario_funcionamento,
-        logo_url: values.logo_url,
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('owner_id', user?.id)
+        .maybeSingle()
+
+      if (orgData) {
+        setOrgId(orgData.id)
+        setClinicForm({
+          nome: orgData.nome || '',
+          cnpj: orgData.cnpj || '',
+          telefone: orgData.telefone || '',
+          email: orgData.email || '',
+          endereco: orgData.endereco || '',
+          horario_funcionamento: orgData.horario_funcionamento || '',
+          logo_url: orgData.logo_url || '',
+        })
       }
 
-      if (values.id) {
-        await supabase.from('organizations').update(payload).eq('id', values.id)
-      } else {
-        const { data } = await supabase.from('organizations').insert(payload).select().single()
-        if (data) orgForm.setValue('id', data.id)
+      const { data: profData } = await supabase
+        .from('profissionais')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle()
+
+      if (profData) {
+        setProfId(profData.id)
+        setProfForm({
+          nome_completo: profData.nome_completo || '',
+          cpf: profData.cpf || '',
+          tipo_registro: profData.tipo_registro || 'Apenas CPF',
+          numero_registro: profData.numero_registro || '',
+          especialidade: profData.especialidade || '',
+          foto_url: profData.foto_url || '',
+          status: profData.status ?? true,
+        })
       }
-      toast({ title: 'Sucesso', description: 'Dados da clínica atualizados.' })
     } catch (error) {
-      toast({ title: 'Erro', description: 'Falha ao salvar dados.', variant: 'destructive' })
-    } finally {
-      setLoading(false)
+      console.error('Error loading settings', error)
     }
   }
 
-  const onSubmitProf = async (values: z.infer<typeof profSchema>) => {
+  const handleSaveClinic = async () => {
     if (!user) return
     setLoading(true)
     try {
-      let orgId = orgForm.getValues('id')
-      if (!orgId) {
-        const { data: org } = await supabase
+      if (orgId) {
+        await supabase
           .from('organizations')
-          .select('id')
-          .eq('owner_id', user.id)
-          .single()
-        if (org) orgId = org.id
-      }
-
-      const payload = {
-        user_id: user.id,
-        organization_id: orgId || null,
-        nome_completo: values.nome_completo,
-        cpf: values.cpf,
-        tipo_registro: values.tipo_registro,
-        numero_registro: values.numero_registro,
-        especialidade: values.especialidade,
-        foto_url: values.foto_url,
-        status: values.status,
-      }
-
-      if (values.id) {
-        await supabase.from('profissionais').update(payload).eq('id', values.id)
+          .update({
+            ...clinicForm,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orgId)
       } else {
-        const { data } = await supabase.from('profissionais').insert(payload).select().single()
-        if (data) profForm.setValue('id', data.id)
+        const { data } = await supabase
+          .from('organizations')
+          .insert({
+            ...clinicForm,
+            owner_id: user.id,
+          })
+          .select()
+          .single()
+        if (data) setOrgId(data.id)
       }
-      toast({ title: 'Sucesso', description: 'Dados do profissional atualizados.' })
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Falha ao salvar dados.', variant: 'destructive' })
+      toast({ title: 'Sucesso', description: 'Dados da clínica salvos com sucesso.' })
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    bucket: string,
-    setUploading: (v: boolean) => void,
-    onUpload: (url: string) => void,
-  ) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploading(true)
+  const handleSaveProf = async () => {
+    if (!user) return
+    setLoading(true)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const { error } = await supabase.storage.from(bucket).upload(fileName, file)
-      if (error) throw error
-
-      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
-      onUpload(data.publicUrl)
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Falha no upload da imagem.', variant: 'destructive' })
+      if (profId) {
+        await supabase
+          .from('profissionais')
+          .update({
+            ...profForm,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', profId)
+      } else {
+        const { data } = await supabase
+          .from('profissionais')
+          .insert({
+            ...profForm,
+            user_id: user.id,
+            organization_id: orgId || null,
+          })
+          .select()
+          .single()
+        if (data) setProfId(data.id)
+      }
+      toast({ title: 'Sucesso', description: 'Dados do profissional salvos com sucesso.' })
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message })
     } finally {
-      setUploading(false)
+      setLoading(false)
     }
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-6">
-      <div className="flex flex-col gap-2">
+    <div className="space-y-6 max-w-5xl mx-auto">
+      <div>
         <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
         <p className="text-muted-foreground">
-          Gerencie as informações da clínica e do seu perfil profissional.
+          Gerencie os dados da sua clínica e do seu perfil profissional.
         </p>
       </div>
 
-      <Tabs defaultValue="clinica" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="clinica" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="clinica">Dados da Clínica</TabsTrigger>
-          <TabsTrigger value="profissional">Cadastro de Profissional</TabsTrigger>
+          <TabsTrigger value="profissionais">Cadastro Profissional</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clinica">
           <Card>
             <CardHeader>
               <CardTitle>Dados da Clínica</CardTitle>
-              <CardDescription>Atualize as informações da sua organização.</CardDescription>
+              <CardDescription>Informações principais da sua organização.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Form {...orgForm}>
-                <form onSubmit={orgForm.handleSubmit(onSubmitOrg)} className="space-y-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    {orgForm.watch('logo_url') && (
-                      <img
-                        src={orgForm.watch('logo_url')}
-                        alt="Logo"
-                        className="w-16 h-16 rounded-md object-cover border"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <FormLabel>Logo da Clínica</FormLabel>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        disabled={uploadingOrg}
-                        onChange={(e) =>
-                          handleFileUpload(e, 'organizations', setUploadingOrg, (url) =>
-                            orgForm.setValue('logo_url', url),
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={orgForm.control}
-                      name="nome"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome da Clínica</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={orgForm.control}
-                      name="cnpj"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CNPJ</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={orgForm.control}
-                      name="telefone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={orgForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>E-mail</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={orgForm.control}
-                      name="horario_funcionamento"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Horário de Funcionamento</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Seg-Sex das 8h às 18h" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={orgForm.control}
-                    name="endereco"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço Completo</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nome da Clínica</Label>
+                  <Input
+                    placeholder="Clínica Exemplo"
+                    value={clinicForm.nome}
+                    onChange={(e) => setClinicForm({ ...clinicForm, nome: e.target.value })}
                   />
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={loading || uploadingOrg}>
-                      Salvar Alterações
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                </div>
+                <div className="space-y-2">
+                  <Label>CNPJ</Label>
+                  <Input
+                    placeholder="00.000.000/0000-00"
+                    value={clinicForm.cnpj}
+                    onChange={(e) => setClinicForm({ ...clinicForm, cnpj: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={clinicForm.telefone}
+                    onChange={(e) => setClinicForm({ ...clinicForm, telefone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    placeholder="contato@clinica.com"
+                    value={clinicForm.email}
+                    onChange={(e) => setClinicForm({ ...clinicForm, email: e.target.value })}
+                    type="email"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Endereço</Label>
+                  <Input
+                    placeholder="Rua Exemplo, 123 - Cidade/UF"
+                    value={clinicForm.endereco}
+                    onChange={(e) => setClinicForm({ ...clinicForm, endereco: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário de Funcionamento</Label>
+                  <Input
+                    placeholder="Seg a Sex, 08h às 18h"
+                    value={clinicForm.horario_funcionamento}
+                    onChange={(e) =>
+                      setClinicForm({ ...clinicForm, horario_funcionamento: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo (URL)</Label>
+                  <Input
+                    placeholder="https://exemplo.com/logo.png"
+                    value={clinicForm.logo_url}
+                    onChange={(e) => setClinicForm({ ...clinicForm, logo_url: e.target.value })}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleSaveClinic} disabled={loading} className="mt-4">
+                Salvar Clínica
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="profissional">
+        <TabsContent value="profissionais">
           <Card>
             <CardHeader>
-              <CardTitle>Cadastro de Profissional</CardTitle>
+              <CardTitle>Seu Perfil Profissional</CardTitle>
               <CardDescription>
-                Configure seu perfil e registro profissional para emissão de prescrições.
+                Configure seus dados para emissão de prescrições e relatórios.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Form {...profForm}>
-                <form onSubmit={profForm.handleSubmit(onSubmitProf)} className="space-y-4">
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
-                    {profForm.watch('foto_url') && (
-                      <img
-                        src={profForm.watch('foto_url')}
-                        alt="Avatar"
-                        className="w-16 h-16 rounded-full object-cover border"
-                      />
-                    )}
-                    <div className="flex-1 w-full">
-                      <FormLabel>Foto de Perfil</FormLabel>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        disabled={uploadingProf}
-                        onChange={(e) =>
-                          handleFileUpload(e, 'profissionais', setUploadingProf, (url) =>
-                            profForm.setValue('foto_url', url),
-                          )
-                        }
-                      />
-                    </div>
-                    <FormField
-                      control={profForm.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border p-3 w-full md:w-auto mt-4 md:mt-0 gap-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Ativo</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nome Completo</Label>
+                  <Input
+                    placeholder="Dr. Nome"
+                    value={profForm.nome_completo}
+                    onChange={(e) => setProfForm({ ...profForm, nome_completo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={profForm.cpf}
+                    onChange={(e) => setProfForm({ ...profForm, cpf: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo de Registro</Label>
+                  <Select
+                    value={profForm.tipo_registro}
+                    onValueChange={(v) => setProfForm({ ...profForm, tipo_registro: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Conselho de Classe">
+                        Conselho de Classe (CRM, CRN, etc)
+                      </SelectItem>
+                      <SelectItem value="ABRATH">ABRATH</SelectItem>
+                      <SelectItem value="CONATESI">CONATESI</SelectItem>
+                      <SelectItem value="Apenas CPF">Apenas CPF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {profForm.tipo_registro !== 'Apenas CPF' && (
+                  <div className="space-y-2">
+                    <Label>Número do Registro</Label>
+                    <Input
+                      placeholder="Ex: CRM-SP 123456"
+                      value={profForm.numero_registro}
+                      onChange={(e) =>
+                        setProfForm({ ...profForm, numero_registro: e.target.value })
+                      }
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={profForm.control}
-                      name="nome_completo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome Completo</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={profForm.control}
-                      name="cpf"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CPF</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={profForm.control}
-                      name="tipo_registro"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo de Registro</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Conselho de Classe">
-                                Conselho de Classe (CRM, CRN, etc)
-                              </SelectItem>
-                              <SelectItem value="ABRATH">ABRATH</SelectItem>
-                              <SelectItem value="CONATESI">CONATESI</SelectItem>
-                              <SelectItem value="Apenas CPF">Apenas CPF</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {tipoRegistro !== 'Apenas CPF' && (
-                      <FormField
-                        control={profForm.control}
-                        name="numero_registro"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Número do Registro</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder={
-                                  tipoRegistro === 'Conselho de Classe'
-                                    ? 'Ex: CRM 123456'
-                                    : tipoRegistro === 'ABRATH'
-                                      ? 'Ex: CRTH-BR 1234'
-                                      : 'Ex: 12345'
-                                }
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    <FormField
-                      control={profForm.control}
-                      name="especialidade"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Especialidade</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Ex: Nutrição Clínica, Terapia Holística..."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                )}
+                <div className="space-y-2">
+                  <Label>Especialidade</Label>
+                  <Input
+                    placeholder="Clínico Geral"
+                    value={profForm.especialidade}
+                    onChange={(e) => setProfForm({ ...profForm, especialidade: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Foto/Avatar (URL)</Label>
+                  <Input
+                    placeholder="https://exemplo.com/avatar.png"
+                    value={profForm.foto_url}
+                    onChange={(e) => setProfForm({ ...profForm, foto_url: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2 flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Status da Conta</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Profissionais inativos não podem acessar o sistema.
+                    </p>
                   </div>
-
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={loading || uploadingProf}>
-                      Salvar Alterações
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                  <Switch
+                    checked={profForm.status}
+                    onCheckedChange={(v) => setProfForm({ ...profForm, status: v })}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleSaveProf} disabled={loading} className="mt-4">
+                Salvar Perfil
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
