@@ -1,23 +1,18 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Construction } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function FeaturePlaceholder({ title }: { title: string }) {
   return (
-    <div className="flex h-[70vh] w-full items-center justify-center p-4 animate-fade-in-up">
-      <Card className="w-full max-w-md text-center border-primary/20 shadow-elevation">
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-primary tracking-tight">{title}</h1>
+      <Card className="shadow-sm">
         <CardHeader>
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/10">
-            <Construction className="h-8 w-8 text-secondary" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-primary">{title}</CardTitle>
-          <CardDescription className="text-base mt-2">
-            Esta funcionalidade está atualmente em desenvolvimento e estará disponível em breve.
-          </CardDescription>
+          <CardTitle>Em Breve</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-2 w-full rounded-full bg-muted overflow-hidden mt-4">
-            <div className="h-full w-1/3 rounded-full bg-secondary animate-pulse" />
-          </div>
+          <p className="text-muted-foreground">
+            Esta funcionalidade está em desenvolvimento e estará disponível na próxima atualização
+            do sistema KronosGest.
+          </p>
         </CardContent>
       </Card>
     </div>

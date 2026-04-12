@@ -1,178 +1,141 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { useAuth } from '@/hooks/use-auth'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { DollarSign, ArrowUpRight, Clock } from 'lucide-react'
-import { toast } from 'sonner'
-
-type Transacao = {
-  id: string
-  tipo: string
-  categoria: string
-  valor: number
-  data_transacao: string
-  status: string
-  descricao: string
-  pacientes?: { nome_completo: string }
-}
+import { DollarSign, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 
 export default function Financial() {
-  const { user } = useAuth()
-  const [transacoes, setTransacoes] = useState<Transacao[]>([])
+  const [transacoes, setTransacoes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) fetchTransacoes()
-  }, [user])
-
-  const fetchTransacoes = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
+    async function loadFinances() {
+      const { data } = await supabase
         .from('transacoes_financeiras')
-        .select(`
-          *,
-          pacientes ( nome_completo )
-        `)
+        .select('*, pacientes(nome_completo), protocolos(nome)')
         .order('data_transacao', { ascending: false })
-
-      if (error) throw error
-      setTransacoes(data || [])
-    } catch (err: any) {
-      toast.error('Erro ao carregar transações: ' + err.message)
-    } finally {
+      if (data) setTransacoes(data)
       setLoading(false)
     }
+    loadFinances()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-  }
-
-  const totalReceitas = transacoes
-    .filter((t) => ['receita', 'protocolo', 'sessao'].includes(t.tipo) && t.status === 'pago')
-    .reduce((acc, curr) => acc + curr.valor, 0)
-  const totalPendentes = transacoes
-    .filter((t) => t.status === 'pendente')
-    .reduce((acc, curr) => acc + curr.valor, 0)
+  const receitas = transacoes
+    .filter((t) => t.tipo === 'receita')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+  const despesas = transacoes
+    .filter((t) => t.tipo === 'despesa')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+  const saldo = receitas - despesas
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-6xl space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#1E3A8A]">Financeiro</h1>
+        <h1 className="text-3xl font-bold text-primary tracking-tight">Financeiro</h1>
         <p className="text-muted-foreground mt-1">
-          Acompanhe suas receitas, vendas de protocolos e fluxo de caixa.
+          Acompanhamento de vendas de protocolos, sessões e fluxo de caixa.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-green-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-              <ArrowUpRight className="w-4 h-4 mr-1 text-green-500" />
-              Receitas Pagas
-            </CardTitle>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="shadow-sm border-l-4 border-l-primary">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Saldo Consolidado</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalReceitas)}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-              <Clock className="w-4 h-4 mr-1 text-amber-500" />
-              Valores Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">
-              {formatCurrency(totalPendentes)}
+            <div className="text-2xl font-bold">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(saldo)}
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-l-4 border-l-[#1E3A8A] shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-              <DollarSign className="w-4 h-4 mr-1 text-[#1E3A8A]" />
-              Total Lançamentos
-            </CardTitle>
+        <Card className="shadow-sm border-l-4 border-l-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Receitas (Entradas)</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-800">{transacoes.length}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                receitas,
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-l-4 border-l-red-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Despesas (Saídas)</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                despesas,
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg text-[#1E3A8A]">Histórico de Transações</CardTitle>
-          <CardDescription>Todas as vendas de protocolos e outros lançamentos.</CardDescription>
+          <CardTitle>Histórico de Transações Integrado</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1E3A8A] border-t-transparent" />
-            </div>
-          ) : transacoes.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-              Nenhuma transação encontrada.
-            </div>
-          ) : (
-            <div className="rounded-md border overflow-hidden">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-600 font-medium border-b">
-                  <tr>
-                    <th className="px-4 py-3">Data</th>
-                    <th className="px-4 py-3">Descrição / Paciente</th>
-                    <th className="px-4 py-3">Categoria</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Valor</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {transacoes.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {format(new Date(t.data_transacao), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-800">
-                          {t.descricao || 'Sem descrição'}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {t.pacientes?.nome_completo || 'Paciente não informado'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="capitalize">
-                          {t.categoria}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={
-                            t.status === 'pago'
-                              ? 'bg-green-100 text-green-800 hover:bg-green-100'
-                              : 'bg-amber-100 text-amber-800 hover:bg-amber-100'
-                          }
-                        >
-                          {t.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium text-slate-800 whitespace-nowrap">
-                        {formatCurrency(t.valor)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div className="space-y-4">
+            {transacoes.map((t) => (
+              <div
+                key={t.id}
+                className="flex justify-between items-center p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <p className="font-semibold">{t.descricao || 'Transação'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.pacientes?.nome_completo || 'Sem Paciente'}{' '}
+                    {t.protocolos?.nome && `• ${t.protocolos.nome}`}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(t.data_transacao).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`font-bold text-lg ${t.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {t.tipo === 'receita' ? '+' : '-'}{' '}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      t.valor,
+                    )}
+                  </span>
+                  <Badge
+                    variant={t.status === 'pago' ? 'default' : 'secondary'}
+                    className={t.status === 'pago' ? 'bg-green-600' : ''}
+                  >
+                    {t.status.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {transacoes.length === 0 && (
+              <p className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
+                Nenhuma transação encontrada. As vendas de protocolos e sessões aparecerão aqui.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
