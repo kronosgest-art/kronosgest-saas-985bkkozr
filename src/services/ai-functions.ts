@@ -156,6 +156,42 @@ export const analyzeExames = async (pdfBase64: string, patientId: string, tipoEx
   }
 }
 
+export const gerarSugestaoPrescricao = async (
+  patientId: string,
+  anamneseId?: string,
+  examesIds?: string[],
+) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token
+
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/gerarSugestaoPrescricao`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          patient_id: patientId,
+          anamnese_id: anamneseId,
+          exames_ids: examesIds,
+        }),
+        timeout: 60000,
+      },
+    )
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Erro na requisição')
+    return { data, error: null }
+  } catch (error: any) {
+    return { data: null, error: error.message }
+  }
+}
+
 export const generatePrescription = async (
   patientId: string,
   anamneseId?: string,
