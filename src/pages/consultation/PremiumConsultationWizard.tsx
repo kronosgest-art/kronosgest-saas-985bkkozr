@@ -23,7 +23,6 @@ import Step1Client from './steps/Step1Client'
 import Step2Anamnese from './steps/Step2Anamnese'
 import Step3TCLE from './steps/Step3TCLE'
 import Step4Bioresonance from './steps/Step4Bioresonance'
-import Step5Exams from './steps/Step5Exams'
 import Step6Interpretation from './steps/Step6Interpretation'
 import Step6Prescription from './steps/Step6Prescription'
 import Step7Referral from './steps/Step7Referral'
@@ -34,11 +33,10 @@ const STEPS = [
   { id: 2, title: 'Anamnese', description: 'Histórico clínico', icon: FileText },
   { id: 3, title: 'TCLE', description: 'Termo de consentimento', icon: ShieldCheck },
   { id: 4, title: 'Biorressonância', description: 'Upload de Exame', icon: Upload },
-  { id: 5, title: 'Laboratorial', description: 'Upload de Exame', icon: Upload },
-  { id: 6, title: 'Interpretação', description: 'Análise da IA', icon: BrainCircuit },
-  { id: 7, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
-  { id: 8, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
-  { id: 9, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
+  { id: 5, title: 'Interpretação', description: 'Análise da IA', icon: BrainCircuit },
+  { id: 6, title: 'Prescrição', description: 'Receituário final', icon: FileSignature },
+  { id: 7, title: 'Encaminhamento', description: 'Direcionamento', icon: Share2 },
+  { id: 8, title: 'Agendamento', description: 'Próxima consulta', icon: CalendarDays },
 ]
 
 export default function PremiumConsultationWizard() {
@@ -77,10 +75,8 @@ export default function PremiumConsultationWizard() {
       case 4:
         return <Step4Bioresonance data={formData} />
       case 5:
-        return <Step5Exams data={formData} />
-      case 6:
         return <Step6Interpretation data={formData} />
-      case 7:
+      case 6:
         return (
           <Step6Prescription
             patientId={formData.patient_id}
@@ -88,9 +84,9 @@ export default function PremiumConsultationWizard() {
             examesIds={formData.exames_ids}
           />
         )
-      case 8:
+      case 7:
         return <Step7Referral />
-      case 9:
+      case 8:
         return <Step9FollowUp data={formData} />
       default:
         return null
@@ -109,7 +105,7 @@ export default function PremiumConsultationWizard() {
     if (currentStep === 3 && !formData.tcle_assinado) {
       toast({
         title: 'Assinatura Pendente',
-        description: 'Assine o TCLE ou clique no ícone Laboratorial para pular a Biorressonância.',
+        description: 'Assine o TCLE para acessar a Biorressonância.',
         variant: 'destructive',
       })
       return false

@@ -32,7 +32,9 @@ Deno.serve(async (req: Request) => {
     const prompt =
       tipo_exame === 'biorressonancia'
         ? `Você é especialista em biorressonância. A partir dos seguintes dados do exame transcritos abaixo, liste as principais manifestações energéticas alteradas (usando linguagem de probabilidade) e recomende acompanhamento:\n\n${texto_exame}`
-        : `Você é especialista em exames laboratoriais. A partir dos seguintes resultados transcritos abaixo, liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico:\n\n${texto_exame}`
+        : tipo_exame === 'bioquimico' || tipo_exame === 'laboratorial'
+          ? `Você é um especialista em medicina integrativa e ortomolecular, fundamentado nos ensinamentos do Dr. Lair Ribeiro. Analise os resultados dos exames laboratoriais transcritos abaixo. Compare os valores encontrados com os *valores ideais de saúde* (quartil ideal, otimização metabólica) e não apenas com os valores de referência laboratoriais convencionais. Destaque as deficiências nutricionais, riscos metabólicos e hormonais, e forneça uma interpretação clínica detalhada:\n\n${texto_exame}`
+          : `Você é especialista em exames laboratoriais. A partir dos seguintes resultados transcritos abaixo, liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico:\n\n${texto_exame}`
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

@@ -101,7 +101,7 @@ Deno.serve(async (req: Request) => {
       throw new Error('OPENAI_API_KEY não configurada no servidor.')
     }
 
-    const prompt = `Você é um especialista. A partir dos dados clínicos abaixo, gere uma sugestão de prescrição baseada nas diretrizes da SBPC/ML e SPC.
+    const prompt = `Você é um especialista em medicina integrativa e ortomolecular, alinhado aos ensinamentos do Dr. Lair Ribeiro. A partir dos dados clínicos abaixo, gere uma sugestão de prescrição de suplementação para corrigir as carências nutricionais e otimizar a saúde do paciente.
     
     REGRAS CRÍTICAS DE PRESCRIÇÃO:
     1. NUNCA sugira medicamentos alopáticos ou prescritos (ex: antibióticos, anti-hipertensivos, etc).

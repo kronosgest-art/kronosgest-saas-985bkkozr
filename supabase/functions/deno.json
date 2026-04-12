@@ -5,8 +5,8 @@
     "generate-prescription": 5,
     "create-paciente": 4,
     "uploadExame": 2,
-    "interpretarExame": 7,
+    "interpretarExame": 8,
     "transcreverExame": 5,
-    "gerarSugestaoPrescricao": 3
+    "gerarSugestaoPrescricao": 4
   }
 }
