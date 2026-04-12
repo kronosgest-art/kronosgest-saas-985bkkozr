@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Plus, Pencil, Trash, FileText, CheckCircle2, X } from 'lucide-react'
+import { Plus, Pencil, Trash, FileText, CheckCircle2, X, ShoppingCart } from 'lucide-react'
+import { SellProtocolDialog } from './SellProtocolDialog'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -86,6 +87,7 @@ export default function Protocols() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [sellingProtocol, setSellingProtocol] = useState<Protocol | null>(null)
 
   const form = useForm<ProtocolFormValues>({
     resolver: zodResolver(protocolSchema),
@@ -567,6 +569,15 @@ export default function Protocols() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => setSellingProtocol(p)}
+                        title="Vender Protocolo"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 text-slate-500 hover:text-[#1E3A8A] hover:bg-slate-100"
                         onClick={() => handleEdit(p)}
                       >
@@ -657,6 +668,12 @@ export default function Protocols() {
           </div>
         )}
       </div>
+
+      <SellProtocolDialog
+        protocol={sellingProtocol}
+        open={!!sellingProtocol}
+        onOpenChange={(open) => !open && setSellingProtocol(null)}
+      />
     </div>
   )
 }
