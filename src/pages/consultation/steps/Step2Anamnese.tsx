@@ -122,6 +122,14 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
       } else {
         if (!currentSec) currentSec = { id: 'default', titulo: 'Geral', perguntas: [] }
         currentSec.perguntas.push(q)
+        if (q.id === 'amputados') {
+          currentSec.perguntas.push({
+            id: 'amputados_espec',
+            tipo: 'text',
+            titulo: 'Especifique o(s) órgão(s) amputado(s)',
+            obrigatoria: false,
+          })
+        }
       }
     })
     if (currentSec) secs.push(currentSec)
@@ -259,7 +267,15 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
 
   const handleNext = () => {
     setAttemptedNext(true)
-    if (validateSection(sections[currentStep], answers)) {
+    const isValid = validateSection(sections[currentStep], answers)
+    const hasAmputadosEspecError = sections[currentStep].perguntas.some(
+      (q: any) =>
+        q.id === 'amputados_espec' &&
+        answers['amputados'] === 'Sim' &&
+        (!answers['amputados_espec'] || String(answers['amputados_espec']).trim() === ''),
+    )
+
+    if (isValid && !hasAmputadosEspecError) {
       setCurrentStep((prev) => prev + 1)
       setAttemptedNext(false)
       window.scrollTo(0, 0)
@@ -384,6 +400,8 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
       let hasAnswers = false
       let secHtml = `<h2>${sec.titulo}</h2>`
       sec.perguntas.forEach((q: any) => {
+        if (q.id === 'amputados_espec' && answers['amputados'] !== 'Sim') return
+
         const answer = answers[q.id]
         let display = '-'
         if (Array.isArray(answer)) display = answer.length > 0 ? answer.join(', ') : '-'
@@ -546,22 +564,38 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
               </div>
               <div className="p-4 sm:p-6 border border-t-0 rounded-b-xl bg-card/50 space-y-6 shadow-sm">
                 {sections[currentStep].perguntas.map((item: any, idx: number) => {
-                  if (!shouldShowQuestion(item, idx, sections[currentStep].perguntas, answers))
+                  if (item.id === 'amputados_espec' && answers['amputados'] !== 'Sim') return null
+                  if (
+                    item.id !== 'amputados_espec' &&
+                    !shouldShowQuestion(item, idx, sections[currentStep].perguntas, answers)
+                  )
                     return null
+
+                  const isAmputadosEspec = item.id === 'amputados_espec'
+                  const currentItem = isAmputadosEspec
+                    ? { ...item, obrigatoria: answers['amputados'] === 'Sim' }
+                    : item
+
                   const isError =
                     attemptedNext &&
-                    item.obrigatoria &&
-                    (!answers[item.id] ||
-                      (Array.isArray(answers[item.id]) && answers[item.id].length === 0))
+                    ((currentItem.obrigatoria &&
+                      (!answers[item.id] ||
+                        (Array.isArray(answers[item.id]) && answers[item.id].length === 0))) ||
+                      (isAmputadosEspec &&
+                        answers['amputados'] === 'Sim' &&
+                        (!answers['amputados_espec'] ||
+                          String(answers['amputados_espec']).trim() === '')))
+
                   const isSuccess =
                     answers[item.id] !== undefined &&
                     answers[item.id] !== '' &&
                     (!Array.isArray(answers[item.id]) || answers[item.id].length > 0)
+
                   return (
                     <QuestionField
-                      key={item.id}
-                      item={item}
-                      answer={answers[item.id]}
+                      key={currentItem.id}
+                      item={currentItem}
+                      answer={answers[currentItem.id]}
                       onChange={handleAnswerChange}
                       isError={!!isError}
                       isSuccess={!!isSuccess}
@@ -631,18 +665,29 @@ export default function Step2Anamnese({ data, onChange }: Step2AnamneseProps) {
                 Próximo <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             ) : (
-              <Button
-                onClick={() => performSave(false)}
-                disabled={isSaving}
-                className="px-8 h-12 bg-green-600 hover:bg-green-700 text-white shadow-md font-semibold text-base"
-              >
-                {isSaving ? (
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                ) : (
-                  <Save className="w-5 h-5 mr-2" />
-                )}{' '}
-                Confirmar e Salvar
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                {anamneseId && (
+                  <Button
+                    onClick={() => handleExportPrint(true)}
+                    variant="outline"
+                    className="w-full sm:w-auto px-8 h-12 border-primary text-primary hover:bg-primary/5 shadow-md font-semibold text-base"
+                  >
+                    <FileDown className="w-5 h-5 mr-2" /> Gerar PDF
+                  </Button>
+                )}
+                <Button
+                  onClick={() => performSave(false)}
+                  disabled={isSaving}
+                  className="w-full sm:w-auto px-8 h-12 bg-green-600 hover:bg-green-700 text-white shadow-md font-semibold text-base"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5 mr-2" />
+                  )}{' '}
+                  Confirmar e Salvar
+                </Button>
+              </div>
             )}
           </div>
         </div>

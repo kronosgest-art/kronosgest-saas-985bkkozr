@@ -32,7 +32,12 @@ export function AnamnesisSummary({ sections, answers, onEdit }: AnamnesisSummary
           <CardContent className="p-0">
             <div className="divide-y divide-border/50">
               {sec.perguntas.map((q: any, qIdx: number) => {
-                if (!shouldShowQuestion(q, qIdx, sec.perguntas, answers)) return null
+                if (q.id === 'amputados_espec' && answers['amputados'] !== 'Sim') return null
+                if (
+                  q.id !== 'amputados_espec' &&
+                  !shouldShowQuestion(q, qIdx, sec.perguntas, answers)
+                )
+                  return null
                 const ans = answers[q.id]
                 const display = Array.isArray(ans)
                   ? ans.length > 0
