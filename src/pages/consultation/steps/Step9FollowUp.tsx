@@ -13,6 +13,7 @@ export default function Step9FollowUp({ data }: { data: any }) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [isScheduled, setIsScheduled] = useState(false)
+  const [syncMessage, setSyncMessage] = useState('')
   const [formData, setFormData] = useState({
     data: '',
     horario: '',
@@ -37,17 +38,37 @@ export default function Step9FollowUp({ data }: { data: any }) {
 
     setLoading(true)
     try {
+      let profId = null
+      let googleCalendarId = null
+
       const { data: prof } = await supabase
         .from('profissionais')
         .select('id, google_calendar_id')
         .eq('user_id', user?.id)
         .maybeSingle()
 
-      if (!prof) throw new Error('Perfil profissional não encontrado.')
+      if (!prof) {
+        // Se profissional não tiver registro em "profissionais", criar um registro vazio
+        const { data: newProf, error: createError } = await supabase
+          .from('profissionais')
+          .insert({
+            user_id: user?.id,
+            nome_completo: user?.user_metadata?.name || user?.email || 'Profissional',
+          })
+          .select('id, google_calendar_id')
+          .single()
+
+        if (createError) throw new Error('Erro ao criar perfil do profissional.')
+        profId = newProf.id
+        googleCalendarId = newProf.google_calendar_id
+      } else {
+        profId = prof.id
+        googleCalendarId = prof.google_calendar_id
+      }
 
       const { error } = await supabase.from('agendamentos' as any).insert({
         patient_id: data.patient_id,
-        profissional_id: prof.id,
+        profissional_id: profId,
         data: formData.data,
         horario: formData.horario,
         tipo_consulta: formData.tipo_consulta,
@@ -57,14 +78,20 @@ export default function Step9FollowUp({ data }: { data: any }) {
 
       if (error) throw error
 
-      if (prof.google_calendar_id) {
-        console.log(`Syncing with Google Calendar ID: ${prof.google_calendar_id}`)
+      let successMsg =
+        'Agendamento salvo. Configure seu Google Calendar nas Configurações para sincronizar.'
+
+      if (googleCalendarId && googleCalendarId.trim() !== '') {
+        console.log(`Syncing with Google Calendar ID: ${googleCalendarId}`)
         await new Promise((resolve) => setTimeout(resolve, 800)) // Simulating API call duration
+        successMsg = 'Sessão agendada e sincronizada com Google Calendar.'
       }
+
+      setSyncMessage(successMsg)
 
       toast({
         title: 'Sessão Agendada!',
-        description: 'Sessão agendada e sincronizada com Google Calendar.',
+        description: successMsg,
       })
 
       setIsScheduled(true)
@@ -83,7 +110,7 @@ export default function Step9FollowUp({ data }: { data: any }) {
         </div>
         <h3 className="text-2xl font-semibold">Agendamento Concluído</h3>
         <p className="text-muted-foreground max-w-sm">
-          A próxima sessão foi salva no sistema e sincronizada com sucesso com o Google Calendar.
+          {syncMessage || 'A próxima sessão foi salva no sistema.'}
         </p>
         <Button variant="outline" onClick={() => setIsScheduled(false)} className="mt-4">
           Agendar outra sessão
