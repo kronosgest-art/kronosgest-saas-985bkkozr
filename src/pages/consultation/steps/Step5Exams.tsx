@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { UploadCloud, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from '@/hooks/use-toast'
-import { uploadExame, interpretarExame } from '@/services/ai-functions'
+import { uploadExame, transcreverExame, interpretarExame } from '@/services/ai-functions'
 
 export default function Step5Exams({ data }: { data?: any }) {
   const [isUploading, setIsUploading] = useState(false)
@@ -49,15 +49,19 @@ export default function Step5Exams({ data }: { data?: any }) {
         setIsUploading(false)
         setIsAnalyzing(true)
 
+        const { data: transcData, error: transcError } = await transcreverExame(uploadData.url)
+        if (transcError || !transcData)
+          throw new Error(transcError || 'Erro ao transcrever exame. Tente novamente.')
+
         const { data: analyzeData, error: analyzeError } = await interpretarExame(
           uploadData.exame_id,
           'laboratorial',
-          uploadData.url,
+          transcData.texto_extraido,
         )
         if (analyzeError || !analyzeData)
           throw new Error(analyzeError || 'Erro ao interpretar exame. Tente novamente.')
 
-        setInterpretation(analyzeData.interpretacao_ia)
+        setInterpretation(analyzeData.interpretacao_ia || analyzeData.interpretacao)
         toast({ title: 'Sucesso', description: 'Exame analisado com sucesso!' })
       } catch (err: any) {
         setError(err.message || 'Erro inesperado')

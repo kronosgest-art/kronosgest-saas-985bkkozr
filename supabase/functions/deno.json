@@ -5,6 +5,7 @@
     "generate-prescription": 4,
     "create-paciente": 3,
     "uploadExame": 1,
-    "interpretarExame": 3
+    "interpretarExame": 4,
+    "transcreverExame": 1
   }
 }

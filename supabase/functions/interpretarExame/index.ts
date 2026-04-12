@@ -15,9 +15,9 @@ Deno.serve(async (req: Request) => {
 
   try {
     const reqData = await req.json()
-    const { exame_id, tipo_exame, arquivo_pdf_url } = reqData
+    const { exame_id, tipo_exame, texto_exame } = reqData
 
-    if (!exame_id || !arquivo_pdf_url) {
+    if (!exame_id || !texto_exame) {
       return new Response(JSON.stringify({ error: 'Faltam parâmetros obrigatórios' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -29,18 +29,10 @@ Deno.serve(async (req: Request) => {
       throw new Error('GEMINI_API_KEY não configurada no servidor.')
     }
 
-    const pdfResponse = await fetch(arquivo_pdf_url)
-    if (!pdfResponse.ok) {
-      throw new Error('Não foi possível baixar o PDF do Storage.')
-    }
-    const pdfBlob = await pdfResponse.blob()
-    const pdfArrayBuffer = await pdfBlob.arrayBuffer()
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)))
-
     const prompt =
       tipo_exame === 'biorressonancia'
-        ? 'Você é especialista em biorressonância. Liste as principais manifestações energéticas alteradas (usando linguagem de probabilidade) e recomende acompanhamento.'
-        : 'Você é especialista em exames laboratoriais. Liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico.'
+        ? `Você é especialista em biorressonância. A partir dos seguintes dados do exame transcritos abaixo, liste as principais manifestações energéticas alteradas (usando linguagem de probabilidade) e recomende acompanhamento:\n\n${texto_exame}`
+        : `Você é especialista em exames laboratoriais. A partir dos seguintes resultados transcritos abaixo, liste os principais valores fora da referência, explicando o significado clínico e recomendando acompanhamento médico:\n\n${texto_exame}`
 
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
@@ -50,10 +42,7 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           contents: [
             {
-              parts: [
-                { text: prompt },
-                { inlineData: { mimeType: 'application/pdf', data: base64Pdf } },
-              ],
+              parts: [{ text: prompt }],
             },
           ],
         }),
@@ -82,10 +71,13 @@ Deno.serve(async (req: Request) => {
       })
       .eq('id', exame_id)
 
-    return new Response(JSON.stringify({ sucesso: true, interpretacao: interpretacao_ia }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ sucesso: true, interpretacao: interpretacao_ia, interpretacao_ia }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
   } catch (error: any) {
     return new Response(JSON.stringify({ sucesso: false, error: error.message }), {
       status: 500,

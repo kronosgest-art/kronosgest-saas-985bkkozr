@@ -52,11 +52,32 @@ export const uploadExame = async (
   }
 }
 
-export const interpretarExame = async (
-  exameId: string,
-  tipoExame: string,
-  arquivoPdfUrl: string,
-) => {
+export const transcreverExame = async (arquivoPdfUrl: string) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token
+
+    const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/transcreverExame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ arquivo_pdf_url: arquivoPdfUrl }),
+      timeout: 90000,
+    })
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Erro na transcrição')
+    return { data, error: null }
+  } catch (error: any) {
+    return { data: null, error: error.message }
+  }
+}
+
+export const interpretarExame = async (exameId: string, tipoExame: string, textoExame: string) => {
   try {
     const {
       data: { session },
@@ -72,7 +93,7 @@ export const interpretarExame = async (
       body: JSON.stringify({
         exame_id: exameId,
         tipo_exame: tipoExame,
-        arquivo_pdf_url: arquivoPdfUrl,
+        texto_exame: textoExame,
       }),
       timeout: 90000,
     })
