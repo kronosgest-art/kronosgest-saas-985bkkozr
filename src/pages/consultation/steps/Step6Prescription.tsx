@@ -23,23 +23,28 @@ export default function Step6Prescription({
   const [isLoadingAi, setIsLoadingAi] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [activePatientId, setActivePatientId] = useState<string | undefined>(patientId)
+  const [localExamesIds, setLocalExamesIds] = useState<string[]>(examesIds || [])
   const { toast } = useToast()
 
   useEffect(() => {
-    if (!patientId) {
-      // Fallback para não quebrar caso o componente pai não passe o ID, buscando um válido
+    setActivePatientId(patientId)
+
+    if (patientId && (!examesIds || examesIds.length === 0)) {
       supabase
-        .from('pacientes')
+        .from('exames')
         .select('id')
-        .limit(1)
-        .single()
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false })
+        .limit(5)
         .then(({ data }) => {
-          if (data) setActivePatientId(data.id)
+          if (data && data.length > 0) {
+            setLocalExamesIds(data.map((e) => e.id))
+          }
         })
-    } else {
-      setActivePatientId(patientId)
+    } else if (examesIds && examesIds.length > 0) {
+      setLocalExamesIds(examesIds)
     }
-  }, [patientId])
+  }, [patientId, examesIds])
 
   const handleGenerateSuggestion = async () => {
     if (!activePatientId) {
@@ -49,7 +54,11 @@ export default function Step6Prescription({
 
     setIsLoadingAi(true)
     try {
-      const { data, error } = await gerarSugestaoPrescricao(activePatientId, anamneseId, examesIds)
+      const { data, error } = await gerarSugestaoPrescricao(
+        activePatientId,
+        anamneseId,
+        localExamesIds,
+      )
 
       if (error) {
         toast({ title: 'Erro ao gerar sugestão', description: error, variant: 'destructive' })
@@ -82,7 +91,7 @@ export default function Step6Prescription({
       const { error } = await supabase.from('prescricoes').insert({
         patient_id: activePatientId,
         anamnese_id: anamneseId || null,
-        exames_ids: examesIds.length > 0 ? examesIds : null,
+        exames_ids: localExamesIds.length > 0 ? localExamesIds : null,
         conteudo_json: { prescricao: prescriptionText },
       })
 

@@ -81,7 +81,13 @@ export default function PremiumConsultationWizard() {
       case 6:
         return <Step6Interpretation data={formData} />
       case 7:
-        return <Step6Prescription />
+        return (
+          <Step6Prescription
+            patientId={formData.patient_id}
+            anamneseId={formData.anamnese_id}
+            examesIds={formData.exames_ids}
+          />
+        )
       case 8:
         return <Step7Referral />
       case 9:
