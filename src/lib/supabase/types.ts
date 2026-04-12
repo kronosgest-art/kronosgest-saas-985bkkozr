@@ -13,28 +13,37 @@ export type Database = {
         Row: {
           criado_em: string
           data: string
+          google_event_id: string | null
           horario: string
           id: string
           observacoes: string | null
           patient_id: string
+          profissional_id: string | null
+          status: string | null
           tipo_consulta: string
         }
         Insert: {
           criado_em?: string
           data: string
+          google_event_id?: string | null
           horario: string
           id?: string
           observacoes?: string | null
           patient_id: string
+          profissional_id?: string | null
+          status?: string | null
           tipo_consulta: string
         }
         Update: {
           criado_em?: string
           data?: string
+          google_event_id?: string | null
           horario?: string
           id?: string
           observacoes?: string | null
           patient_id?: string
+          profissional_id?: string | null
+          status?: string | null
           tipo_consulta?: string
         }
         Relationships: [
@@ -43,6 +52,13 @@ export type Database = {
             columns: ['patient_id']
             isOneToOne: false
             referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'agendamentos_profissional_id_fkey'
+            columns: ['profissional_id']
+            isOneToOne: false
+            referencedRelation: 'profissionais'
             referencedColumns: ['id']
           },
         ]
@@ -363,6 +379,7 @@ export type Database = {
           created_at: string
           especialidade: string | null
           foto_url: string | null
+          google_calendar_id: string | null
           id: string
           nome_completo: string
           numero_registro: string | null
@@ -377,6 +394,7 @@ export type Database = {
           created_at?: string
           especialidade?: string | null
           foto_url?: string | null
+          google_calendar_id?: string | null
           id?: string
           nome_completo: string
           numero_registro?: string | null
@@ -391,6 +409,7 @@ export type Database = {
           created_at?: string
           especialidade?: string | null
           foto_url?: string | null
+          google_calendar_id?: string | null
           id?: string
           nome_completo?: string
           numero_registro?: string | null
@@ -600,6 +619,9 @@ export const Constants = {
 //   tipo_consulta: text (not null)
 //   observacoes: text (nullable)
 //   criado_em: timestamp with time zone (not null, default: now())
+//   profissional_id: uuid (nullable)
+//   status: text (nullable, default: 'Agendado'::text)
+//   google_event_id: text (nullable)
 // Table: anamnese
 //   anamnese_id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (nullable)
@@ -692,6 +714,7 @@ export const Constants = {
 //   status: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   google_calendar_id: text (nullable)
 // Table: tcle_assinado
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -704,6 +727,7 @@ export const Constants = {
 // Table: agendamentos
 //   FOREIGN KEY agendamentos_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY agendamentos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY agendamentos_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 // Table: anamnese
 //   FOREIGN KEY anamnese_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY anamnese_pkey: PRIMARY KEY (anamnese_id)
