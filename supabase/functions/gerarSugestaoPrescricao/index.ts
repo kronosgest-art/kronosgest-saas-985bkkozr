@@ -96,6 +96,18 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Carregar protocolos disponíveis para o profissional para injetar no contexto da IA
+    if (userId) {
+      const { data: protocolosData } = await supabase
+        .from('protocolos')
+        .select('nome, tipo, duracao, suplementos, contraindicacoes')
+        .or(`user_id.eq.${userId},is_padrao.eq.true`)
+
+      if (protocolosData && protocolosData.length > 0) {
+        promptContext += `Protocolos Clínicos Disponíveis (RECOMENDE UTILIZAR UM OU MAIS DESTES PROTOCOLOS se adequados ao quadro do paciente, copiando exatamente os suplementos originais):\n${JSON.stringify(protocolosData)}\n\n`
+      }
+    }
+
     const openAiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAiApiKey) {
       throw new Error('OPENAI_API_KEY não configurada no servidor.')
@@ -107,9 +119,10 @@ Deno.serve(async (req: Request) => {
     1. NUNCA sugira medicamentos alopáticos ou prescritos (ex: antibióticos, anti-hipertensivos, etc).
     2. O foco deve ser EXCLUSIVAMENTE em SUPLEMENTAÇÃO (vitaminas, minerais, nutracêuticos, fitoterápicos) e orientações de estilo de vida.
     3. CONSOLIDAÇÃO DE ATIVOS: Agrupe os ativos em uma ÚNICA FÓRMULA com 2 ou mais itens sempre que possível e clinicamente compatível.
-    4. FORMA FARMACÊUTICA: Avalie e sugira a via de administração mais interessante e adequada para o paciente (ex: cápsula, sachê, comprimido sublingual, xarope, goma de mascar, comprimido mastigável).
-    5. INTERAÇÕES E CONFLITOS: Analise rigorosamente as interações farmacológicas e competições de absorção. Se houver interação entre ativos, SEPARE-OS obrigatoriamente em fórmulas diferentes com HORÁRIOS DE TOMADA DIFERENTES.
-    6. Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
+    4. VÍNCULO COM PROTOCOLOS: Se algum dos Protocolos Clínicos Disponíveis for perfeito para o caso, INCLUA-O na sugestão integralmente, referenciando o nome do protocolo.
+    5. FORMA FARMACÊUTICA: Avalie e sugira a via de administração mais interessante e adequada para o paciente.
+    6. INTERAÇÕES E CONFLITOS: Analise rigorosamente as interações farmacológicas e competições de absorção.
+    7. Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
     Não use marcações markdown como \`\`\` nos extremos, apenas o texto puro formatado para leitura.\n\n${promptContext}`
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

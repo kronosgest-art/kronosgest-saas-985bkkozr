@@ -820,6 +820,21 @@ export const Constants = {
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION handle_new_profissional()
+//   CREATE OR REPLACE FUNCTION public.handle_new_profissional()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NOT EXISTS (SELECT 1 FROM public.profissionais WHERE user_id = NEW.id) THEN
+//       INSERT INTO public.profissionais (user_id, nome_completo)
+//       VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'name', NEW.email, 'Profissional'));
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION handle_new_profissional_template()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional_template()
 //    RETURNS trigger

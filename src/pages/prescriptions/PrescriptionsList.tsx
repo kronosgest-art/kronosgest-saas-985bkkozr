@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Loader2, RefreshCw, Eye, Pill, Printer } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Search, Loader2, RefreshCw, Eye, Pill, Printer, FileText } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
+import ProtocolsTab from './protocols/ProtocolsTab'
 
 export default function PrescriptionsList() {
   const { user } = useAuth()
@@ -26,7 +28,6 @@ export default function PrescriptionsList() {
     if (!user?.id) return
     setIsLoading(true)
     try {
-      // First get all patients for this user to filter their prescriptions
       const { data: patientsData } = await supabase
         .from('pacientes')
         .select('id, nome_completo, cpf')
@@ -52,11 +53,7 @@ export default function PrescriptionsList() {
         setPrescriptions([])
       }
     } catch (error: any) {
-      toast({
-        title: 'Erro ao carregar prescrições',
-        description: error.message,
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao carregar', description: error.message, variant: 'destructive' })
     } finally {
       setIsLoading(false)
     }
@@ -64,7 +61,6 @@ export default function PrescriptionsList() {
 
   const handlePrint = (prescriptionText: string) => {
     if (!prescriptionText) return
-
     const printWindow = window.open('', '_blank')
     if (printWindow) {
       printWindow.document.write(`
@@ -87,16 +83,9 @@ export default function PrescriptionsList() {
               <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
             </div>
             <div class="content">${prescriptionText}</div>
-            <div class="signature">
-              <div class="signature-line"></div>
-              <p>Assinatura e Carimbo do Profissional</p>
-            </div>
-            <div class="footer">
-              Este documento é de uso pessoal e intransferível.
-            </div>
-            <script>
-              window.onload = () => { window.print(); window.close(); }
-            </script>
+            <div class="signature"><div class="signature-line"></div><p>Assinatura do Profissional</p></div>
+            <div class="footer">Documento de uso clínico.</div>
+            <script>window.onload = () => { window.print(); window.close(); }</script>
           </body>
         </html>
       `)
@@ -110,124 +99,141 @@ export default function PrescriptionsList() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-primary flex items-center gap-2">
-            <Pill className="w-8 h-8" /> Prescrições
-          </h2>
-          <p className="text-muted-foreground">
-            Histórico de prescrições e fórmulas dos pacientes.
-          </p>
+      <Tabs defaultValue="prescriptions" className="w-full">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-primary flex items-center gap-2">
+              <Pill className="w-8 h-8" /> Prescrições & Protocolos
+            </h2>
+            <p className="text-muted-foreground">
+              Gestão de receituários de pacientes e biblioteca de protocolos.
+            </p>
+          </div>
+          <TabsList className="bg-primary/5">
+            <TabsTrigger
+              value="prescriptions"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <FileText className="w-4 h-4 mr-2" /> Minhas Prescrições
+            </TabsTrigger>
+            <TabsTrigger
+              value="protocols"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Pill className="w-4 h-4 mr-2" /> Biblioteca de Protocolos
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={fetchPrescriptions} disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Recarregar
-          </Button>
-        </div>
-      </div>
 
-      <Card className="border-primary/10 shadow-sm bg-white">
-        <CardHeader className="bg-transparent border-b border-primary/5">
-          <CardTitle className="text-primary">Lista de Prescrições</CardTitle>
-          <CardDescription>
-            Busque por paciente para ver suas prescrições anteriores.
-          </CardDescription>
-          <div className="mt-4 flex max-w-sm items-center space-x-2">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar por paciente..."
-                className="w-full pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-primary/5 text-primary border-b border-primary/10">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Data</th>
-                  <th className="px-6 py-4 font-semibold">Paciente</th>
-                  <th className="px-6 py-4 font-semibold">CPF</th>
-                  <th className="px-6 py-4 font-semibold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+        <TabsContent value="prescriptions" className="mt-0">
+          <Card className="border-primary/10 shadow-sm bg-white">
+            <CardHeader className="bg-transparent border-b border-primary/5 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-primary">Lista de Prescrições</CardTitle>
+                <CardDescription>Busque por paciente para ver seu histórico.</CardDescription>
+              </div>
+              <Button variant="outline" onClick={fetchPrescriptions} disabled={isLoading} size="sm">
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                    </td>
-                  </tr>
-                ) : filteredPrescriptions.length > 0 ? (
-                  filteredPrescriptions.map((prescription) => (
-                    <tr
-                      key={prescription.id}
-                      className="border-b border-primary/5 last:border-0 hover:bg-primary/5 transition-colors"
-                    >
-                      <td className="px-6 py-4 font-medium text-slate-800">
-                        {new Date(prescription.created_at).toLocaleDateString('pt-BR')} às{' '}
-                        {new Date(prescription.created_at).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-slate-800 font-medium">
-                        {prescription.patient?.nome_completo || 'Paciente Desconhecido'}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {prescription.patient?.cpf || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handlePrint(prescription.conteudo_json?.prescricao)}
-                            title="Imprimir Receituário"
-                          >
-                            <Printer className="w-4 h-4 text-primary" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setViewingPrescription(prescription)}
-                            title="Ver Prescrição"
-                          >
-                            <Eye className="w-4 h-4 text-primary" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      Nenhuma prescrição encontrada.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}{' '}
+                Recarregar
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="p-4 border-b border-primary/5">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por paciente..."
+                    className="w-full pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-primary/5 text-primary border-b border-primary/10">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">Data</th>
+                      <th className="px-6 py-4 font-semibold">Paciente</th>
+                      <th className="px-6 py-4 font-semibold">CPF</th>
+                      <th className="px-6 py-4 font-semibold text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                        </td>
+                      </tr>
+                    ) : filteredPrescriptions.length > 0 ? (
+                      filteredPrescriptions.map((prescription) => (
+                        <tr
+                          key={prescription.id}
+                          className="border-b border-primary/5 last:border-0 hover:bg-primary/5 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium text-slate-800">
+                            {new Date(prescription.created_at).toLocaleDateString('pt-BR')} às{' '}
+                            {new Date(prescription.created_at).toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="px-6 py-4 text-slate-800 font-medium">
+                            {prescription.patient?.nome_completo || 'Desconhecido'}
+                          </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {prescription.patient?.cpf || '-'}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handlePrint(prescription.conteudo_json?.prescricao)}
+                              >
+                                <Printer className="w-4 h-4 text-primary" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setViewingPrescription(prescription)}
+                              >
+                                <Eye className="w-4 h-4 text-primary" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                          Nenhuma prescrição encontrada.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="protocols" className="mt-0">
+          <ProtocolsTab />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={!!viewingPrescription} onOpenChange={(o) => !o && setViewingPrescription(null)}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="text-primary flex items-center gap-2">
-              <Pill className="w-5 h-5" />
-              Prescrição - {viewingPrescription?.patient?.nome_completo}
+              <Pill className="w-5 h-5" /> Prescrição -{' '}
+              {viewingPrescription?.patient?.nome_completo}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
@@ -238,8 +244,7 @@ export default function PrescriptionsList() {
             </p>
             <ScrollArea className="h-[400px] w-full rounded-md border p-4 bg-muted/30">
               <pre className="text-sm font-mono whitespace-pre-wrap">
-                {viewingPrescription?.conteudo_json?.prescricao ||
-                  'Conteúdo da prescrição indisponível.'}
+                {viewingPrescription?.conteudo_json?.prescricao || 'Indisponível.'}
               </pre>
             </ScrollArea>
           </div>
