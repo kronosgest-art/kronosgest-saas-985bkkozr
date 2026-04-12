@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Plus, Pencil, Trash, FileText, CheckCircle2, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,21 +30,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 const protocolSchema = z
   .object({
     id: z.string().optional(),
-    nome: z.string().min(1, 'O nome do protocolo é obrigatório'),
+    nome_protocolo: z.string().min(1, 'O nome do protocolo é obrigatório'),
     indicacao: z.string().min(1, 'A indicação é obrigatória'),
-    numeroSessoes: z.coerce.number().min(1, 'Informe um número válido de sessões'),
-    tipoAplicacao: z.string().min(1, 'O tipo de aplicação é obrigatório'),
+    numero_sessoes: z.coerce.number().min(1, 'Informe um número válido de sessões'),
+    tipo_aplicacao: z.string().min(1, 'O tipo de aplicação é obrigatório'),
     frequencia: z.string().min(1, 'A frequência é obrigatória'),
-    duracaoSessao: z.string().min(1, 'A duração da sessão é obrigatória'),
-    valorTotal: z.string().min(1, 'O valor total é obrigatório'),
-    tcle: z.string().min(1, 'Selecione um TCLE'),
-    tcleOutro: z.string().optional(),
+    duracao_sessao: z.string().min(1, 'A duração da sessão é obrigatória'),
+    valor_total: z.string().min(1, 'O valor total é obrigatório'),
+    tipo_tcle: z.string().min(1, 'Selecione um TCLE'),
+    tcle_outro: z.string().optional(),
   })
   .refine(
     (data) => {
       if (
-        data.tcle === 'Outro (especificar)' &&
-        (!data.tcleOutro || data.tcleOutro.trim() === '')
+        data.tipo_tcle === 'Outro (especificar)' &&
+        (!data.tcle_outro || data.tcle_outro.trim() === '')
       ) {
         return false
       }
@@ -50,97 +52,146 @@ const protocolSchema = z
     },
     {
       message: 'Especifique o nome do TCLE',
-      path: ['tcleOutro'],
+      path: ['tcle_outro'],
     },
   )
 
 type ProtocolFormValues = z.infer<typeof protocolSchema>
 
-type Protocol = ProtocolFormValues & { id: string }
-
-const initialProtocols: Protocol[] = [
-  {
-    id: '1',
-    nome: 'Protocolo Dor Zero com Ozonioterapia',
-    indicacao:
-      'Alívio de dores articulares crônicas, redução de inflamação e tratamento auxiliar para fibromialgia.',
-    numeroSessoes: 10,
-    tipoAplicacao: 'Injeção intra-articular + ozônio retal',
-    frequencia: '2x/semana',
-    duracaoSessao: '45 minutos',
-    valorTotal: '2.500,00',
-    tcle: 'TCLE Ozonioterapia',
-  },
-  {
-    id: '2',
-    nome: 'Revitalização Sistêmica Integral',
-    indicacao: 'Desintoxicação corporal, fadiga crônica e reequilíbrio metabólico sistêmico.',
-    numeroSessoes: 5,
-    tipoAplicacao: 'Soroterapia endovenosa ortomolecular',
-    frequencia: '1x/semana',
-    duracaoSessao: '60 minutos',
-    valorTotal: '1.800,00',
-    tcle: 'Outro (especificar)',
-    tcleOutro: 'TCLE Soroterapia Integrativa',
-  },
-]
+type Protocol = {
+  id: string
+  nome: string
+  nome_protocolo: string | null
+  indicacao: string | null
+  numero_sessoes: number | null
+  tipo_aplicacao: string | null
+  frequencia: string | null
+  duracao_sessao: string | null
+  valor_total: number | null
+  tipo_tcle: string | null
+  tcle_outro: string | null
+}
 
 export default function Protocols() {
-  const [protocols, setProtocols] = useState<Protocol[]>(initialProtocols)
+  const { user } = useAuth()
+  const [protocols, setProtocols] = useState<Protocol[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const form = useForm<ProtocolFormValues>({
     resolver: zodResolver(protocolSchema),
     defaultValues: {
-      nome: '',
+      nome_protocolo: '',
       indicacao: '',
-      numeroSessoes: 1,
-      tipoAplicacao: '',
+      numero_sessoes: 1,
+      tipo_aplicacao: '',
       frequencia: '',
-      duracaoSessao: '',
-      valorTotal: '',
-      tcle: '',
-      tcleOutro: '',
+      duracao_sessao: '',
+      valor_total: '',
+      tipo_tcle: '',
+      tcle_outro: '',
     },
   })
 
-  const onSubmit = (data: ProtocolFormValues) => {
-    if (editingId) {
-      setProtocols((prev) => prev.map((p) => (p.id === editingId ? { ...data, id: editingId } : p)))
-      toast.success('Protocolo atualizado com sucesso!')
-    } else {
-      const newProtocol = { ...data, id: Math.random().toString(36).substring(2, 9) }
-      setProtocols((prev) => [newProtocol, ...prev])
-      toast.success('Protocolo salvo com sucesso!')
+  const fetchProtocols = async () => {
+    try {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from('protocolos')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setProtocols(data || [])
+    } catch (error: any) {
+      toast.error('Erro ao carregar protocolos')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchProtocols()
+    }
+  }, [user])
+
+  const onSubmit = async (data: ProtocolFormValues) => {
+    if (!user) return
+
+    const valorNumerico = parseFloat(data.valor_total.replace(/\./g, '').replace(',', '.') || '0')
+
+    const payload = {
+      nome: data.nome_protocolo,
+      nome_protocolo: data.nome_protocolo,
+      indicacao: data.indicacao,
+      numero_sessoes: data.numero_sessoes,
+      tipo_aplicacao: data.tipo_aplicacao,
+      frequencia: data.frequencia,
+      duracao_sessao: data.duracao_sessao,
+      valor_total: valorNumerico,
+      tipo_tcle: data.tipo_tcle,
+      tcle_outro: data.tcle_outro,
+      criado_por: user.id,
+      user_id: user.id,
+      apenas_pacote_fechado: true,
+      updated_at: new Date().toISOString(),
     }
 
-    setIsFormOpen(false)
-    setEditingId(null)
-    form.reset()
+    try {
+      if (editingId) {
+        const { error } = await supabase.from('protocolos').update(payload).eq('id', editingId)
+
+        if (error) throw error
+        toast.success('Protocolo atualizado com sucesso!')
+      } else {
+        const { error } = await supabase.from('protocolos').insert([payload])
+
+        if (error) throw error
+        toast.success('Protocolo salvo com sucesso!')
+      }
+
+      fetchProtocols()
+      setIsFormOpen(false)
+      setEditingId(null)
+      form.reset()
+    } catch (error: any) {
+      toast.error('Erro ao salvar protocolo: ' + error.message)
+    }
   }
 
   const handleEdit = (protocol: Protocol) => {
     setEditingId(protocol.id)
     form.reset({
-      nome: protocol.nome,
-      indicacao: protocol.indicacao,
-      numeroSessoes: protocol.numeroSessoes,
-      tipoAplicacao: protocol.tipoAplicacao,
-      frequencia: protocol.frequencia,
-      duracaoSessao: protocol.duracaoSessao,
-      valorTotal: protocol.valorTotal,
-      tcle: protocol.tcle,
-      tcleOutro: protocol.tcleOutro || '',
+      nome_protocolo: protocol.nome_protocolo || protocol.nome || '',
+      indicacao: protocol.indicacao || '',
+      numero_sessoes: protocol.numero_sessoes || 1,
+      tipo_aplicacao: protocol.tipo_aplicacao || '',
+      frequencia: protocol.frequencia || '',
+      duracao_sessao: protocol.duracao_sessao || '',
+      valor_total: protocol.valor_total
+        ? protocol.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+        : '',
+      tipo_tcle: protocol.tipo_tcle || '',
+      tcle_outro: protocol.tcle_outro || '',
     })
     setIsFormOpen(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja remover este protocolo?')) {
-      setProtocols((prev) => prev.filter((p) => p.id !== id))
-      toast.success('Protocolo removido com sucesso!')
+      try {
+        const { error } = await supabase.from('protocolos').delete().eq('id', id)
+
+        if (error) throw error
+
+        setProtocols((prev) => prev.filter((p) => p.id !== id))
+        toast.success('Protocolo removido com sucesso!')
+      } catch (error: any) {
+        toast.error('Erro ao remover protocolo')
+      }
     }
   }
 
@@ -191,7 +242,7 @@ export default function Protocols() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
-                    name="nome"
+                    name="nome_protocolo"
                     render={({ field }) => (
                       <FormItem className="col-span-1 md:col-span-2">
                         <FormLabel className="font-bold text-[#1E3A8A]">
@@ -231,7 +282,7 @@ export default function Protocols() {
 
                   <FormField
                     control={form.control}
-                    name="tipoAplicacao"
+                    name="tipo_aplicacao"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-semibold text-slate-700">
@@ -248,7 +299,7 @@ export default function Protocols() {
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="numeroSessoes"
+                      name="numero_sessoes"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-semibold text-slate-700">
@@ -263,7 +314,7 @@ export default function Protocols() {
                     />
                     <FormField
                       control={form.control}
-                      name="duracaoSessao"
+                      name="duracao_sessao"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-semibold text-slate-700">
@@ -294,7 +345,7 @@ export default function Protocols() {
 
                   <FormField
                     control={form.control}
-                    name="valorTotal"
+                    name="valor_total"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-semibold text-[#B8860B]">
@@ -310,7 +361,7 @@ export default function Protocols() {
 
                   <FormField
                     control={form.control}
-                    name="tcle"
+                    name="tipo_tcle"
                     render={({ field }) => (
                       <FormItem className="col-span-1 md:col-span-2">
                         <FormLabel className="font-semibold text-slate-700">
@@ -341,10 +392,10 @@ export default function Protocols() {
                     )}
                   />
 
-                  {form.watch('tcle') === 'Outro (especificar)' && (
+                  {form.watch('tipo_tcle') === 'Outro (especificar)' && (
                     <FormField
                       control={form.control}
-                      name="tcleOutro"
+                      name="tcle_outro"
                       render={({ field }) => (
                         <FormItem className="col-span-1 md:col-span-2 animate-in fade-in slide-in-from-top-2">
                           <FormLabel className="font-semibold text-slate-700">
@@ -386,7 +437,13 @@ export default function Protocols() {
           Protocolos Cadastrados
         </h2>
 
-        {protocols.length === 0 ? (
+        {isLoading ? (
+          <Card className="bg-muted/30">
+            <CardContent className="flex justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1E3A8A] border-t-transparent" />
+            </CardContent>
+          </Card>
+        ) : protocols.length === 0 ? (
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="w-12 h-12 text-muted-foreground/40 mb-4" />
@@ -408,7 +465,7 @@ export default function Protocols() {
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start gap-4">
                     <CardTitle className="text-lg text-[#1E3A8A] font-bold leading-tight">
-                      {p.nome}
+                      {p.nome_protocolo || p.nome}
                     </CardTitle>
                     <div className="flex gap-1 shrink-0">
                       <Button
@@ -430,7 +487,7 @@ export default function Protocols() {
                     </div>
                   </div>
                   <CardDescription className="line-clamp-2 mt-1 text-sm">
-                    {p.indicacao}
+                    {p.indicacao || 'Sem indicação cadastrada.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2.5">
@@ -438,28 +495,35 @@ export default function Protocols() {
                     <div>
                       <p className="text-xs text-muted-foreground font-medium uppercase">Sessões</p>
                       <p className="font-semibold text-slate-700">
-                        {p.numeroSessoes}{' '}
-                        <span className="text-xs font-normal">({p.frequencia})</span>
+                        {p.numero_sessoes || 0}{' '}
+                        <span className="text-xs font-normal">({p.frequencia || '-'})</span>
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground font-medium uppercase">Duração</p>
-                      <p className="font-semibold text-slate-700">{p.duracaoSessao}</p>
+                      <p className="font-semibold text-slate-700">{p.duracao_sessao || '-'}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-xs text-muted-foreground font-medium uppercase">
                         Aplicação
                       </p>
-                      <p className="font-semibold text-slate-700">{p.tipoAplicacao}</p>
+                      <p className="font-semibold text-slate-700">{p.tipo_aplicacao || '-'}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
                     <p className="inline-flex items-center text-xs bg-[#B8860B]/10 text-[#B8860B] px-2 py-1 rounded-md font-medium">
                       <FileText className="w-3 h-3 mr-1.5" />
-                      {p.tcle === 'Outro (especificar)' ? p.tcleOutro : p.tcle}
+                      {p.tipo_tcle === 'Outro (especificar)'
+                        ? p.tcle_outro
+                        : p.tipo_tcle || 'Nenhum TCLE'}
                     </p>
-                    <p className="font-bold text-[#1E3A8A]">R$ {p.valorTotal}</p>
+                    <p className="font-bold text-[#1E3A8A]">
+                      R${' '}
+                      {p.valor_total
+                        ? p.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                        : '0,00'}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
