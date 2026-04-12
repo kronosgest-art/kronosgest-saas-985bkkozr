@@ -41,7 +41,7 @@ export default function Step9FollowUp({ data }: { data: any }) {
         .from('profissionais')
         .select('id, google_calendar_id')
         .eq('user_id', user?.id)
-        .single()
+        .maybeSingle()
 
       if (!prof) throw new Error('Perfil profissional não encontrado.')
 
