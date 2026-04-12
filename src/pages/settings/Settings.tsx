@@ -41,6 +41,7 @@ export default function Settings() {
     especialidade: '',
     foto_url: '',
     status: true,
+    google_calendar_id: '',
   })
 
   useEffect(() => {
@@ -86,6 +87,7 @@ export default function Settings() {
           especialidade: profData.especialidade || '',
           foto_url: profData.foto_url || '',
           status: profData.status ?? true,
+          google_calendar_id: profData.google_calendar_id || '',
         })
       }
     } catch (error) {
@@ -318,6 +320,19 @@ export default function Settings() {
                     value={profForm.foto_url}
                     onChange={(e) => setProfForm({ ...profForm, foto_url: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Google Calendar ID</Label>
+                  <Input
+                    placeholder="exemplo@group.calendar.google.com"
+                    value={profForm.google_calendar_id}
+                    onChange={(e) =>
+                      setProfForm({ ...profForm, google_calendar_id: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Necessário para sincronização automática de agendamentos.
+                  </p>
                 </div>
                 <div className="space-y-2 md:col-span-2 flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">

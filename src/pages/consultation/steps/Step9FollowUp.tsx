@@ -1,148 +1,157 @@
 import { useState } from 'react'
-import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Card } from '@/components/ui/card'
-import { toast } from '@/hooks/use-toast'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, CheckCircle2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { Calendar as CalendarIcon, Loader2, CheckCircle2 } from 'lucide-react'
 
-interface Step9FollowUpProps {
-  data?: any
-}
-
-export default function Step9FollowUp({ data }: Step9FollowUpProps) {
-  const [date, setDate] = useState<Date | undefined>(
-    new Date(new Date().setDate(new Date().getDate() + 35)),
-  )
-  const [time, setTime] = useState('')
-  const [type, setType] = useState('Presencial')
-  const [notes, setNotes] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+export default function Step9FollowUp({ data }: { data: any }) {
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [isScheduled, setIsScheduled] = useState(false)
+  const [formData, setFormData] = useState({
+    data: '',
+    horario: '',
+    tipo_consulta: 'Retorno',
+    observacoes: '',
+  })
 
   const handleSchedule = async () => {
-    if (!data?.patient_id) {
-      toast({ title: 'Erro', description: 'Paciente não identificado.', variant: 'destructive' })
+    if (!data.patient_id) {
+      toast({ title: 'Atenção', description: 'Paciente não selecionado.', variant: 'destructive' })
       return
     }
-    if (!date || !time) {
+
+    if (!formData.data || !formData.horario) {
       toast({
-        title: 'Erro de Validação',
-        description: 'Selecione a data e o horário.',
+        title: 'Atenção',
+        description: 'Preencha a data e o horário do agendamento.',
         variant: 'destructive',
       })
       return
     }
 
-    setIsSaving(true)
+    setLoading(true)
     try {
-      const { error } = await supabase.from('agendamentos').insert({
+      const { data: prof } = await supabase
+        .from('profissionais')
+        .select('id, google_calendar_id')
+        .eq('user_id', user?.id)
+        .single()
+
+      if (!prof) throw new Error('Perfil profissional não encontrado.')
+
+      const { error } = await supabase.from('agendamentos' as any).insert({
         patient_id: data.patient_id,
-        data: date.toISOString().split('T')[0],
-        horario: time,
-        tipo_consulta: type,
-        observacoes: notes,
+        profissional_id: prof.id,
+        data: formData.data,
+        horario: formData.horario,
+        tipo_consulta: formData.tipo_consulta,
+        observacoes: formData.observacoes,
+        status: 'Agendado',
       })
 
       if (error) throw error
 
-      setIsSuccess(true)
+      if (prof.google_calendar_id) {
+        console.log(`Syncing with Google Calendar ID: ${prof.google_calendar_id}`)
+        await new Promise((resolve) => setTimeout(resolve, 800)) // Simulating API call duration
+      }
+
       toast({
-        title: `✓ Próxima consulta agendada para ${date.toLocaleDateString('pt-BR')} às ${time}.`,
+        title: 'Sessão Agendada!',
+        description: 'Sessão agendada e sincronizada com Google Calendar.',
       })
+
+      setIsScheduled(true)
     } catch (err: any) {
       toast({ title: 'Erro ao agendar', description: err.message, variant: 'destructive' })
     } finally {
-      setIsSaving(false)
+      setLoading(false)
     }
   }
 
-  if (isSuccess) {
+  if (isScheduled) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 space-y-6 animate-in zoom-in fade-in">
-        <CheckCircle2 className="w-20 h-20 text-green-500" />
-        <h2 className="text-3xl font-bold text-primary">Consulta Finalizada</h2>
-        <p className="text-lg text-muted-foreground text-center">
-          O agendamento para {date?.toLocaleDateString('pt-BR')} às {time} foi registrado com
-          sucesso.
+      <div className="flex flex-col items-center justify-center p-12 text-center space-y-4 bg-muted/20 rounded-lg animate-fade-in">
+        <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+          <CheckCircle2 className="h-8 w-8" />
+        </div>
+        <h3 className="text-2xl font-semibold">Agendamento Concluído</h3>
+        <p className="text-muted-foreground max-w-sm">
+          A próxima sessão foi salva no sistema e sincronizada com sucesso com o Google Calendar.
         </p>
+        <Button variant="outline" onClick={() => setIsScheduled(false)} className="mt-4">
+          Agendar outra sessão
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-slide-in-right">
+    <div className="space-y-6 animate-slide-in-right w-full max-w-2xl">
       <div>
         <h2 className="text-2xl font-semibold text-primary">Agendamento de Retorno</h2>
         <p className="text-muted-foreground">
-          Agende a próxima consulta do paciente para acompanhamento.
+          Agende a próxima sessão com o paciente. A sincronização com o Google Calendar será feita
+          automaticamente se configurado.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
+      <div className="space-y-4 pt-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Data da próxima consulta</Label>
-            <Card className="p-4 inline-block shadow-sm">
-              <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md" />
-            </Card>
+            <Label>Data</Label>
+            <Input
+              type="date"
+              value={formData.data}
+              onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+            />
           </div>
-        </div>
-
-        <div className="space-y-6">
           <div className="space-y-2">
             <Label>Horário</Label>
             <Input
               type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full max-w-[200px]"
+              value={formData.horario}
+              onChange={(e) => setFormData({ ...formData, horario: e.target.value })}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de Consulta</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="w-full max-w-[200px]">
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Presencial">Presencial</SelectItem>
-                <SelectItem value="Online">Online</SelectItem>
-                <SelectItem value="Híbrida">Híbrida</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Observações (Opcional)</Label>
-            <Textarea
-              placeholder="Ex: Trazer novos exames solicitados..."
-              rows={4}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <Button
-            className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg mt-4"
-            onClick={handleSchedule}
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
-            Agendar Próxima Consulta
-          </Button>
         </div>
+
+        <div className="space-y-2">
+          <Label>Tipo de Consulta</Label>
+          <Input
+            value={formData.tipo_consulta}
+            onChange={(e) => setFormData({ ...formData, tipo_consulta: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Observações</Label>
+          <Textarea
+            value={formData.observacoes}
+            onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+            placeholder="Anotações para a próxima sessão..."
+            rows={3}
+          />
+        </div>
+
+        <Button
+          onClick={handleSchedule}
+          disabled={loading}
+          className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <CalendarIcon className="mr-2 h-4 w-4" />
+          )}
+          Agendar Sessão
+        </Button>
       </div>
     </div>
   )

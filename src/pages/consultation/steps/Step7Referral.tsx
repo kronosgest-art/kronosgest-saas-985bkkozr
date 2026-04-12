@@ -3,15 +3,25 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function Step7Referral() {
+  const handlePrint = () => {
+    window.print()
+  }
+
   return (
-    <div className="space-y-6 animate-slide-in-right max-w-2xl">
-      <div>
-        <h2 className="text-2xl font-semibold text-primary">Encaminhamento Médico</h2>
-        <p className="text-muted-foreground">
-          Necessário quando identificados riscos clínicos além da especialidade.
-        </p>
+    <div className="space-y-6 animate-slide-in-right max-w-2xl w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-primary">Encaminhamento Médico</h2>
+          <p className="text-muted-foreground">
+            Necessário quando identificados riscos clínicos além da especialidade.
+          </p>
+        </div>
+        <Button onClick={handlePrint} variant="outline" className="shrink-0 font-medium">
+          🖨️ Imprimir
+        </Button>
       </div>
 
       <Alert variant="destructive">

@@ -14,6 +14,7 @@ import PatientsList from '@/pages/patients/PatientsList'
 import PrescriptionsList from '@/pages/prescriptions/PrescriptionsList'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import Settings from '@/pages/settings/Settings'
+import SessionsList from '@/pages/sessions/SessionsList'
 import BiochemicalExams from '@/pages/exams/BiochemicalExams'
 import BiophysicalExams from '@/pages/exams/BiophysicalExams'
 import NotFound from '@/pages/NotFound'
@@ -42,7 +43,7 @@ const App = () => (
             <Route path="/exams/biophysical" element={<BiophysicalExams />} />
             <Route path="/prescriptions" element={<PrescriptionsList />} />
             <Route path="/protocols" element={<FeaturePlaceholder title="Protocolos" />} />
-            <Route path="/sessions" element={<FeaturePlaceholder title="Sessões" />} />
+            <Route path="/sessions" element={<SessionsList />} />
             <Route path="/reports" element={<FeaturePlaceholder title="Relatórios" />} />
 
             {/* Patient Routes */}
