@@ -551,6 +551,124 @@ export type Database = {
           },
         ]
       }
+      transacoes_financeiras: {
+        Row: {
+          agendamento_id: string | null
+          categoria: string
+          created_at: string
+          data_transacao: string
+          descricao: string | null
+          id: string
+          patient_id: string | null
+          profissional_id: string | null
+          protocolo_id: string | null
+          status: string
+          tipo: string
+          valor: number
+          venda_id: string | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          categoria?: string
+          created_at?: string
+          data_transacao?: string
+          descricao?: string | null
+          id?: string
+          patient_id?: string | null
+          profissional_id?: string | null
+          protocolo_id?: string | null
+          status?: string
+          tipo?: string
+          valor: number
+          venda_id?: string | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          categoria?: string
+          created_at?: string
+          data_transacao?: string
+          descricao?: string | null
+          id?: string
+          patient_id?: string | null
+          profissional_id?: string | null
+          protocolo_id?: string | null
+          status?: string
+          tipo?: string
+          valor?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'transacoes_financeiras_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_financeiras_protocolo_id_fkey'
+            columns: ['protocolo_id']
+            isOneToOne: false
+            referencedRelation: 'protocolos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_financeiras_venda_id_fkey'
+            columns: ['venda_id']
+            isOneToOne: false
+            referencedRelation: 'vendas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      vendas: {
+        Row: {
+          created_at: string
+          data_venda: string
+          id: string
+          patient_id: string | null
+          profissional_id: string | null
+          protocolo_id: string | null
+          status: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_venda?: string
+          id?: string
+          patient_id?: string | null
+          profissional_id?: string | null
+          protocolo_id?: string | null
+          status?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_venda?: string
+          id?: string
+          patient_id?: string | null
+          profissional_id?: string | null
+          protocolo_id?: string | null
+          status?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vendas_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_protocolo_id_fkey'
+            columns: ['protocolo_id']
+            isOneToOne: false
+            referencedRelation: 'protocolos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -836,6 +954,29 @@ export const Constants = {
 //   data_assinatura: timestamp with time zone (not null, default: now())
 //   tipo_assinatura: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: transacoes_financeiras
+//   id: uuid (not null, default: gen_random_uuid())
+//   agendamento_id: uuid (nullable)
+//   venda_id: uuid (nullable)
+//   patient_id: uuid (nullable)
+//   protocolo_id: uuid (nullable)
+//   profissional_id: uuid (nullable)
+//   tipo: text (not null, default: 'receita'::text)
+//   categoria: text (not null, default: 'protocolo'::text)
+//   valor: numeric (not null)
+//   data_transacao: timestamp with time zone (not null, default: now())
+//   status: text (not null, default: 'pendente'::text)
+//   descricao: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: vendas
+//   id: uuid (not null, default: gen_random_uuid())
+//   protocolo_id: uuid (nullable)
+//   patient_id: uuid (nullable)
+//   profissional_id: uuid (nullable)
+//   valor: numeric (not null)
+//   data_venda: timestamp with time zone (not null, default: now())
+//   status: text (not null, default: 'pendente'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
 // Table: agendamentos
@@ -877,6 +1018,17 @@ export const Constants = {
 // Table: tcle_assinado
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
+// Table: transacoes_financeiras
+//   FOREIGN KEY transacoes_financeiras_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY transacoes_financeiras_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY transacoes_financeiras_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   FOREIGN KEY transacoes_financeiras_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE CASCADE
+//   FOREIGN KEY transacoes_financeiras_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE
+// Table: vendas
+//   FOREIGN KEY vendas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY vendas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY vendas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   FOREIGN KEY vendas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: agendamentos
@@ -940,6 +1092,14 @@ export const Constants = {
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
+// Table: transacoes_financeiras
+//   Policy "transacoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = transacoes_financeiras.patient_id) AND (pacientes.user_id = auth.uid())))))
+//     WITH CHECK: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = transacoes_financeiras.patient_id) AND (pacientes.user_id = auth.uid())))))
+// Table: vendas
+//   Policy "vendas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = vendas.patient_id) AND (pacientes.user_id = auth.uid())))))
+//     WITH CHECK: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = vendas.patient_id) AND (pacientes.user_id = auth.uid())))))
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION handle_new_profissional()

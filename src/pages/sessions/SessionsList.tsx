@@ -17,6 +17,7 @@ import {
   Edit2,
   Loader2,
   Lightbulb,
+  Plus,
 } from 'lucide-react'
 import {
   Dialog,
@@ -44,6 +45,27 @@ export default function SessionsList() {
   const [saving, setSaving] = useState(false)
   const [editingSession, setEditingSession] = useState<any>(null)
   const [protocols, setProtocols] = useState<any[]>([])
+  const [isNewSessionOpen, setIsNewSessionOpen] = useState(false)
+  const [patients, setPatients] = useState<any[]>([])
+  const [newSession, setNewSession] = useState({
+    patient_id: '',
+    data: '',
+    horario: '',
+    tipo_consulta: 'Sessão Avulsa',
+  })
+
+  useEffect(() => {
+    const loadPatients = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('pacientes')
+          .select('id, nome_completo')
+          .order('nome_completo')
+        if (data) setPatients(data)
+      }
+    }
+    loadPatients()
+  }, [user])
 
   useEffect(() => {
     const loadProtocols = async () => {
@@ -116,6 +138,18 @@ export default function SessionsList() {
 
       if (error) throw error
 
+      if (editingSession.status === 'Realizado') {
+        await supabase
+          .from('transacoes_financeiras')
+          .update({ status: 'pago' })
+          .eq('agendamento_id', editingSession.id)
+      } else if (editingSession.status === 'Cancelado') {
+        await supabase
+          .from('transacoes_financeiras')
+          .update({ status: 'cancelado' })
+          .eq('agendamento_id', editingSession.id)
+      }
+
       toast({ title: 'Sessão atualizada com sucesso!' })
       setEditingSession(null)
       loadSessions()
@@ -163,6 +197,68 @@ export default function SessionsList() {
 
   const suggestion = getSuggestionData()
 
+  const handleCreateSession = async () => {
+    if (!newSession.patient_id || !newSession.data || !newSession.horario) {
+      toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' })
+      return
+    }
+    setSaving(true)
+    try {
+      const { data: prof } = await supabase
+        .from('profissionais')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single()
+      const { data: agendamento, error } = await supabase
+        .from('agendamentos')
+        .insert({
+          patient_id: newSession.patient_id,
+          profissional_id: prof?.id,
+          data: newSession.data,
+          horario: newSession.horario,
+          tipo_consulta: newSession.tipo_consulta,
+          status: 'Agendado',
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      if (agendamento) {
+        let valorSessao = 150
+        if (protocols && protocols.length > 0) {
+          const match = protocols.find((p) =>
+            p.nome.toLowerCase().includes(newSession.tipo_consulta.toLowerCase()),
+          )
+          if (match && match.valor_sessao_avulsa) {
+            valorSessao = Number(match.valor_sessao_avulsa)
+          }
+        }
+
+        await supabase.from('transacoes_financeiras').insert({
+          agendamento_id: agendamento.id,
+          patient_id: agendamento.patient_id,
+          profissional_id: prof?.id,
+          tipo: 'sessao',
+          categoria: 'sessão',
+          valor: valorSessao,
+          data_transacao: new Date().toISOString(),
+          status: 'pendente',
+          descricao: `Sessão: ${newSession.tipo_consulta}`,
+        })
+      }
+
+      toast({ title: 'Sessão agendada com sucesso!' })
+      setIsNewSessionOpen(false)
+      setNewSession({ patient_id: '', data: '', horario: '', tipo_consulta: 'Sessão Avulsa' })
+      loadSessions()
+    } catch (error: any) {
+      toast({ title: 'Erro ao agendar', description: error.message, variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Realizado':
@@ -188,9 +284,17 @@ export default function SessionsList() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Gestão de Sessões</h1>
-        <p className="text-muted-foreground">Acompanhe e gerencie todos os seus agendamentos.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Gestão de Sessões</h1>
+          <p className="text-muted-foreground">Acompanhe e gerencie todos os seus agendamentos.</p>
+        </div>
+        <Button
+          onClick={() => setIsNewSessionOpen(true)}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Agendar Sessão
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -350,6 +454,69 @@ export default function SessionsList() {
             <Button onClick={handleUpdate} disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isNewSessionOpen} onOpenChange={setIsNewSessionOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Sessão</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Paciente</Label>
+              <Select
+                value={newSession.patient_id}
+                onValueChange={(v) => setNewSession({ ...newSession, patient_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nome_completo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de Consulta</Label>
+              <Input
+                value={newSession.tipo_consulta}
+                onChange={(e) => setNewSession({ ...newSession, tipo_consulta: e.target.value })}
+                placeholder="Ex: Sessão Avulsa, Retorno"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input
+                  type="date"
+                  value={newSession.data}
+                  onChange={(e) => setNewSession({ ...newSession, data: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Input
+                  type="time"
+                  value={newSession.horario}
+                  onChange={(e) => setNewSession({ ...newSession, horario: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewSessionOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateSession} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Agendar
             </Button>
           </DialogFooter>
         </DialogContent>

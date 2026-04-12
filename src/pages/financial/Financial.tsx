@@ -53,7 +53,7 @@ export default function Financial() {
   }
 
   const totalReceitas = transacoes
-    .filter((t) => t.tipo === 'receita' && t.status === 'pago')
+    .filter((t) => ['receita', 'protocolo', 'sessao'].includes(t.tipo) && t.status === 'pago')
     .reduce((acc, curr) => acc + curr.valor, 0)
   const totalPendentes = transacoes
     .filter((t) => t.status === 'pendente')
