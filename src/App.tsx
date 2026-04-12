@@ -13,6 +13,7 @@ import Financial from '@/pages/financial/Financial'
 import PatientsList from '@/pages/patients/PatientsList'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import Settings from '@/pages/settings/Settings'
+import BiophysicalExams from '@/pages/exams/BiophysicalExams'
 import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 
@@ -39,10 +40,7 @@ const App = () => (
               path="/exams/biochemical"
               element={<FeaturePlaceholder title="Exames Bioquímicos" />}
             />
-            <Route
-              path="/exams/biophysical"
-              element={<FeaturePlaceholder title="Exames Biofísicos" />}
-            />
+            <Route path="/exams/biophysical" element={<BiophysicalExams />} />
             <Route path="/prescriptions" element={<FeaturePlaceholder title="Prescrições" />} />
             <Route path="/protocols" element={<FeaturePlaceholder title="Protocolos" />} />
             <Route path="/sessions" element={<FeaturePlaceholder title="Sessões" />} />
