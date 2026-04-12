@@ -599,6 +599,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: 'transacoes_financeiras_agendamento_id_fkey'
+            columns: ['agendamento_id']
+            isOneToOne: false
+            referencedRelation: 'agendamentos'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'transacoes_financeiras_patient_id_fkey'
             columns: ['patient_id']
             isOneToOne: false
@@ -956,7 +963,6 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 // Table: transacoes_financeiras
 //   id: uuid (not null, default: gen_random_uuid())
-//   agendamento_id: uuid (nullable)
 //   venda_id: uuid (nullable)
 //   patient_id: uuid (nullable)
 //   protocolo_id: uuid (nullable)
@@ -968,6 +974,7 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   descricao: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+//   agendamento_id: uuid (nullable)
 // Table: vendas
 //   id: uuid (not null, default: gen_random_uuid())
 //   protocolo_id: uuid (nullable)
@@ -1019,6 +1026,7 @@ export const Constants = {
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
 // Table: transacoes_financeiras
+//   FOREIGN KEY transacoes_financeiras_agendamento_id_fkey: FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id) ON DELETE CASCADE
 //   FOREIGN KEY transacoes_financeiras_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY transacoes_financeiras_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY transacoes_financeiras_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE

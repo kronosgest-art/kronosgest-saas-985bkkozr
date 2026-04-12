@@ -13,6 +13,7 @@ import ProtocolDashboard from './ProtocolDashboard'
 import ProtocolList from './ProtocolList'
 import ProtocolFormModal from './ProtocolFormModal'
 import { useProtocols, Protocol } from './use-protocols'
+import { SellProtocolDialog } from '@/pages/protocols/SellProtocolDialog'
 
 export default function ProtocolsTab() {
   const { protocols, loading, saveProtocol, deleteProtocol } = useProtocols()
@@ -23,6 +24,7 @@ export default function ProtocolsTab() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProtocol, setEditingProtocol] = useState<Protocol | null>(null)
+  const [sellingProtocol, setSellingProtocol] = useState<Protocol | null>(null)
 
   const handleOpenModal = (protocol?: Protocol) => {
     setEditingProtocol(protocol || null)
@@ -97,8 +99,15 @@ export default function ProtocolsTab() {
           onEdit={handleOpenModal}
           onDuplicate={handleDuplicate}
           onDelete={deleteProtocol}
+          onSell={setSellingProtocol}
         />
       )}
+
+      <SellProtocolDialog
+        protocol={sellingProtocol}
+        open={!!sellingProtocol}
+        onOpenChange={(open) => !open && setSellingProtocol(null)}
+      />
 
       <ProtocolFormModal
         isOpen={isModalOpen}

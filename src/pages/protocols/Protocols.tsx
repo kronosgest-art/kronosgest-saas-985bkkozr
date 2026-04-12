@@ -565,11 +565,20 @@ export default function Protocols() {
                     <CardTitle className="text-lg text-[#1E3A8A] font-bold leading-tight">
                       {p.nome_protocolo || p.nome}
                     </CardTitle>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex gap-2 shrink-0">
                       <Button
-                        variant="ghost"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-green-700 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-800 hidden sm:flex"
+                        onClick={() => setSellingProtocol(p)}
+                        title="Vender Protocolo"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-2" /> Vender
+                      </Button>
+                      <Button
+                        variant="outline"
                         size="icon"
-                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        className="h-8 w-8 text-green-700 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-800 sm:hidden"
                         onClick={() => setSellingProtocol(p)}
                         title="Vender Protocolo"
                       >

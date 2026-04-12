@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Edit, Printer, Trash2 } from 'lucide-react'
+import { Copy, Edit, Printer, Trash2, ShoppingCart } from 'lucide-react'
 import { Protocol } from './use-protocols'
 import { printProtocol } from '@/lib/print-protocol'
 import { useAuth } from '@/hooks/use-auth'
@@ -17,6 +17,7 @@ interface ProtocolListProps {
   onDuplicate: (p: Protocol) => void
   onDelete: (id: string) => void
   onSelect?: (p: Protocol) => void
+  onSell?: (p: Protocol) => void
 }
 
 export default function ProtocolList({
@@ -28,6 +29,7 @@ export default function ProtocolList({
   onDuplicate,
   onDelete,
   onSelect,
+  onSell,
 }: ProtocolListProps) {
   const { user } = useAuth()
 
@@ -105,11 +107,22 @@ export default function ProtocolList({
               <Button
                 size="sm"
                 variant="default"
-                className="flex-1 text-xs"
+                className="flex-1 text-xs whitespace-nowrap"
                 onClick={() => handleCopy(p)}
               >
                 <Copy className="w-3 h-3 mr-1" /> Copiar
               </Button>
+              {onSell && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs whitespace-nowrap text-green-700 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-800"
+                  onClick={() => onSell(p)}
+                  title="Vender Protocolo"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" /> Vender
+                </Button>
+              )}
               <Button
                 size="icon"
                 variant="outline"
