@@ -106,7 +106,10 @@ Deno.serve(async (req: Request) => {
     REGRAS CRÍTICAS DE PRESCRIÇÃO:
     1. NUNCA sugira medicamentos alopáticos ou prescritos (ex: antibióticos, anti-hipertensivos, etc).
     2. O foco deve ser EXCLUSIVAMENTE em SUPLEMENTAÇÃO (vitaminas, minerais, nutracêuticos, fitoterápicos) e orientações de estilo de vida.
-    3. Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
+    3. CONSOLIDAÇÃO DE ATIVOS: Agrupe os ativos em uma ÚNICA FÓRMULA com 2 ou mais itens sempre que possível e clinicamente compatível.
+    4. FORMA FARMACÊUTICA: Avalie e sugira a via de administração mais interessante e adequada para o paciente (ex: cápsula, sachê, comprimido sublingual, xarope, goma de mascar, comprimido mastigável).
+    5. INTERAÇÕES E CONFLITOS: Analise rigorosamente as interações farmacológicas e competições de absorção. Se houver interação entre ativos, SEPARE-OS obrigatoriamente em fórmulas diferentes com HORÁRIOS DE TOMADA DIFERENTES.
+    6. Retorne APENAS o texto da prescrição de forma clara, pronta para ir para um receituário, incluindo compostos, fórmulas, dosagens, frequência e orientações ao paciente.
     Não use marcações markdown como \`\`\` nos extremos, apenas o texto puro formatado para leitura.\n\n${promptContext}`
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
