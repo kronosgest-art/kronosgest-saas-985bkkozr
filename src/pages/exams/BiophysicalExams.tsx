@@ -18,12 +18,22 @@ import {
   gerarSugestaoPrescricao,
 } from '@/services/ai-functions'
 import { useToast } from '@/hooks/use-toast'
-import { FileText, Upload, Activity, Loader2, FileSignature, AlertCircle } from 'lucide-react'
+import {
+  FileText,
+  Upload,
+  Activity,
+  Loader2,
+  FileSignature,
+  AlertCircle,
+  ShoppingCart,
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { SellProtocolDialog } from '@/pages/protocols/SellProtocolDialog'
 
 export default function BiophysicalExams() {
   const [patients, setPatients] = useState<any[]>([])
+  const [sellOpen, setSellOpen] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
   const [processing, setProcessing] = useState(false)
@@ -109,12 +119,23 @@ export default function BiophysicalExams() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Exames Biofísicos</h1>
-        <p className="text-muted-foreground">
-          Faça o upload do laudo de biorressonância em PDF para extração e análise inteligente.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Exames Biofísicos</h1>
+          <p className="text-muted-foreground">
+            Faça o upload do laudo de biorressonância em PDF para extração e análise inteligente.
+          </p>
+        </div>
+        <Button
+          onClick={() => setSellOpen(true)}
+          className="bg-green-600 hover:bg-green-700 text-white shadow-sm shrink-0"
+        >
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          Vender Protocolo
+        </Button>
       </div>
+
+      <SellProtocolDialog protocol={null} open={sellOpen} onOpenChange={setSellOpen} />
 
       <Card>
         <CardHeader>

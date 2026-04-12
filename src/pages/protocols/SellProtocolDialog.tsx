@@ -40,6 +40,9 @@ export function SellProtocolDialog({
   const [valor, setValor] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [protocolos, setProtocolos] = useState<Protocol[]>([])
+  const [selectedProtocolId, setSelectedProtocolId] = useState('')
+
   useEffect(() => {
     if (open && user) {
       supabase
@@ -48,23 +51,55 @@ export function SellProtocolDialog({
         .order('nome_completo')
         .then(({ data }) => setPatients(data || []))
 
+      if (!protocol) {
+        supabase
+          .from('protocolos')
+          .select('id, nome, nome_protocolo, valor_total')
+          .order('nome')
+          .then(({ data }) => setProtocolos(data || []))
+      }
+
       if (protocol) {
         setValor(protocol.valor_total ? protocol.valor_total.toString() : '0')
         setStatus('pago')
         setSelectedPatient('')
+        setSelectedProtocolId('')
+      } else {
+        setValor('0')
+        setStatus('pago')
+        setSelectedPatient('')
+        setSelectedProtocolId('')
       }
     }
   }, [open, user, protocol])
+
+  const handleProtocolChange = (val: string) => {
+    setSelectedProtocolId(val)
+    const p = protocolos.find((x) => x.id === val)
+    if (p && p.valor_total) {
+      setValor(p.valor_total.toString())
+    }
+  }
 
   const handleSell = async () => {
     if (!selectedPatient) {
       toast.error('Selecione um paciente')
       return
     }
+
+    const targetProtocolId = protocol?.id || selectedProtocolId
+    if (!targetProtocolId) {
+      toast.error('Selecione um protocolo')
+      return
+    }
+
+    const targetProtocol = protocol || protocolos.find((p) => p.id === targetProtocolId)
+    const protocolName = targetProtocol?.nome_protocolo || targetProtocol?.nome || 'Protocolo'
+
     setLoading(true)
     try {
       const venda = {
-        protocolo_id: protocol.id,
+        protocolo_id: targetProtocolId,
         patient_id: selectedPatient,
         profissional_id: user?.id,
         valor: parseFloat(valor),
@@ -82,13 +117,13 @@ export function SellProtocolDialog({
       const transacao = {
         venda_id: vendaData.id,
         patient_id: selectedPatient,
-        protocolo_id: protocol.id,
+        protocolo_id: targetProtocolId,
         profissional_id: user?.id,
         tipo: 'receita',
         categoria: 'protocolo',
         valor: parseFloat(valor),
         status: status,
-        descricao: `Venda do protocolo: ${protocol.nome_protocolo || protocol.nome}`,
+        descricao: `Venda do protocolo: ${protocolName}`,
       }
 
       const { error: transacaoError } = await supabase
@@ -112,11 +147,39 @@ export function SellProtocolDialog({
         <DialogHeader>
           <DialogTitle className="text-[#1E3A8A]">Vender Protocolo</DialogTitle>
           <DialogDescription>
-            Registre a venda do protocolo{' '}
-            <strong>{protocol?.nome_protocolo || protocol?.nome}</strong> para um paciente.
+            Registre a venda de um protocolo para um paciente.
+            {protocol && (
+              <>
+                <br />
+                Protocolo: <strong>{protocol.nome_protocolo || protocol.nome}</strong>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {!protocol && (
+            <div className="space-y-2">
+              <Label className="text-slate-700 font-semibold">Protocolo *</Label>
+              <Select value={selectedProtocolId} onValueChange={handleProtocolChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o protocolo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {protocolos.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      Nenhum protocolo encontrado
+                    </SelectItem>
+                  ) : (
+                    protocolos.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome_protocolo || p.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold">Paciente *</Label>
             <Select value={selectedPatient} onValueChange={setSelectedPatient}>
