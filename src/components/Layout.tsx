@@ -1,6 +1,7 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Users,
@@ -29,7 +30,7 @@ export default function Layout() {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <p className="text-lg font-medium text-muted-foreground">Inicializando...</p>
+        <p className="text-lg font-medium text-muted-foreground font-sans">Inicializando...</p>
       </div>
     )
   }
@@ -43,9 +44,9 @@ export default function Layout() {
   const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
 
   const adminLinks = [
-    { to: '/', label: 'Dashboard Principal', icon: LayoutDashboard },
+    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/crm', label: 'CRM & Leads', icon: Filter },
-    { to: '/premium-consultation', label: 'Consulta Premium', icon: Star },
+    { to: '/premium-consultation', label: 'Consulta Premium', icon: Star, isPremium: true },
     { to: '/patients', label: 'Paciente', icon: User },
     { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
     { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
@@ -68,7 +69,6 @@ export default function Layout() {
 
   const navLinks = isPatient ? patientLinks : adminLinks
 
-  // Simple Route Protection
   const allowedPaths = isPatient
     ? patientLinks.map((l) => l.to)
     : ['/consultation', ...adminLinks.map((l) => l.to)]
@@ -83,35 +83,81 @@ export default function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
-      {/* Sidebar with Blue (#1E3A8A) and Gold (#B8860B) Theme */}
-      <aside className="hidden w-64 flex-col border-r border-primary/10 bg-primary sm:flex shadow-xl z-10 transition-all">
-        <div className="flex h-16 items-center border-b border-primary-foreground/10 px-6">
-          <span className="text-xl font-bold text-primary-foreground tracking-tight flex items-center gap-2">
-            <span className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-sm shadow-sm">
-              IMV
+    <div className="flex min-h-screen bg-[#FDFCF0] text-[#333333] font-sans">
+      <aside className="hidden w-72 flex-col border-r border-[#333333]/10 bg-[#001F3F] sm:flex shadow-2xl z-10 transition-all">
+        <div className="flex flex-col items-center justify-center border-b border-[#FDFCF0]/10 px-4 py-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <svg
+              width="52"
+              height="52"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-[#C5A059] mb-4 drop-shadow-md"
+            >
+              <path
+                d="M14 10H34L24 24L14 10Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+                fill="currentColor"
+                fillOpacity="0.1"
+              />
+              <path
+                d="M14 38H34L24 24L14 38Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+                fill="currentColor"
+                fillOpacity="0.1"
+              />
+              <path
+                d="M26 22L38 10M38 10H28M38 10V20"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="font-display text-2xl font-bold tracking-[0.15em] text-[#C5A059] uppercase drop-shadow-sm">
+              KRONOS GEST
             </span>
-            KronosGest
-          </span>
+            <span className="mt-2 text-[0.55rem] font-medium uppercase tracking-[0.2em] text-[#FDFCF0]/70 text-center leading-relaxed">
+              Inteligência Clínica em cada
+              <br />
+              Consulta Integrativa
+            </span>
+          </div>
         </div>
-        <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {navLinks.map((link) => {
             const Icon = link.icon
             const isActive =
               location.pathname === link.to ||
               (location.pathname.startsWith(link.to) && link.to !== '/')
+            const isPremium = (link as any).isPremium
+
             return (
               <Link key={link.to} to={link.to}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start transition-all duration-200 ${
+                  className={cn(
+                    'w-full justify-start transition-all duration-300 font-sans tracking-wide text-sm h-11',
                     isActive
-                      ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold shadow-md'
-                      : 'text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10'
-                  }`}
+                      ? 'bg-[#C5A059]/15 text-[#C5A059] font-semibold border-l-[3px] border-[#C5A059] rounded-l-none rounded-r-md shadow-sm'
+                      : 'text-[#FDFCF0]/70 hover:bg-[#FDFCF0]/10 hover:text-[#FDFCF0]',
+                    isPremium && !isActive && 'text-[#C5A059]/80 hover:text-[#C5A059]',
+                  )}
                 >
                   <Icon
-                    className={`mr-3 h-5 w-5 ${isActive ? 'text-secondary-foreground' : 'text-primary-foreground/70'}`}
+                    className={cn(
+                      'mr-3 h-[18px] w-[18px]',
+                      isActive
+                        ? 'text-[#C5A059]'
+                        : isPremium
+                          ? 'text-[#C5A059]/80'
+                          : 'text-[#FDFCF0]/50',
+                    )}
                   />
                   {link.label}
                 </Button>
@@ -119,32 +165,48 @@ export default function Layout() {
             )
           })}
         </nav>
-        <div className="border-t border-primary-foreground/10 p-4">
+        <div className="border-t border-[#FDFCF0]/10 p-4">
           <Button
             variant="ghost"
-            className="w-full justify-start text-primary-foreground/80 hover:text-white hover:bg-red-500/20 transition-colors"
+            className="w-full justify-start text-[#FDFCF0]/70 hover:text-white hover:bg-red-500/20 transition-colors font-sans"
             onClick={() => signOut()}
           >
-            <LogOut className="mr-3 h-5 w-5" />
+            <LogOut className="mr-3 h-[18px] w-[18px]" />
             Sair da Conta
           </Button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-muted/10">
-        <header className="flex h-16 items-center gap-4 border-b bg-primary px-6 sm:hidden text-primary-foreground shadow-md">
-          <span className="text-lg font-bold flex items-center gap-2">
-            <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs">
-              IMV
-            </span>
-            KronosGest
-          </span>
+      <main className="flex-1 overflow-y-auto bg-[#FDFCF0]">
+        <header className="flex h-16 items-center gap-4 border-b border-[#333333]/10 bg-[#001F3F] px-6 sm:hidden text-[#C5A059] shadow-md">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-[#C5A059]"
+          >
+            <path
+              d="M14 10H34L24 24L14 10Z"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 38H34L24 24L14 38Z"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="font-display text-lg font-bold tracking-widest">KRONOS GEST</span>
           <div className="ml-auto">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => signOut()}
-              className="text-primary-foreground hover:bg-primary-foreground/20"
+              className="text-[#FDFCF0]/80 hover:bg-[#FDFCF0]/20 hover:text-[#FDFCF0]"
             >
               <LogOut className="h-5 w-5" />
             </Button>
