@@ -17,7 +17,7 @@ import {
   Check,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 import Step1Client from './steps/Step1Client'
@@ -51,6 +51,8 @@ export default function PremiumConsultationWizard() {
   })
   const [isFinished, setIsFinished] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const patientIdParam = searchParams.get('patient_id')
   const totalSteps = STEPS.length
 
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100
@@ -67,10 +69,16 @@ export default function PremiumConsultationWizard() {
   }
 
   useEffect(() => {
-    if (isFinished) {
-      navigate('/patients')
+    if (patientIdParam && !formData.patient_id) {
+      setFormData((prev: any) => ({ ...prev, patient_id: patientIdParam }))
     }
-  }, [isFinished, navigate])
+
+    const hash = window.location.hash.replace('#/', '')
+    const step = Object.entries(stepToPath).find(([_, path]) => path === hash)
+    if (step) {
+      setCurrentStep(Number(step[0]))
+    }
+  }, [patientIdParam])
 
   const handleDataChange = (newData: any) => {
     setFormData((prev: any) => ({ ...prev, ...newData }))
@@ -157,6 +165,81 @@ export default function PremiumConsultationWizard() {
       setCurrentStep(prevStep)
       window.history.pushState(null, '', `#/${stepToPath[prevStep]}`)
     }
+  }
+
+  if (isFinished) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-fade-in-up">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-[#001F3F]">Resumo da Consulta Premium</h1>
+          <p className="text-muted-foreground mt-2">
+            Consulta finalizada com sucesso. Revise as informações e próximos passos.
+          </p>
+        </div>
+
+        <Card className="min-h-[400px] border-[#001F3F]/10 shadow-xl shadow-[#001F3F]/5 bg-white">
+          <CardContent className="p-10 flex flex-col items-center justify-center h-full gap-8">
+            <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-[#D4AF37]" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-[#001F3F]">Tudo Certo!</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Os dados do paciente foram registrados no sistema. Você pode complementar o
+                histórico clínico agora ou voltar para a lista de pacientes.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 w-full max-w-md mt-4">
+              {formData.anamnese_id ? (
+                <div className="flex flex-col items-center gap-3 w-full p-6 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-medium">Formulário já preenchido</span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setIsFinished(false)
+                      setCurrentStep(2)
+                      navigate(`?patient_id=${formData.patient_id}#/${stepToPath[2]}`, {
+                        replace: true,
+                      })
+                    }}
+                    className="w-full bg-[#001F3F] hover:bg-[#00152B] text-white cursor-pointer transition-all hover:scale-[1.02] shadow-sm flex items-center justify-center gap-2 group"
+                  >
+                    <FileText className="w-4 h-4 group-hover:text-[#D4AF37] transition-colors" />
+                    Editar Anamnese
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setIsFinished(false)
+                    setCurrentStep(2)
+                    navigate(`?patient_id=${formData.patient_id}#/${stepToPath[2]}`, {
+                      replace: true,
+                    })
+                  }}
+                  className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-white cursor-pointer transition-all hover:scale-[1.02] shadow-sm flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Abrir Formulário de Anamnese
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                className="w-full text-[#001F3F] hover:bg-[#001F3F]/5 transition-colors cursor-pointer"
+                onClick={() => navigate('/patients')}
+              >
+                Voltar para Lista de Pacientes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
