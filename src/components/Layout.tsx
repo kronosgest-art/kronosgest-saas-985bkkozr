@@ -93,30 +93,57 @@ export default function Layout() {
               viewBox="0 0 48 48"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-[#C5A059] mb-4 drop-shadow-md"
+              className="mb-4 drop-shadow-xl"
             >
+              <defs>
+                <linearGradient id="goldBrushed" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFF1B8" />
+                  <stop offset="20%" stopColor="#C5A059" />
+                  <stop offset="40%" stopColor="#E5C77B" />
+                  <stop offset="60%" stopColor="#8A6B29" />
+                  <stop offset="80%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#5E4511" />
+                </linearGradient>
+                <linearGradient id="goldBrushedDark" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#8A6B29" />
+                  <stop offset="50%" stopColor="#C5A059" />
+                  <stop offset="100%" stopColor="#5E4511" />
+                </linearGradient>
+                <filter id="metalShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow
+                    dx="0"
+                    dy="2"
+                    stdDeviation="3"
+                    floodColor="#000000"
+                    floodOpacity="0.6"
+                  />
+                </filter>
+              </defs>
               <path
                 d="M14 10H34L24 24L14 10Z"
-                stroke="currentColor"
+                stroke="url(#goldBrushed)"
                 strokeWidth="2"
                 strokeLinejoin="round"
-                fill="currentColor"
-                fillOpacity="0.1"
+                fill="url(#goldBrushedDark)"
+                fillOpacity="0.8"
+                filter="url(#metalShadow)"
               />
               <path
                 d="M14 38H34L24 24L14 38Z"
-                stroke="currentColor"
+                stroke="url(#goldBrushed)"
                 strokeWidth="2"
                 strokeLinejoin="round"
-                fill="currentColor"
-                fillOpacity="0.1"
+                fill="url(#goldBrushedDark)"
+                fillOpacity="0.8"
+                filter="url(#metalShadow)"
               />
               <path
                 d="M26 22L38 10M38 10H28M38 10V20"
-                stroke="currentColor"
+                stroke="url(#goldBrushed)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                filter="url(#metalShadow)"
               />
             </svg>
             <span className="font-display text-2xl font-bold tracking-[0.15em] text-[#C5A059] uppercase drop-shadow-sm">
@@ -185,18 +212,35 @@ export default function Layout() {
             viewBox="0 0 48 48"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-[#C5A059]"
+            className="drop-shadow-md"
           >
+            <defs>
+              <linearGradient id="goldBrushedMobile" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFF1B8" />
+                <stop offset="20%" stopColor="#C5A059" />
+                <stop offset="40%" stopColor="#E5C77B" />
+                <stop offset="60%" stopColor="#8A6B29" />
+                <stop offset="80%" stopColor="#D4AF37" />
+                <stop offset="100%" stopColor="#5E4511" />
+              </linearGradient>
+            </defs>
             <path
               d="M14 10H34L24 24L14 10Z"
-              stroke="currentColor"
+              stroke="url(#goldBrushedMobile)"
               strokeWidth="2.5"
               strokeLinejoin="round"
             />
             <path
               d="M14 38H34L24 24L14 38Z"
-              stroke="currentColor"
+              stroke="url(#goldBrushedMobile)"
               strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M26 22L38 10M38 10H28M38 10V20"
+              stroke="url(#goldBrushedMobile)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
