@@ -21,6 +21,7 @@ import {
   User,
   Settings as SettingsIcon,
 } from 'lucide-react'
+import logoImg from '@/assets/photo-2026-04-13-12-26-51-1908e.jpg'
 
 export default function Layout() {
   const { user, loading, signOut } = useAuth()
@@ -86,74 +87,12 @@ export default function Layout() {
     <div className="flex min-h-screen bg-[#FDFCF0] text-[#333333] font-sans">
       <aside className="hidden w-72 flex-col border-r border-[#333333]/10 bg-[#001F3F] sm:flex shadow-2xl z-10 transition-all">
         <div className="flex flex-col items-center justify-center border-b border-[#FDFCF0]/10 px-4 py-8">
-          <div className="flex flex-col items-center justify-center text-center">
-            <svg
-              width="52"
-              height="52"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="mb-4 drop-shadow-xl"
-            >
-              <defs>
-                <linearGradient id="goldBrushed" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FFF1B8" />
-                  <stop offset="20%" stopColor="#C5A059" />
-                  <stop offset="40%" stopColor="#E5C77B" />
-                  <stop offset="60%" stopColor="#8A6B29" />
-                  <stop offset="80%" stopColor="#D4AF37" />
-                  <stop offset="100%" stopColor="#5E4511" />
-                </linearGradient>
-                <linearGradient id="goldBrushedDark" x1="100%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#8A6B29" />
-                  <stop offset="50%" stopColor="#C5A059" />
-                  <stop offset="100%" stopColor="#5E4511" />
-                </linearGradient>
-                <filter id="metalShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow
-                    dx="0"
-                    dy="2"
-                    stdDeviation="3"
-                    floodColor="#000000"
-                    floodOpacity="0.6"
-                  />
-                </filter>
-              </defs>
-              <path
-                d="M14 10H34L24 24L14 10Z"
-                stroke="url(#goldBrushed)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-                fill="url(#goldBrushedDark)"
-                fillOpacity="0.8"
-                filter="url(#metalShadow)"
-              />
-              <path
-                d="M14 38H34L24 24L14 38Z"
-                stroke="url(#goldBrushed)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-                fill="url(#goldBrushedDark)"
-                fillOpacity="0.8"
-                filter="url(#metalShadow)"
-              />
-              <path
-                d="M26 22L38 10M38 10H28M38 10V20"
-                stroke="url(#goldBrushed)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#metalShadow)"
-              />
-            </svg>
-            <span className="font-display text-2xl font-bold tracking-[0.15em] text-[#C5A059] uppercase drop-shadow-sm">
-              KRONOS GEST
-            </span>
-            <span className="mt-2 text-[0.55rem] font-medium uppercase tracking-[0.2em] text-[#FDFCF0]/70 text-center leading-relaxed">
-              Inteligência Clínica em cada
-              <br />
-              Consulta Integrativa
-            </span>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <img
+              src={logoImg}
+              alt="Kronos Gest"
+              className="w-full max-w-[220px] object-contain mix-blend-lighten"
+            />
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
@@ -206,45 +145,11 @@ export default function Layout() {
 
       <main className="flex-1 overflow-y-auto bg-[#FDFCF0]">
         <header className="flex h-16 items-center gap-4 border-b border-[#333333]/10 bg-[#001F3F] px-6 sm:hidden text-[#C5A059] shadow-md">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="drop-shadow-md"
-          >
-            <defs>
-              <linearGradient id="goldBrushedMobile" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFF1B8" />
-                <stop offset="20%" stopColor="#C5A059" />
-                <stop offset="40%" stopColor="#E5C77B" />
-                <stop offset="60%" stopColor="#8A6B29" />
-                <stop offset="80%" stopColor="#D4AF37" />
-                <stop offset="100%" stopColor="#5E4511" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M14 10H34L24 24L14 10Z"
-              stroke="url(#goldBrushedMobile)"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 38H34L24 24L14 38Z"
-              stroke="url(#goldBrushedMobile)"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M26 22L38 10M38 10H28M38 10V20"
-              stroke="url(#goldBrushedMobile)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="font-display text-lg font-bold tracking-widest">KRONOS GEST</span>
+          <img
+            src={logoImg}
+            alt="Kronos Gest"
+            className="h-10 w-auto object-contain object-left mix-blend-lighten"
+          />
           <div className="ml-auto">
             <Button
               variant="ghost"
