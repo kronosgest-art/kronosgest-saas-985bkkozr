@@ -15,10 +15,12 @@ import {
   Share2,
   CalendarDays,
   Check,
+  FolderOpen,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 import Step1Client from './steps/Step1Client'
 import Step2Anamnese from './steps/Step2Anamnese'
@@ -133,7 +135,7 @@ export default function PremiumConsultationWizard() {
     return true
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep()) return
 
     if (currentStep < totalSteps) {
@@ -151,10 +153,29 @@ export default function PremiumConsultationWizard() {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       toast({ title: 'Etapa concluída', description: 'Os dados foram salvos temporariamente.' })
     } else {
-      toast({
-        title: 'Consulta Premium Finalizada',
-        description: 'Todos os dados foram registrados no sistema com sucesso.',
-      })
+      try {
+        const { error } = await (supabase as any).from('consultas').insert({
+          patient_id: formData.patient_id,
+          consultation_type: 'Premium',
+          consultation_date: new Date().toISOString(),
+          status: 'Finalizada',
+          data_collected: formData,
+        })
+
+        if (error) throw error
+
+        toast({
+          title: 'Consulta Premium Finalizada',
+          description: 'Todos os dados foram registrados no sistema com sucesso.',
+        })
+      } catch (error) {
+        console.error('Error saving consultation:', error)
+        toast({
+          title: 'Aviso',
+          description: 'A consulta foi finalizada, mas houve um erro ao salvar o histórico.',
+          variant: 'destructive',
+        })
+      }
       setIsFinished(true)
     }
   }
@@ -227,6 +248,14 @@ export default function PremiumConsultationWizard() {
                   Abrir Formulário de Anamnese
                 </Button>
               )}
+
+              <Button
+                onClick={() => navigate(`/patients/${formData.patient_id}/medical-record`)}
+                className="w-full bg-[#001F3F] hover:bg-[#00152B] text-white cursor-pointer transition-all hover:scale-[1.02] shadow-sm flex items-center justify-center gap-2"
+              >
+                <FolderOpen className="w-4 h-4" />
+                Abrir Prontuário
+              </Button>
 
               <Button
                 variant="ghost"

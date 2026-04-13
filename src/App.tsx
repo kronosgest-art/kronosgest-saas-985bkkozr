@@ -14,6 +14,7 @@ import PatientsList from '@/pages/patients/PatientsList'
 import PrescriptionsList from '@/pages/prescriptions/PrescriptionsList'
 import Protocols from '@/pages/protocols/Protocols'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
+import PatientMedicalRecord from '@/pages/patients/PatientMedicalRecord'
 import Settings from '@/pages/settings/Settings'
 import SessionsList from '@/pages/sessions/SessionsList'
 import BiochemicalExams from '@/pages/exams/BiochemicalExams'
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/financial" element={<Financial />} />
             <Route path="/patients" element={<PatientsList />} />
+            <Route path="/patients/:patientId/medical-record" element={<PatientMedicalRecord />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/anamnesis-templates" element={<AnamneseTemplates />} />
 
