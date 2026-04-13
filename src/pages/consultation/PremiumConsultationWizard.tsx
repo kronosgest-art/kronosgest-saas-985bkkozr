@@ -162,7 +162,7 @@ export default function PremiumConsultationWizard() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-fade-in-up">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-[#1E3A8A]">Consulta Premium</h1>
+        <h1 className="text-3xl font-bold text-[#001F3F]">Consulta Premium</h1>
         <p className="text-muted-foreground mt-2">
           Módulo exclusivo para atendimento de alta performance
         </p>
@@ -170,7 +170,7 @@ export default function PremiumConsultationWizard() {
 
       <div className="sticky top-[64px] z-10 bg-muted/20 backdrop-blur-md py-6">
         <div className="flex flex-col justify-between gap-4 mb-2 relative">
-          <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-[#333333]/20 -z-10 rounded-full overflow-hidden">
+          <div className="absolute top-6 -translate-y-1/2 left-[5%] right-[5%] h-1 bg-[#001F3F]/20 -z-10 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#D4AF37]"
               style={{ width: `${progress}%`, transition: 'all 0.6s ease-in-out' }}
@@ -209,10 +209,10 @@ export default function PremiumConsultationWizard() {
                     className={cn(
                       'w-12 h-12 rounded-full flex items-center justify-center transition-all border-2',
                       isActive
-                        ? 'border-transparent text-white shadow-[0_0_12px_rgba(212,175,55,0.6)]'
+                        ? 'border-transparent text-[#001F3F] shadow-[0_0_12px_rgba(212,175,55,0.6)]'
                         : isPast
-                          ? 'bg-[#FDFCF0] border-transparent text-[#D4AF37]'
-                          : 'border-[#333333]/50 text-[#333333]/50 bg-background',
+                          ? 'bg-[#FDFCF0] border-[#D4AF37] text-[#D4AF37]'
+                          : 'border-[#001F3F]/30 text-[#001F3F]/50 bg-background',
                     )}
                     style={{
                       transition: 'all 0.6s ease-in-out',
@@ -237,8 +237,8 @@ export default function PremiumConsultationWizard() {
                         isActive
                           ? 'text-[#D4AF37]'
                           : isPast
-                            ? 'text-[#333333]'
-                            : 'text-[#333333]/50',
+                            ? 'text-[#001F3F]'
+                            : 'text-[#001F3F]/50',
                       )}
                       style={{ transition: 'color 0.6s ease-in-out' }}
                     >
@@ -252,16 +252,16 @@ export default function PremiumConsultationWizard() {
         </div>
       </div>
 
-      <Card className="min-h-[400px] border-[#1E3A8A]/10 shadow-xl shadow-[#1E3A8A]/5 bg-white">
+      <Card className="min-h-[400px] border-[#001F3F]/10 shadow-xl shadow-[#001F3F]/5 bg-white">
         <CardContent className="p-6 sm:p-10 flex flex-col h-full justify-between gap-8">
           <div className="flex-1 flex flex-col items-center justify-start space-y-6 w-full">
-            <div className="w-16 h-16 rounded-full bg-[#1E3A8A]/5 flex items-center justify-center text-[#1E3A8A] mb-2">
+            <div className="w-16 h-16 rounded-full bg-[#001F3F]/5 flex items-center justify-center text-[#001F3F] mb-2">
               {STEPS.map(
                 (s) =>
-                  s.id === currentStep && <s.icon key={s.id} className="w-8 h-8 text-[#B8860B]" />,
+                  s.id === currentStep && <s.icon key={s.id} className="w-8 h-8 text-[#D4AF37]" />,
               )}
             </div>
-            <h2 className="text-2xl font-bold text-[#1E3A8A] text-center">
+            <h2 className="text-2xl font-bold text-[#001F3F] text-center">
               {STEPS.find((s) => s.id === currentStep)?.title}
             </h2>
 
@@ -273,14 +273,14 @@ export default function PremiumConsultationWizard() {
               variant="outline"
               onClick={handlePrev}
               disabled={currentStep === 1}
-              className="border-[#1E3A8A]/20 text-[#1E3A8A] hover:bg-[#1E3A8A]/5"
+              className="border-[#001F3F]/20 text-[#001F3F] hover:bg-[#001F3F]/5"
             >
               <ChevronLeft className="mr-2 h-4 w-4" /> Anterior
             </Button>
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="hidden sm:flex border-[#B8860B]/50 text-[#B8860B] hover:bg-[#B8860B]/10 hover:text-[#B8860B]"
+                className="hidden sm:flex border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
                 onClick={() =>
                   toast({
                     title: 'Rascunho Salvo',
@@ -290,10 +290,10 @@ export default function PremiumConsultationWizard() {
               >
                 <Save className="mr-2 h-4 w-4" /> Salvar Rascunho
               </Button>
-              <Button onClick={handleNext} className="bg-[#1E3A8A] hover:bg-[#152865] text-white">
+              <Button onClick={handleNext} className="bg-[#001F3F] hover:bg-[#00152B] text-white">
                 {currentStep === totalSteps ? (
                   <>
-                    <CheckCircle className="mr-2 h-4 w-4 text-[#B8860B]" /> Finalizar Consulta
+                    <CheckCircle className="mr-2 h-4 w-4 text-[#D4AF37]" /> Finalizar Consulta
                   </>
                 ) : (
                   <>
