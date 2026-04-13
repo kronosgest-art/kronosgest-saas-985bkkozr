@@ -170,9 +170,9 @@ export default function PremiumConsultationWizard() {
 
       <div className="sticky top-[64px] z-10 bg-muted/20 backdrop-blur-md py-6">
         <div className="flex flex-col justify-between gap-4 mb-2 relative">
-          <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-border -z-10 rounded-full overflow-hidden">
+          <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-[#333333]/20 -z-10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#C5A059]"
+              className="h-full bg-[#D4AF37]"
               style={{ width: `${progress}%`, transition: 'all 0.6s ease-in-out' }}
             />
           </div>
@@ -209,21 +209,33 @@ export default function PremiumConsultationWizard() {
                     className={cn(
                       'w-12 h-12 rounded-full flex items-center justify-center transition-all border-2',
                       isActive
-                        ? 'bg-[#C5A059] border-[#C5A059] text-white shadow-[0_0_12px_rgba(197,160,89,0.4)]'
+                        ? 'border-transparent text-white shadow-[0_0_12px_rgba(212,175,55,0.6)]'
                         : isPast
-                          ? 'bg-[#333333]/30 border-transparent text-[#C5A059]'
+                          ? 'bg-[#FDFCF0] border-transparent text-[#D4AF37]'
                           : 'border-[#333333]/50 text-[#333333]/50 bg-background',
                     )}
-                    style={{ transition: 'all 0.6s ease-in-out' }}
+                    style={{
+                      transition: 'all 0.6s ease-in-out',
+                      ...(isActive
+                        ? {
+                            background:
+                              'linear-gradient(135deg, #D4AF37 0%, #FFF4D0 45%, #D4AF37 55%, #B8860B 100%)',
+                          }
+                        : {}),
+                    }}
                   >
-                    {isPast ? <Check className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                    {isPast ? (
+                      <Check className="w-5 h-5" strokeWidth={3} />
+                    ) : (
+                      <StepIcon className="w-5 h-5" />
+                    )}
                   </div>
                   <div className="text-center hidden sm:block w-24">
                     <p
                       className={cn(
                         'text-xs font-semibold transition-colors',
                         isActive
-                          ? 'text-[#C5A059]'
+                          ? 'text-[#D4AF37]'
                           : isPast
                             ? 'text-[#333333]'
                             : 'text-[#333333]/50',
