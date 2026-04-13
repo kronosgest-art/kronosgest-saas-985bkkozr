@@ -14,6 +14,7 @@ import {
   FileSignature,
   Share2,
   CalendarDays,
+  Check,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
@@ -53,6 +54,17 @@ export default function PremiumConsultationWizard() {
   const totalSteps = STEPS.length
 
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100
+
+  const stepToPath: Record<number, string> = {
+    1: 'cadastro',
+    2: 'anamnese',
+    3: 'tcle',
+    4: 'bioressonancia',
+    5: 'interpretacao',
+    6: 'prescricao',
+    7: 'encaminhamento',
+    8: 'agendamento',
+  }
 
   useEffect(() => {
     if (isFinished) {
@@ -127,6 +139,7 @@ export default function PremiumConsultationWizard() {
         return
       }
       setCurrentStep(nextStep)
+      window.history.pushState(null, '', `#/${stepToPath[nextStep]}`)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       toast({ title: 'Etapa concluída', description: 'Os dados foram salvos temporariamente.' })
     } else {
@@ -139,7 +152,11 @@ export default function PremiumConsultationWizard() {
   }
 
   const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep((s) => s - 1)
+    if (currentStep > 1) {
+      const prevStep = currentStep - 1
+      setCurrentStep(prevStep)
+      window.history.pushState(null, '', `#/${stepToPath[prevStep]}`)
+    }
   }
 
   return (
@@ -155,8 +172,8 @@ export default function PremiumConsultationWizard() {
         <div className="flex flex-col justify-between gap-4 mb-2 relative">
           <div className="absolute top-6 left-[5%] right-[5%] h-1 bg-border -z-10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#1E3A8A] transition-all duration-500 ease-in-out"
-              style={{ width: `${progress}%` }}
+              className="h-full bg-[#C5A059]"
+              style={{ width: `${progress}%`, transition: 'all 0.6s ease-in-out' }}
             />
           </div>
 
@@ -180,30 +197,38 @@ export default function PremiumConsultationWizard() {
                           variant: 'destructive',
                         })
                         setCurrentStep(3)
+                        window.history.pushState(null, '', `#/${stepToPath[3]}`)
                         return
                       }
                       setCurrentStep(step.id)
+                      window.history.pushState(null, '', `#/${stepToPath[step.id]}`)
                     }
                   }}
                 >
                   <div
                     className={cn(
-                      'w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors duration-300',
+                      'w-12 h-12 rounded-full flex items-center justify-center transition-all border-2',
                       isActive
-                        ? 'border-[#B8860B] bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/30'
+                        ? 'bg-[#C5A059] border-[#C5A059] text-white shadow-[0_0_12px_rgba(197,160,89,0.4)]'
                         : isPast
-                          ? 'border-[#1E3A8A] bg-[#1E3A8A] text-white'
-                          : 'border-muted-foreground/30 bg-background text-muted-foreground',
+                          ? 'bg-[#333333]/30 border-transparent text-[#C5A059]'
+                          : 'border-[#333333]/50 text-[#333333]/50 bg-background',
                     )}
+                    style={{ transition: 'all 0.6s ease-in-out' }}
                   >
-                    <StepIcon className="w-5 h-5" />
+                    {isPast ? <Check className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
                   </div>
                   <div className="text-center hidden sm:block w-24">
                     <p
                       className={cn(
-                        'text-xs font-semibold',
-                        isActive ? 'text-[#1E3A8A]' : 'text-muted-foreground',
+                        'text-xs font-semibold transition-colors',
+                        isActive
+                          ? 'text-[#C5A059]'
+                          : isPast
+                            ? 'text-[#333333]'
+                            : 'text-[#333333]/50',
                       )}
+                      style={{ transition: 'color 0.6s ease-in-out' }}
                     >
                       {step.title}
                     </p>
