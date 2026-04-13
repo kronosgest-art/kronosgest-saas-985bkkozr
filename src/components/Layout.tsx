@@ -44,35 +44,61 @@ export default function Layout() {
   const role = user?.user_metadata?.role || 'profissional'
   const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
 
-  const adminLinks = [
-    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/crm', label: 'CRM & Leads', icon: Filter },
-    { to: '/premium-consultation', label: 'Consulta Premium', icon: Star, isPremium: true },
-    { to: '/patients', label: 'Paciente', icon: User },
-    { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
-    { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
-    { to: '/prescriptions', label: 'Prescrições', icon: FileSignature },
-    { to: '/protocols', label: 'Protocolos', icon: BookOpen },
-    { to: '/sessions', label: 'Sessões', icon: Calendar },
-    { to: '/financial', label: 'Financeiro', icon: FileText },
-    { to: '/reports', label: 'Relatórios', icon: PieChart },
-    { to: '/settings', label: 'Configurações', icon: SettingsIcon },
-    { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
+  const adminGroups = [
+    {
+      title: 'Visão Geral',
+      links: [
+        { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { to: '/crm', label: 'CRM & Leads', icon: Filter },
+        { to: '/premium-consultation', label: 'Consulta Premium', icon: Star, isPremium: true },
+      ],
+    },
+    {
+      title: 'Gestão Clínica',
+      links: [
+        { to: '/patients', label: 'Paciente', icon: User },
+        { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
+        { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
+        { to: '/prescriptions', label: 'Prescrições', icon: FileSignature },
+        { to: '/protocols', label: 'Protocolos', icon: BookOpen },
+        { to: '/sessions', label: 'Sessões', icon: Calendar },
+      ],
+    },
+    {
+      title: 'Análise Financeira',
+      links: [
+        { to: '/financial', label: 'Financeiro', icon: FileText },
+        { to: '/reports', label: 'Relatórios', icon: PieChart },
+      ],
+    },
+    {
+      title: 'Configurações',
+      links: [
+        { to: '/settings', label: 'Configurações', icon: SettingsIcon },
+        { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
+      ],
+    },
   ]
 
-  const patientLinks = [
-    { to: '/', label: 'Minha Ficha Clínica', icon: ClipboardList },
-    { to: '/patient/exams', label: 'Meus Exames', icon: Stethoscope },
-    { to: '/patient/prescriptions', label: 'Minhas Prescrições', icon: FileSignature },
-    { to: '/patient/sessions', label: 'Minhas Sessões Agendadas', icon: Calendar },
-    { to: '/patient/history', label: 'Meu Histórico', icon: History },
+  const patientGroups = [
+    {
+      title: 'Área do Paciente',
+      links: [
+        { to: '/', label: 'Minha Ficha Clínica', icon: ClipboardList },
+        { to: '/patient/exams', label: 'Meus Exames', icon: Stethoscope },
+        { to: '/patient/prescriptions', label: 'Minhas Prescrições', icon: FileSignature },
+        { to: '/patient/sessions', label: 'Minhas Sessões Agendadas', icon: Calendar },
+        { to: '/patient/history', label: 'Meu Histórico', icon: History },
+      ],
+    },
   ]
 
-  const navLinks = isPatient ? patientLinks : adminLinks
+  const navGroups = isPatient ? patientGroups : adminGroups
+  const allLinks = navGroups.flatMap((g) => g.links)
 
   const allowedPaths = isPatient
-    ? patientLinks.map((l) => l.to)
-    : ['/consultation', ...adminLinks.map((l) => l.to)]
+    ? allLinks.map((l) => l.to)
+    : ['/consultation', ...allLinks.map((l) => l.to)]
 
   const isAllowed = allowedPaths.some(
     (path) =>
@@ -95,49 +121,61 @@ export default function Layout() {
             />
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
-          {navLinks.map((link) => {
-            const Icon = link.icon
-            const isActive =
-              location.pathname === link.to ||
-              (location.pathname.startsWith(link.to) && link.to !== '/')
-            const isPremium = (link as any).isPremium
+        <nav className="flex-1 p-4 overflow-y-auto">
+          {navGroups.map((group, index) => (
+            <div key={index} className="mb-6 last:mb-0">
+              <h3 className="px-3 text-[11px] font-bold uppercase tracking-wider text-[#333333] mb-2">
+                {group.title}
+              </h3>
+              <div className="space-y-1">
+                {group.links.map((link) => {
+                  const Icon = link.icon
+                  const isActive =
+                    location.pathname === link.to ||
+                    (location.pathname.startsWith(link.to) && link.to !== '/')
+                  const isPremium = (link as any).isPremium
 
-            return (
-              <Link key={link.to} to={link.to}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    'w-full justify-start transition-all duration-300 font-sans tracking-wide text-sm h-11',
-                    isActive
-                      ? 'bg-[#C5A059]/15 text-[#C5A059] font-semibold border-l-[3px] border-[#C5A059] rounded-l-none rounded-r-md shadow-sm'
-                      : 'text-[#FDFCF0]/70 hover:bg-[#FDFCF0]/10 hover:text-[#FDFCF0]',
-                    isPremium && !isActive && 'text-[#C5A059]/80 hover:text-[#C5A059]',
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      'mr-3 h-[18px] w-[18px]',
-                      isActive
-                        ? 'text-[#C5A059]'
-                        : isPremium
-                          ? 'text-[#C5A059]/80'
-                          : 'text-[#FDFCF0]/50',
-                    )}
-                  />
-                  {link.label}
-                </Button>
-              </Link>
-            )
-          })}
+                  return (
+                    <Link key={link.to} to={link.to} className="block">
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          'w-full justify-start transition-all duration-300 font-sans tracking-wide text-sm h-11 relative overflow-hidden',
+                          isActive
+                            ? 'text-[#C5A059] bg-[#001F3F] shadow-[0_2px_10px_rgba(0,0,0,0.3)] font-semibold'
+                            : 'text-white hover:bg-white/5 hover:text-white font-medium',
+                          isPremium && !isActive && 'text-[#C5A059]/80 hover:text-[#C5A059]',
+                        )}
+                      >
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#C5A059]" />
+                        )}
+                        <Icon
+                          className={cn(
+                            'mr-3 h-[18px] w-[18px] transition-colors duration-300',
+                            isActive
+                              ? 'text-[#C5A059]'
+                              : isPremium
+                                ? 'text-[#C5A059]/80'
+                                : 'text-white',
+                          )}
+                        />
+                        {link.label}
+                      </Button>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="border-t border-[#FDFCF0]/10 p-4">
           <Button
             variant="ghost"
-            className="w-full justify-start text-[#FDFCF0]/70 hover:text-white hover:bg-red-500/20 transition-colors font-sans"
+            className="w-full justify-start text-white hover:text-white hover:bg-red-500/20 transition-colors font-sans duration-300"
             onClick={() => signOut()}
           >
-            <LogOut className="mr-3 h-[18px] w-[18px]" />
+            <LogOut className="mr-3 h-[18px] w-[18px] transition-colors duration-300" />
             Sair da Conta
           </Button>
         </div>
