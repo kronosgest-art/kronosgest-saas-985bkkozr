@@ -46,34 +46,19 @@ export default function Layout() {
 
   const adminGroups = [
     {
-      title: 'Visão Geral',
+      title: '',
       links: [
         { to: '/', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/crm', label: 'CRM & Leads', icon: Filter },
         { to: '/premium-consultation', label: 'Consulta Premium', icon: Star, isPremium: true },
-      ],
-    },
-    {
-      title: 'Gestão Clínica',
-      links: [
         { to: '/patients', label: 'Paciente', icon: User },
         { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },
         { to: '/exams/biophysical', label: 'Exames Biofísicos', icon: HeartPulse },
         { to: '/prescriptions', label: 'Prescrições', icon: FileSignature },
         { to: '/protocols', label: 'Protocolos', icon: BookOpen },
         { to: '/sessions', label: 'Sessões', icon: Calendar },
-      ],
-    },
-    {
-      title: 'Análise Financeira',
-      links: [
         { to: '/financial', label: 'Financeiro', icon: FileText },
         { to: '/reports', label: 'Relatórios', icon: PieChart },
-      ],
-    },
-    {
-      title: 'Configurações',
-      links: [
         { to: '/settings', label: 'Configurações', icon: SettingsIcon },
         { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
       ],
@@ -82,7 +67,7 @@ export default function Layout() {
 
   const patientGroups = [
     {
-      title: 'Área do Paciente',
+      title: '',
       links: [
         { to: '/', label: 'Minha Ficha Clínica', icon: ClipboardList },
         { to: '/patient/exams', label: 'Meus Exames', icon: Stethoscope },
@@ -124,9 +109,11 @@ export default function Layout() {
         <nav className="flex-1 p-4 overflow-y-auto">
           {navGroups.map((group, index) => (
             <div key={index} className="mb-6 last:mb-0">
-              <h3 className="px-3 text-[11px] font-bold uppercase tracking-wider text-[#333333] mb-2">
-                {group.title}
-              </h3>
+              {group.title && (
+                <h3 className="px-3 text-[11px] font-bold uppercase tracking-wider text-[#333333] mb-2">
+                  {group.title}
+                </h3>
+              )}
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const Icon = link.icon
