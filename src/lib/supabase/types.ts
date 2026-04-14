@@ -402,6 +402,7 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          method: string | null
           status: string | null
           subscription_id: string | null
           user_id: string | null
@@ -410,6 +411,7 @@ export type Database = {
           amount: number
           created_at?: string
           id?: string
+          method?: string | null
           status?: string | null
           subscription_id?: string | null
           user_id?: string | null
@@ -418,6 +420,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          method?: string | null
           status?: string | null
           subscription_id?: string | null
           user_id?: string | null
@@ -855,6 +858,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_payment_status: {
+        Args: { p_payment_id: string; p_status: string }
+        Returns: undefined
+      }
       admin_update_subscription: {
         Args: {
           p_free_access_end_date?: string
@@ -873,6 +880,19 @@ export type Database = {
           p_subscription_id: string
         }
         Returns: undefined
+      }
+      get_admin_billing: {
+        Args: never
+        Returns: {
+          amount: number
+          clinica_nome: string
+          created_at: string
+          email: string
+          method: string
+          payment_id: string
+          plan: string
+          status: string
+        }[]
       }
       get_admin_subscriptions: {
         Args: never
@@ -1144,6 +1164,7 @@ export const Constants = {
 //   amount: numeric (not null)
 //   status: text (nullable, default: 'succeeded'::text)
 //   created_at: timestamp with time zone (not null, default: now())
+//   method: text (nullable, default: 'Cartão'::text)
 // Table: prescricoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1411,6 +1432,17 @@ export const Constants = {
 //     WITH CHECK: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = vendas.patient_id) AND (pacientes.user_id = auth.uid())))))
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION admin_update_payment_status(uuid, text)
+//   CREATE OR REPLACE FUNCTION public.admin_update_payment_status(p_payment_id uuid, p_status text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     UPDATE public.payments SET status = p_status WHERE id = p_payment_id;
+//   END;
+//   $function$
+//
 // FUNCTION admin_update_subscription(uuid, text, timestamp with time zone, timestamp with time zone)
 //   CREATE OR REPLACE FUNCTION public.admin_update_subscription(p_subscription_id uuid, p_status text, p_free_access_start_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_free_access_end_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
 //    RETURNS void
@@ -1454,6 +1486,32 @@ export const Constants = {
 //         status = CASE WHEN status IN ('blocked', 'suspended') THEN 'free_access' ELSE status END
 //       WHERE id = p_subscription_id;
 //     END IF;
+//   END;
+//   $function$
+//
+// FUNCTION get_admin_billing()
+//   CREATE OR REPLACE FUNCTION public.get_admin_billing()
+//    RETURNS TABLE(payment_id uuid, created_at timestamp with time zone, clinica_nome text, email text, plan text, amount numeric, status text, method text)
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN QUERY
+//     SELECT
+//       p.id AS payment_id,
+//       p.created_at,
+//       COALESCE(o.nome, prof.nome_completo, 'Desconhecida') AS clinica_nome,
+//       u.email::TEXT AS email,
+//       COALESCE(s.plan, 'Básico') AS plan,
+//       p.amount,
+//       p.status,
+//       p.method
+//     FROM public.payments p
+//     LEFT JOIN public.subscriptions s ON p.subscription_id = s.id OR p.user_id = s.user_id
+//     JOIN auth.users u ON p.user_id = u.id
+//     LEFT JOIN public.profissionais prof ON prof.user_id = p.user_id
+//     LEFT JOIN public.organizations o ON prof.organization_id = o.id OR o.owner_id = u.id
+//     ORDER BY p.created_at DESC;
 //   END;
 //   $function$
 //
