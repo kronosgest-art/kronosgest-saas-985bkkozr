@@ -34,9 +34,13 @@ export default function Layout() {
 
   const role = user?.user_metadata?.role || 'profissional'
   const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
+  const isAdmin =
+    user?.email === 'dra.morganavieira@gmail.com' ||
+    role === 'admin' ||
+    user?.user_metadata?.is_admin === true
 
   useEffect(() => {
-    if (user && !isPatient) {
+    if (user && !isPatient && !isAdmin) {
       const checkSub = async () => {
         const { data } = await supabase
           .from('subscriptions')
@@ -74,7 +78,7 @@ export default function Layout() {
     } else {
       setCheckingSub(false)
     }
-  }, [user, isPatient])
+  }, [user, isPatient, isAdmin])
 
   if (loading || checkingSub) {
     return (
@@ -89,7 +93,7 @@ export default function Layout() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isPatient && subscription && location.pathname !== '/upgrade') {
+  if (!isPatient && !isAdmin && subscription && location.pathname !== '/upgrade') {
     let isExpired = false
     let blockReason = ''
 
@@ -136,6 +140,9 @@ export default function Layout() {
         { to: '/reports', label: 'Relatórios', icon: PieChart },
         { to: '/settings', label: 'Configurações', icon: SettingsIcon },
         { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
+        ...(isAdmin
+          ? [{ to: '/admin/manage-free-access', label: 'Acessos e Planos', icon: SettingsIcon }]
+          : []),
       ],
     },
   ]
