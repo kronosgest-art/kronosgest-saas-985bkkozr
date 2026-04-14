@@ -143,6 +143,7 @@ export default function Layout() {
         ...(isAdmin
           ? [
               { to: '/admin/dashboard', label: 'Dashboard SaaS', icon: LayoutDashboard },
+              { to: '/admin/subscribers', label: 'Assinantes', icon: Users },
               { to: '/admin/manage-free-access', label: 'Acessos e Planos', icon: SettingsIcon },
             ]
           : []),

@@ -24,6 +24,7 @@ import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
+import Subscribers from '@/pages/admin/Subscribers'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/upgrade" element={<UpgradePage />} />
             <Route path="/admin/manage-free-access" element={<ManageFreeAccess />} />
             <Route path="/admin/dashboard" element={<AdminDashboardSaaS />} />
+            <Route path="/admin/subscribers" element={<Subscribers />} />
 
             {/* Profissional / Admin Routes */}
             <Route path="/exams/biochemical" element={<BiochemicalExams />} />

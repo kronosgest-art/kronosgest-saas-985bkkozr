@@ -373,6 +373,41 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          status: string | null
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          status?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          status?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'payments_subscription_id_fkey'
+            columns: ['subscription_id']
+            isOneToOne: false
+            referencedRelation: 'subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       prescricoes: {
         Row: {
           anamnese_id: string | null
@@ -560,10 +595,12 @@ export type Database = {
       subscriptions: {
         Row: {
           blocked_reason: string | null
+          canceled_at: string | null
           created_at: string
           free_access_end_date: string | null
           free_access_start_date: string | null
           id: string
+          plan: string | null
           status: string
           trial_end_date: string
           trial_start_date: string
@@ -572,10 +609,12 @@ export type Database = {
         }
         Insert: {
           blocked_reason?: string | null
+          canceled_at?: string | null
           created_at?: string
           free_access_end_date?: string | null
           free_access_start_date?: string | null
           id?: string
+          plan?: string | null
           status?: string
           trial_end_date: string
           trial_start_date?: string
@@ -584,10 +623,12 @@ export type Database = {
         }
         Update: {
           blocked_reason?: string | null
+          canceled_at?: string | null
           created_at?: string
           free_access_end_date?: string | null
           free_access_start_date?: string | null
           id?: string
+          plan?: string | null
           status?: string
           trial_end_date?: string
           trial_start_date?: string
@@ -1042,6 +1083,13 @@ export const Constants = {
 //   endereco: text (nullable)
 //   profissao: text (nullable)
 //   observacoes: text (nullable)
+// Table: payments
+//   id: uuid (not null, default: gen_random_uuid())
+//   subscription_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   amount: numeric (not null)
+//   status: text (nullable, default: 'succeeded'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: prescricoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1103,6 +1151,8 @@ export const Constants = {
 //   blocked_reason: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   plan: text (nullable, default: 'Básico'::text)
+//   canceled_at: timestamp with time zone (nullable)
 // Table: sync_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   profissional_id: uuid (nullable)
@@ -1168,6 +1218,10 @@ export const Constants = {
 //   UNIQUE pacientes_email_key: UNIQUE (email)
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY pacientes_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: payments
+//   PRIMARY KEY payments_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY payments_subscription_id_fkey: FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
+//   FOREIGN KEY payments_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: prescricoes
 //   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
@@ -1250,6 +1304,11 @@ export const Constants = {
 //   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
+// Table: payments
+//   Policy "Admin can insert payments" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Admin can read payments" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: prescricoes
 //   Policy "prescricoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
