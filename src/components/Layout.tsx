@@ -1,4 +1,7 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -26,8 +29,46 @@ import logoImg from '@/assets/photo-2026-04-13-12-26-51-1908e.jpg'
 export default function Layout() {
   const { user, loading, signOut } = useAuth()
   const location = useLocation()
+  const [subscription, setSubscription] = useState<any>(null)
+  const [checkingSub, setCheckingSub] = useState(true)
 
-  if (loading) {
+  const role = user?.user_metadata?.role || 'profissional'
+  const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
+
+  useEffect(() => {
+    if (user && !isPatient) {
+      const checkSub = async () => {
+        const { data } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        setSubscription(data)
+        setCheckingSub(false)
+
+        if (data && data.status === 'trial') {
+          const endDate = new Date(data.trial_end_date)
+          const now = new Date()
+          const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          const diffTime = endDay.getTime() - today.getTime()
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+          if (diffDays === 1) {
+            toast.warning('⏰ Seu trial expira AMANHÃ. Faça upgrade agora!', { duration: 10000 })
+          } else if (diffDays === 2) {
+            toast.warning('⏰ Seu trial expira em 2 dias. Faça upgrade agora!', { duration: 10000 })
+          }
+        }
+      }
+      checkSub()
+    } else {
+      setCheckingSub(false)
+    }
+  }, [user, isPatient])
+
+  if (loading || checkingSub) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -40,9 +81,15 @@ export default function Layout() {
     return <Navigate to="/login" replace />
   }
 
-  // RBAC Logic
-  const role = user?.user_metadata?.role || 'profissional'
-  const isPatient = ['paciente', 'cliente', 'patient'].includes(role)
+  if (!isPatient && subscription) {
+    const isExpired =
+      subscription.status === 'trial' && new Date(subscription.trial_end_date) < new Date()
+    const isBlocked = subscription.status === 'blocked'
+
+    if ((isExpired || isBlocked) && location.pathname !== '/upgrade') {
+      return <Navigate to="/upgrade" replace />
+    }
+  }
 
   const adminGroups = [
     {
@@ -83,7 +130,7 @@ export default function Layout() {
 
   const allowedPaths = isPatient
     ? allLinks.map((l) => l.to)
-    : ['/consultation', ...allLinks.map((l) => l.to)]
+    : ['/consultation', '/upgrade', ...allLinks.map((l) => l.to)]
 
   const isAllowed = allowedPaths.some(
     (path) =>

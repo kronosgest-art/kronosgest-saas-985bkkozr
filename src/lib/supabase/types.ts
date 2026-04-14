@@ -557,6 +557,35 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_logs: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          profissional_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          profissional_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          profissional_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sync_logs_profissional_id_fkey'
+            columns: ['profissional_id']
+            isOneToOne: false
+            referencedRelation: 'profissionais'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       tcle_assinado: {
         Row: {
           assinatura: string
@@ -1004,6 +1033,11 @@ export const Constants = {
 //   criado_por: uuid (nullable)
 //   valor_sessao_avulsa: numeric (nullable)
 //   desconto_progressivo: text (nullable)
+// Table: sync_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   profissional_id: uuid (nullable)
+//   mensagem: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: tcle_assinado
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1075,6 +1109,9 @@ export const Constants = {
 //   FOREIGN KEY protocolos_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: sync_logs
+//   PRIMARY KEY sync_logs_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY sync_logs_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 // Table: tcle_assinado
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
@@ -1153,6 +1190,12 @@ export const Constants = {
 //   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
 //     WITH CHECK: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
+// Table: sync_logs
+//   Policy "sync_logs_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "sync_logs_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM profissionais   WHERE ((profissionais.id = sync_logs.profissional_id) AND (profissionais.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM profissionais   WHERE ((profissionais.id = sync_logs.profissional_id) AND (profissionais.user_id = auth.uid()))))
 // Table: tcle_assinado
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
