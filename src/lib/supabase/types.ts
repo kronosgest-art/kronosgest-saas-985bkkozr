@@ -144,6 +144,47 @@ export type Database = {
         }
         Relationships: []
       }
+      consultas: {
+        Row: {
+          consultation_date: string
+          consultation_type: string
+          created_at: string
+          data_collected: Json | null
+          id: string
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consultation_date?: string
+          consultation_type: string
+          created_at?: string
+          data_collected?: Json | null
+          id?: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consultation_date?: string
+          consultation_type?: string
+          created_at?: string
+          data_collected?: Json | null
+          id?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'consultas_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       exames: {
         Row: {
           arquivo_pdf_url: string | null
@@ -852,6 +893,15 @@ export const Constants = {
 //   perguntas: jsonb (not null, default: '[]'::jsonb)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: consultas
+//   id: uuid (not null, default: gen_random_uuid())
+//   patient_id: uuid (not null)
+//   consultation_type: text (not null)
+//   consultation_date: timestamp with time zone (not null, default: now())
+//   status: text (not null, default: 'Realizada'::text)
+//   data_collected: jsonb (nullable, default: '{}'::jsonb)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -997,6 +1047,9 @@ export const Constants = {
 // Table: anamnese_templates
 //   PRIMARY KEY anamnese_templates_pkey: PRIMARY KEY (template_id)
 //   FOREIGN KEY anamnese_templates_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: consultas
+//   FOREIGN KEY consultas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY consultas_pkey: PRIMARY KEY (id)
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
@@ -1056,6 +1109,10 @@ export const Constants = {
 //     USING: (auth.uid() = profissional_id)
 //   Policy "Users can view their own templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
+// Table: consultas
+//   Policy "consultas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
 // Table: exames
 //   Policy "exames_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))

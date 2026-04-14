@@ -7,6 +7,7 @@
     "uploadExame": 2,
     "interpretarExame": 8,
     "transcreverExame": 5,
-    "gerarSugestaoPrescricao": 5
+    "gerarSugestaoPrescricao": 5,
+    "sync-to-google-calendar": 1
   }
 }

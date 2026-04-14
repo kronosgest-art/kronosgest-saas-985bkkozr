@@ -79,6 +79,24 @@ export default function Settings() {
 
       if (profData) {
         setProfId(profData.id)
+
+        let autoCalendarId = profData.google_calendar_id || ''
+
+        // Auto-detect Gmail and auto-fill Google Calendar ID
+        if (!autoCalendarId && user?.email?.endsWith('@gmail.com')) {
+          autoCalendarId = user.email
+
+          await supabase
+            .from('profissionais')
+            .update({ google_calendar_id: autoCalendarId })
+            .eq('id', profData.id)
+
+          toast({
+            title: 'Sincronização',
+            description: `✅ Google Calendar conectado automaticamente com ${user.email}`,
+          })
+        }
+
         setProfForm({
           nome_completo: profData.nome_completo || '',
           cpf: profData.cpf || '',
@@ -87,8 +105,10 @@ export default function Settings() {
           especialidade: profData.especialidade || '',
           foto_url: profData.foto_url || '',
           status: profData.status ?? true,
-          google_calendar_id: profData.google_calendar_id || '',
+          google_calendar_id: autoCalendarId,
         })
+      } else if (user?.email?.endsWith('@gmail.com')) {
+        setProfForm((prev) => ({ ...prev, google_calendar_id: user.email! }))
       }
     } catch (error) {
       console.error('Error loading settings', error)
@@ -322,7 +342,11 @@ export default function Settings() {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Google Calendar ID</Label>
+                  <Label>
+                    {user?.email?.endsWith('@gmail.com')
+                      ? 'Google Calendar ID'
+                      : 'Google Calendar ID (opcional)'}
+                  </Label>
                   <Input
                     placeholder="exemplo@group.calendar.google.com"
                     value={profForm.google_calendar_id}
@@ -333,6 +357,11 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground">
                     Necessário para sincronização automática de agendamentos.
                   </p>
+                  {!user?.email?.endsWith('@gmail.com') && (
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-500 mt-2">
+                      Se você não tem Gmail, crie uma conta gratuita para sincronizar agendamentos
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2 md:col-span-2 flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
