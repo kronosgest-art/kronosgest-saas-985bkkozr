@@ -141,7 +141,10 @@ export default function Layout() {
         { to: '/settings', label: 'Configurações', icon: SettingsIcon },
         { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
         ...(isAdmin
-          ? [{ to: '/admin/manage-free-access', label: 'Acessos e Planos', icon: SettingsIcon }]
+          ? [
+              { to: '/admin/dashboard', label: 'Dashboard SaaS', icon: LayoutDashboard },
+              { to: '/admin/manage-free-access', label: 'Acessos e Planos', icon: SettingsIcon },
+            ]
           : []),
       ],
     },

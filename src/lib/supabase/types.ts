@@ -1183,6 +1183,7 @@ export const Constants = {
 //   PRIMARY KEY subscriptions_pkey: PRIMARY KEY (id)
 //   CHECK subscriptions_status_check: CHECK ((status = ANY (ARRAY['trial'::text, 'free_access'::text, 'suspended'::text, 'active'::text, 'blocked'::text])))
 //   FOREIGN KEY subscriptions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE subscriptions_user_id_key: UNIQUE (user_id)
 // Table: sync_logs
 //   PRIMARY KEY sync_logs_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY sync_logs_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
@@ -1469,8 +1470,20 @@ export const Constants = {
 //    SECURITY DEFINER
 //   AS $function$
 //   BEGIN
+//     -- We don't want to create subscriptions for patients
+//     IF NEW.raw_user_meta_data->>'role' = 'paciente' THEN
+//       RETURN NEW;
+//     END IF;
+//
 //     INSERT INTO public.subscriptions (user_id, trial_start_date, trial_end_date, status)
-//     VALUES (NEW.id, NOW(), NOW() + INTERVAL '7 days', 'trial');
+//     VALUES (
+//       NEW.id,
+//       NOW(),
+//       NOW() + INTERVAL '7 days',
+//       'trial'
+//     )
+//     ON CONFLICT (user_id) DO NOTHING;
+//
 //     RETURN NEW;
 //   END;
 //   $function$
@@ -1495,3 +1508,5 @@ export const Constants = {
 // Table: pacientes
 //   CREATE UNIQUE INDEX pacientes_cpf_key ON public.pacientes USING btree (cpf)
 //   CREATE UNIQUE INDEX pacientes_email_key ON public.pacientes USING btree (email)
+// Table: subscriptions
+//   CREATE UNIQUE INDEX subscriptions_user_id_key ON public.subscriptions USING btree (user_id)
