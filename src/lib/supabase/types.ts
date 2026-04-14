@@ -557,6 +557,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          blocked_reason: string | null
+          created_at: string
+          free_access_end_date: string | null
+          free_access_start_date: string | null
+          id: string
+          status: string
+          trial_end_date: string
+          trial_start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked_reason?: string | null
+          created_at?: string
+          free_access_end_date?: string | null
+          free_access_start_date?: string | null
+          id?: string
+          status?: string
+          trial_end_date: string
+          trial_start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked_reason?: string | null
+          created_at?: string
+          free_access_end_date?: string | null
+          free_access_start_date?: string | null
+          id?: string
+          status?: string
+          trial_end_date?: string
+          trial_start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sync_logs: {
         Row: {
           created_at: string
@@ -1033,6 +1072,17 @@ export const Constants = {
 //   criado_por: uuid (nullable)
 //   valor_sessao_avulsa: numeric (nullable)
 //   desconto_progressivo: text (nullable)
+// Table: subscriptions
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   trial_start_date: timestamp with time zone (not null, default: now())
+//   trial_end_date: timestamp with time zone (not null)
+//   free_access_start_date: timestamp with time zone (nullable)
+//   free_access_end_date: timestamp with time zone (nullable)
+//   status: text (not null, default: 'trial'::text)
+//   blocked_reason: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: sync_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   profissional_id: uuid (nullable)
@@ -1109,6 +1159,10 @@ export const Constants = {
 //   FOREIGN KEY protocolos_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: subscriptions
+//   PRIMARY KEY subscriptions_pkey: PRIMARY KEY (id)
+//   CHECK subscriptions_status_check: CHECK ((status = ANY (ARRAY['trial'::text, 'free_access'::text, 'suspended'::text, 'active'::text, 'blocked'::text])))
+//   FOREIGN KEY subscriptions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: sync_logs
 //   PRIMARY KEY sync_logs_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY sync_logs_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
@@ -1190,6 +1244,11 @@ export const Constants = {
 //   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
 //     WITH CHECK: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
+// Table: subscriptions
+//   Policy "Users can update own subscription" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can view own subscription" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 // Table: sync_logs
 //   Policy "sync_logs_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1339,6 +1398,19 @@ export const Constants = {
 //         {"id": "amputados", "tipo": "radio", "titulo": "Tem órgãos amputados? (Biorressonância não identifica órgãos ausentes)", "opcoes": ["Sim", "Não"], "obrigatoria": true}
 //       ]'::jsonb
 //     );
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION handle_new_user_subscription()
+//   CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     INSERT INTO public.subscriptions (user_id, trial_start_date, trial_end_date, status)
+//     VALUES (NEW.id, NOW(), NOW() + INTERVAL '7 days', 'trial');
 //     RETURN NEW;
 //   END;
 //   $function$

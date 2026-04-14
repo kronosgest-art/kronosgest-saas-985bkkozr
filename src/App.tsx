@@ -22,6 +22,7 @@ import BiophysicalExams from '@/pages/exams/BiophysicalExams'
 import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
+import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/anamnesis-templates" element={<AnamneseTemplates />} />
             <Route path="/upgrade" element={<UpgradePage />} />
+            <Route path="/admin/manage-free-access" element={<ManageFreeAccess />} />
 
             {/* Profissional / Admin Routes */}
             <Route path="/exams/biochemical" element={<BiochemicalExams />} />
