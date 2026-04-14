@@ -144,6 +144,7 @@ export default function Layout() {
           ? [
               { to: '/admin/dashboard', label: 'Dashboard SaaS', icon: LayoutDashboard },
               { to: '/admin/subscribers', label: 'Assinantes', icon: Users },
+              { to: '/admin/billing', label: 'Faturamento', icon: FileText },
               { to: '/admin/manage-free-access', label: 'Acessos e Planos', icon: SettingsIcon },
             ]
           : []),

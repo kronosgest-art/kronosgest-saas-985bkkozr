@@ -9,6 +9,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Relationships: []
+      }
       agendamentos: {
         Row: {
           criado_em: string
@@ -840,12 +864,36 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_subscription_full: {
+        Args: {
+          p_add_months?: number
+          p_blocked_reason?: string
+          p_plan?: string
+          p_status?: string
+          p_subscription_id: string
+        }
+        Returns: undefined
+      }
       get_admin_subscriptions: {
         Args: never
         Returns: {
           email: string
           free_access_end_date: string
           nome: string
+          status: string
+          subscription_id: string
+          trial_end_date: string
+          user_id: string
+        }[]
+      }
+      get_all_subscribers: {
+        Args: never
+        Returns: {
+          clinica_nome: string
+          created_at: string
+          email: string
+          free_access_end_date: string
+          plan: string
           status: string
           subscription_id: string
           trial_end_date: string
@@ -993,6 +1041,12 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: admin_audit_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   admin_id: uuid (nullable)
+//   action: text (not null)
+//   details: jsonb (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: agendamentos
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1190,6 +1244,9 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
+// Table: admin_audit_logs
+//   FOREIGN KEY admin_audit_logs_admin_id_fkey: FOREIGN KEY (admin_id) REFERENCES auth.users(id) ON DELETE SET NULL
+//   PRIMARY KEY admin_audit_logs_pkey: PRIMARY KEY (id)
 // Table: agendamentos
 //   FOREIGN KEY agendamentos_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY agendamentos_pkey: PRIMARY KEY (id)
@@ -1258,6 +1315,11 @@ export const Constants = {
 //   FOREIGN KEY vendas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: admin_audit_logs
+//   Policy "Admin can insert audit logs" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Admin can read audit logs" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: agendamentos
 //   Policy "agendamentos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
@@ -1366,6 +1428,35 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION admin_update_subscription_full(uuid, text, text, text, integer)
+//   CREATE OR REPLACE FUNCTION public.admin_update_subscription_full(p_subscription_id uuid, p_status text DEFAULT NULL::text, p_plan text DEFAULT NULL::text, p_blocked_reason text DEFAULT NULL::text, p_add_months integer DEFAULT 0)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF p_status IS NOT NULL THEN
+//       UPDATE public.subscriptions SET status = p_status WHERE id = p_subscription_id;
+//     END IF;
+//
+//     IF p_plan IS NOT NULL THEN
+//       UPDATE public.subscriptions SET plan = p_plan WHERE id = p_subscription_id;
+//     END IF;
+//
+//     IF p_blocked_reason IS NOT NULL THEN
+//       UPDATE public.subscriptions SET blocked_reason = p_blocked_reason WHERE id = p_subscription_id;
+//     END IF;
+//
+//     IF p_add_months > 0 THEN
+//       UPDATE public.subscriptions
+//       SET
+//         free_access_end_date = COALESCE(free_access_end_date, trial_end_date, NOW()) + (p_add_months || ' months')::interval,
+//         status = CASE WHEN status IN ('blocked', 'suspended') THEN 'free_access' ELSE status END
+//       WHERE id = p_subscription_id;
+//     END IF;
+//   END;
+//   $function$
+//
 // FUNCTION get_admin_subscriptions()
 //   CREATE OR REPLACE FUNCTION public.get_admin_subscriptions()
 //    RETURNS TABLE(subscription_id uuid, user_id uuid, nome text, email text, status text, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
@@ -1386,6 +1477,31 @@ export const Constants = {
 //     JOIN auth.users u ON s.user_id = u.id
 //     LEFT JOIN public.profissionais p ON p.user_id = s.user_id
 //     WHERE s.status IN ('trial', 'blocked', 'suspended', 'free_access');
+//   END;
+//   $function$
+//
+// FUNCTION get_all_subscribers()
+//   CREATE OR REPLACE FUNCTION public.get_all_subscribers()
+//    RETURNS TABLE(subscription_id uuid, user_id uuid, clinica_nome text, email text, plan text, status text, created_at timestamp with time zone, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN QUERY
+//     SELECT DISTINCT ON (s.id)
+//       s.id AS subscription_id,
+//       s.user_id,
+//       COALESCE(o.nome, p.nome_completo, 'Desconhecida') AS clinica_nome,
+//       u.email::TEXT AS email,
+//       COALESCE(s.plan, 'Básico') AS plan,
+//       s.status,
+//       s.created_at,
+//       s.trial_end_date,
+//       s.free_access_end_date
+//     FROM public.subscriptions s
+//     JOIN auth.users u ON s.user_id = u.id
+//     LEFT JOIN public.profissionais p ON p.user_id = s.user_id
+//     LEFT JOIN public.organizations o ON p.organization_id = o.id OR o.owner_id = u.id;
 //   END;
 //   $function$
 //

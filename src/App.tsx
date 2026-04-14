@@ -25,6 +25,7 @@ import UpgradePage from '@/pages/upgrade/UpgradePage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
 import Subscribers from '@/pages/admin/Subscribers'
+import Billing from '@/pages/admin/Billing'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/admin/manage-free-access" element={<ManageFreeAccess />} />
             <Route path="/admin/dashboard" element={<AdminDashboardSaaS />} />
             <Route path="/admin/subscribers" element={<Subscribers />} />
+            <Route path="/admin/billing" element={<Billing />} />
 
             {/* Profissional / Admin Routes */}
             <Route path="/exams/biochemical" element={<BiochemicalExams />} />
