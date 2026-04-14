@@ -47,18 +47,26 @@ export default function Layout() {
         setSubscription(data)
         setCheckingSub(false)
 
-        if (data && data.status === 'trial') {
-          const endDate = new Date(data.trial_end_date)
-          const now = new Date()
-          const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          const diffTime = endDay.getTime() - today.getTime()
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        if (data) {
+          let endDate = null
+          if (data.status === 'trial') endDate = new Date(data.trial_end_date)
+          if (data.status === 'free_access' && data.free_access_end_date)
+            endDate = new Date(data.free_access_end_date)
 
-          if (diffDays === 1) {
-            toast.warning('⏰ Seu trial expira AMANHÃ. Faça upgrade agora!', { duration: 10000 })
-          } else if (diffDays === 2) {
-            toast.warning('⏰ Seu trial expira em 2 dias. Faça upgrade agora!', { duration: 10000 })
+          if (endDate && data.status !== 'suspended' && data.status !== 'blocked') {
+            const now = new Date()
+            const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            const diffTime = endDay.getTime() - today.getTime()
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+            if (diffDays === 1) {
+              toast.warning('⏰ Seu acesso expira AMANHÃ. Faça upgrade agora!', { duration: 10000 })
+            } else if (diffDays === 2) {
+              toast.warning('⏰ Seu acesso expira em 2 dias. Faça upgrade agora!', {
+                duration: 10000,
+              })
+            }
           }
         }
       }
@@ -81,13 +89,33 @@ export default function Layout() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isPatient && subscription) {
-    const isExpired =
-      subscription.status === 'trial' && new Date(subscription.trial_end_date) < new Date()
-    const isBlocked = subscription.status === 'blocked'
+  if (!isPatient && subscription && location.pathname !== '/upgrade') {
+    let isExpired = false
+    let blockReason = ''
 
-    if ((isExpired || isBlocked) && location.pathname !== '/upgrade') {
-      return <Navigate to="/upgrade" replace />
+    if (subscription.status === 'suspended') {
+      isExpired = true
+      blockReason = 'Sua conta está suspensa. Faça upgrade para continuar.'
+    } else if (subscription.status === 'blocked') {
+      isExpired = true
+      blockReason = subscription.blocked_reason || 'Sua conta foi bloqueada.'
+    } else if (subscription.status === 'trial') {
+      if (new Date(subscription.trial_end_date) < new Date()) {
+        isExpired = true
+        blockReason = 'Seu período de teste expirou.'
+      }
+    } else if (subscription.status === 'free_access') {
+      if (
+        subscription.free_access_end_date &&
+        new Date(subscription.free_access_end_date) < new Date()
+      ) {
+        isExpired = true
+        blockReason = 'Seu acesso gratuito expirou.'
+      }
+    }
+
+    if (isExpired) {
+      return <Navigate to="/upgrade" state={{ reason: blockReason }} replace />
     }
   }
 

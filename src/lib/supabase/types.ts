@@ -790,7 +790,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_update_subscription: {
+        Args: {
+          p_free_access_end_date?: string
+          p_free_access_start_date?: string
+          p_status: string
+          p_subscription_id: string
+        }
+        Returns: undefined
+      }
+      get_admin_subscriptions: {
+        Args: never
+        Returns: {
+          email: string
+          free_access_end_date: string
+          nome: string
+          status: string
+          subscription_id: string
+          trial_end_date: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1269,6 +1289,46 @@ export const Constants = {
 //     WITH CHECK: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = vendas.patient_id) AND (pacientes.user_id = auth.uid())))))
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION admin_update_subscription(uuid, text, timestamp with time zone, timestamp with time zone)
+//   CREATE OR REPLACE FUNCTION public.admin_update_subscription(p_subscription_id uuid, p_status text, p_free_access_start_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_free_access_end_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     UPDATE public.subscriptions
+//     SET
+//       status = p_status,
+//       free_access_start_date = COALESCE(p_free_access_start_date, free_access_start_date),
+//       free_access_end_date = COALESCE(p_free_access_end_date, free_access_end_date),
+//       updated_at = NOW()
+//     WHERE id = p_subscription_id;
+//   END;
+//   $function$
+//
+// FUNCTION get_admin_subscriptions()
+//   CREATE OR REPLACE FUNCTION public.get_admin_subscriptions()
+//    RETURNS TABLE(subscription_id uuid, user_id uuid, nome text, email text, status text, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN QUERY
+//     SELECT
+//       s.id AS subscription_id,
+//       s.user_id,
+//       COALESCE(p.nome_completo, 'Desconhecido') AS nome,
+//       u.email::TEXT AS email,
+//       s.status,
+//       s.trial_end_date,
+//       s.free_access_end_date
+//     FROM public.subscriptions s
+//     JOIN auth.users u ON s.user_id = u.id
+//     LEFT JOIN public.profissionais p ON p.user_id = s.user_id
+//     WHERE s.status IN ('trial', 'blocked', 'suspended', 'free_access');
+//   END;
+//   $function$
+//
 // FUNCTION handle_new_profissional()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional()
 //    RETURNS trigger
