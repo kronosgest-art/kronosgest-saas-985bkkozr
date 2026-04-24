@@ -209,6 +209,53 @@ export type Database = {
           },
         ]
       }
+      credit_purchases: {
+        Row: {
+          created_at: string
+          credits_amount: number
+          id: string
+          organization_id: string | null
+          package_name: string
+          payment_method: string | null
+          price: number
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          credits_amount: number
+          id?: string
+          organization_id?: string | null
+          package_name: string
+          payment_method?: string | null
+          price: number
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          credits_amount?: number
+          id?: string
+          organization_id?: string | null
+          package_name?: string
+          payment_method?: string | null
+          price?: number
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'credit_purchases_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       exames: {
         Row: {
           arquivo_pdf_url: string | null
@@ -894,6 +941,20 @@ export type Database = {
           status: string
         }[]
       }
+      get_admin_credit_purchases: {
+        Args: never
+        Returns: {
+          admin_email: string
+          clinica_nome: string
+          created_at: string
+          credits_amount: number
+          id: string
+          package_name: string
+          payment_method: string
+          price: number
+          status: string
+        }[]
+      }
       get_admin_subscriptions: {
         Args: never
         Returns: {
@@ -1105,6 +1166,17 @@ export const Constants = {
 //   data_collected: jsonb (nullable, default: '{}'::jsonb)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+// Table: credit_purchases
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   package_name: text (not null)
+//   credits_amount: integer (not null)
+//   price: numeric (not null)
+//   status: text (not null, default: 'pending'::text)
+//   payment_method: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1282,6 +1354,10 @@ export const Constants = {
 // Table: consultas
 //   FOREIGN KEY consultas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY consultas_pkey: PRIMARY KEY (id)
+// Table: credit_purchases
+//   FOREIGN KEY credit_purchases_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY credit_purchases_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY credit_purchases_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
@@ -1362,6 +1438,11 @@ export const Constants = {
 //   Policy "consultas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
+// Table: credit_purchases
+//   Policy "Admins can manage all credit purchases" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Admins can view all credit purchases" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: exames
 //   Policy "exames_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))
@@ -1512,6 +1593,31 @@ export const Constants = {
 //     LEFT JOIN public.profissionais prof ON prof.user_id = p.user_id
 //     LEFT JOIN public.organizations o ON prof.organization_id = o.id OR o.owner_id = u.id
 //     ORDER BY p.created_at DESC;
+//   END;
+//   $function$
+//
+// FUNCTION get_admin_credit_purchases()
+//   CREATE OR REPLACE FUNCTION public.get_admin_credit_purchases()
+//    RETURNS TABLE(id uuid, created_at timestamp with time zone, clinica_nome text, admin_email text, package_name text, credits_amount integer, price numeric, status text, payment_method text)
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN QUERY
+//     SELECT
+//       cp.id,
+//       cp.created_at,
+//       COALESCE(o.nome, 'Desconhecida') AS clinica_nome,
+//       u.email::TEXT AS admin_email,
+//       cp.package_name,
+//       cp.credits_amount,
+//       cp.price,
+//       cp.status,
+//       cp.payment_method
+//     FROM public.credit_purchases cp
+//     JOIN auth.users u ON cp.user_id = u.id
+//     LEFT JOIN public.organizations o ON cp.organization_id = o.id
+//     ORDER BY cp.created_at DESC;
 //   END;
 //   $function$
 //

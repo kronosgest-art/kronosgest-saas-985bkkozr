@@ -38,9 +38,13 @@ export default function Layout() {
     user?.email === 'dra.morganavieira@gmail.com' ||
     role === 'admin' ||
     user?.user_metadata?.is_admin === true
+  const isTestClinic =
+    user?.email?.toLowerCase().includes('teste') ||
+    user?.email === 'clinica@teste.com' ||
+    user?.email === 'teste@teste.com'
 
   useEffect(() => {
-    if (user && !isPatient && !isAdmin) {
+    if (user && !isPatient && !isAdmin && !isTestClinic) {
       const checkSub = async () => {
         const { data } = await supabase
           .from('subscriptions')
@@ -78,7 +82,7 @@ export default function Layout() {
     } else {
       setCheckingSub(false)
     }
-  }, [user, isPatient, isAdmin])
+  }, [user, isPatient, isAdmin, isTestClinic])
 
   if (loading || checkingSub) {
     return (
@@ -93,7 +97,7 @@ export default function Layout() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isPatient && !isAdmin && subscription && location.pathname !== '/upgrade') {
+  if (!isPatient && !isAdmin && !isTestClinic && subscription && location.pathname !== '/upgrade') {
     let isExpired = false
     let blockReason = ''
 
