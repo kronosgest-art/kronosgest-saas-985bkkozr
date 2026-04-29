@@ -34,6 +34,35 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Validação de Duplicidade Manual apenas para pacientes ativos
+    if ((cpf && cpf.trim() !== '') || (email && email.trim() !== '')) {
+      const orConditions = []
+      if (cpf && cpf.trim() !== '') orConditions.push(`cpf.eq.${cpf}`)
+      if (email && email.trim() !== '') orConditions.push(`email.eq.${email}`)
+
+      let query = supabase
+        .from('pacientes')
+        .select('id')
+        .is('deleted_at', null)
+        .neq('status', 'deletado')
+
+      if (user_id) {
+        query = query.eq('user_id', user_id)
+      }
+
+      const { data: existing } = await query.or(orConditions.join(','))
+
+      if (existing && existing.length > 0) {
+        return new Response(
+          JSON.stringify({ error: 'Paciente já cadastrado com este CPF/email' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
+      }
+    }
+
     const { data, error } = await supabase
       .from('pacientes')
       .insert({
@@ -55,10 +84,13 @@ Deno.serve(async (req: Request) => {
 
     if (error) {
       if (error.code === '23505') {
-        return new Response(JSON.stringify({ error: 'CPF ou Email já cadastrado.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return new Response(
+          JSON.stringify({ error: 'Paciente já cadastrado com este CPF/email' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
       }
       throw error
     }
