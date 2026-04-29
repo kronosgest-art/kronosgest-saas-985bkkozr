@@ -27,6 +27,7 @@ import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
 import PatientLogin from '@/pages/patient/PatientLogin'
 import PatientDashboard from '@/pages/patient/PatientDashboard'
+import PatientDocuments from '@/pages/patient/PatientDocuments'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/patient/prescriptions" element={<PatientPrescriptions />} />
             <Route path="/patient/sessions" element={<PatientSessions />} />
             <Route path="/patient/history" element={<PatientHistory />} />
+            <Route path="/patient/documents" element={<PatientDocuments />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
