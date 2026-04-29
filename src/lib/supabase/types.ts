@@ -1648,6 +1648,9 @@ export const Constants = {
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = anamnese.patient_id) AND (pacientes.user_id = auth.uid()))))
 //   Policy "anon_select_anamnese" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true
+//   Policy "anon_update_anamnese" (UPDATE, PERMISSIVE) roles={anon}
+//     USING: true
+//     WITH CHECK: true
 // Table: anamnese_templates
 //   Policy "Users can delete their own templates" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
@@ -1657,6 +1660,8 @@ export const Constants = {
 //     USING: (auth.uid() = profissional_id)
 //   Policy "Users can view their own templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
+//   Policy "anon_select_anamnese_templates" (SELECT, PERMISSIVE) roles={anon}
+//     USING: true
 // Table: consultas
 //   Policy "consultas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))

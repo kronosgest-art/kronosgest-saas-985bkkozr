@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -6,6 +6,9 @@ import { AuthProvider } from '@/hooks/use-auth'
 import Layout from '@/components/Layout'
 import Index from '@/pages/Index'
 import Login from '@/pages/Login'
+import AdminLogin from '@/pages/login/AdminLogin'
+import ClinicaLogin from '@/pages/login/ClinicaLogin'
+import ProfissionalLogin from '@/pages/login/ProfissionalLogin'
 import ConsultationWizard from '@/pages/consultation/ConsultationWizard'
 import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationWizard'
 import CRM from '@/pages/crm/CRM'
@@ -43,7 +46,11 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/patient-login" element={<PatientLogin />} />
+          <Route path="/login/admin" element={<AdminLogin />} />
+          <Route path="/login/clinica" element={<ClinicaLogin />} />
+          <Route path="/login/profissional" element={<ProfissionalLogin />} />
+          <Route path="/login/paciente" element={<PatientLogin />} />
+          <Route path="/patient-login" element={<Navigate to="/login/paciente" replace />} />
           <Route path="/patient-dashboard" element={<PatientDashboard />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
