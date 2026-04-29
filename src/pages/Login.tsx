@@ -62,14 +62,14 @@ export default function Login() {
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
         {/* Header Logo */}
-        <div className="text-center mb-16 animate-fade-in-up">
+        <div className="text-center mb-12 md:mb-16 animate-fade-in-up px-4">
           <img
             src="/logo.png"
             alt="Logomarca KronosGest"
-            className="h-16 md:h-20 object-contain mx-auto drop-shadow-lg"
+            className="w-full max-w-[320px] md:max-w-[480px] lg:max-w-[560px] h-auto object-contain mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-700"
             onError={(e) => {
               e.currentTarget.src =
-                'https://img.usecurling.com/p/300/80?q=luxury%20gold%20logo&color=black'
+                'https://img.usecurling.com/p/600/300?q=luxury%20gold%20logo&color=black'
             }}
           />
         </div>
