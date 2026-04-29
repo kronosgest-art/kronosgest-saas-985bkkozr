@@ -65,16 +65,22 @@ export default function Login() {
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
         {/* Header Logo */}
-        <div className="text-center mb-12 md:mb-16 animate-fade-in-up px-4">
-          <img
-            src="/logo.png"
-            alt="Logomarca KronosGest"
-            className="w-full max-w-[400px] md:max-w-[600px] lg:max-w-[800px] h-auto object-contain mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-700"
-            onError={(e) => {
-              e.currentTarget.src =
-                'https://img.usecurling.com/p/800/300?q=luxury%20gold%20logo&color=black'
+        <div className="text-center mb-12 md:mb-16 animate-fade-in-up px-4 flex flex-col items-center justify-center select-none">
+          <h1
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold tracking-widest mb-6"
+            style={{
+              background:
+                'linear-gradient(to right, #B38728 0%, #FDFCF0 25%, #C5A059 50%, #FDFCF0 75%, #8C6D31 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              color: 'transparent',
+              filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))',
             }}
-          />
+          >
+            KRONOS GEST
+          </h1>
+          <div className="h-[1px] w-48 md:w-64 bg-gradient-to-r from-transparent via-[#C5A059] to-transparent opacity-60"></div>
         </div>
 
         {/* Selection Area */}
