@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +19,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 export default function PatientDashboard() {
   const navigate = useNavigate()
@@ -28,6 +36,11 @@ export default function PatientDashboard() {
   const [tcles, setTcles] = useState<any[]>([])
   const [prescricoes, setPrescricoes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [docToSign, setDocToSign] = useState<any>(null)
+  const [sessionToSign, setSessionToSign] = useState<any>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('patient_session')
@@ -47,7 +60,11 @@ export default function PatientDashboard() {
             .select('*')
             .eq('patient_id', patientId)
             .order('data', { ascending: true }),
-          supabase.from('anamnese').select('*').eq('patient_id', patientId),
+          supabase
+            .from('anamnese')
+            .select('*, anamnese_templates(nome_template)')
+            .eq('patient_id', patientId)
+            .order('criado_em', { ascending: false }),
           supabase.from('tcle_assinado').select('*').eq('patient_id', patientId),
           supabase.from('prescricoes').select('*').eq('patient_id', patientId),
         ])
@@ -65,40 +82,112 @@ export default function PatientDashboard() {
     navigate('/patient-login')
   }
 
-  const handleConfirmPresence = async (id: string) => {
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    setIsDrawing(true)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const rect = canvas.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    ctx.beginPath()
+    ctx.moveTo(clientX - rect.left, clientY - rect.top)
+  }
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const rect = canvas.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    ctx.lineTo(clientX - rect.left, clientY - rect.top)
+    ctx.stroke()
+  }
+
+  const stopDrawing = () => setIsDrawing(false)
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
+  const handleSignDocument = async () => {
+    if (!docToSign) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const signatureImage = canvas.toDataURL('image/png')
+
+    const { error } = await supabase
+      .from('anamnese')
+      .update({
+        assinatura_paciente: {
+          data: new Date().toISOString(),
+          imagem: signatureImage,
+          ip: 'Digital',
+        },
+      })
+      .eq('anamnese_id', docToSign.anamnese_id)
+
+    if (!error) {
+      toast({ title: 'Documento assinado com sucesso' })
+      setAnamneses((prev) =>
+        prev.map((a) =>
+          a.anamnese_id === docToSign.anamnese_id
+            ? {
+                ...a,
+                assinatura_paciente: { data: new Date().toISOString(), imagem: signatureImage },
+              }
+            : a,
+        ),
+      )
+      setDocToSign(null)
+    } else {
+      toast({ title: 'Erro ao assinar documento', variant: 'destructive' })
+    }
+  }
+
+  const handleSignSession = async () => {
+    if (!sessionToSign) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const signatureImage = canvas.toDataURL('image/png')
     const timestamp = new Date().toISOString()
-    const assinatura = `Assinado digitalmente por ${patient.nome_completo}`
+
     const { error } = await supabase
       .from('agendamentos')
       .update({
         status: 'Confirmado',
-        assinatura_paciente: assinatura,
+        assinatura_paciente: signatureImage,
         data_assinatura: timestamp,
       })
-      .eq('id', id)
+      .eq('id', sessionToSign.id)
+
     if (!error) {
-      toast({
-        title: 'Presença e assinatura confirmadas!',
-        description: 'Sua assinatura foi registrada com sucesso.',
-      })
+      toast({ title: 'Presença confirmada com sucesso!' })
       setSessoes((prev) =>
         prev.map((s) =>
-          s.id === id
+          s.id === sessionToSign.id
             ? {
                 ...s,
                 status: 'Confirmado',
-                assinatura_paciente: assinatura,
+                assinatura_paciente: signatureImage,
                 data_assinatura: timestamp,
               }
             : s,
         ),
       )
+      setSessionToSign(null)
     } else {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível registrar a assinatura.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao assinar sessão', variant: 'destructive' })
     }
   }
 
@@ -125,7 +214,6 @@ export default function PatientDashboard() {
   const historico = sessoes.filter(
     (s) => new Date(`${s.data}T${s.horario}`) < now && s.assinatura_paciente,
   )
-  const ultimaConsulta = historico.length > 0 ? historico[historico.length - 1] : null
 
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-8 text-[#333333]">
@@ -163,15 +251,15 @@ export default function PatientDashboard() {
           <Card className="border-[#C5A059] bg-white shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-[#333333] uppercase tracking-wider">
-                Documentos Assinados
+                Documentos
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-xl font-bold text-[#001F3F]">
-                {tcles.length + anamneses.length}
+                {tcles.length + anamneses.length + prescricoes.length}
               </div>
               <p className="text-xs text-muted-foreground mt-1 truncate">
-                TCLEs e Anamneses registradas
+                Disponíveis no seu prontuário
               </p>
             </CardContent>
           </Card>
@@ -238,10 +326,21 @@ export default function PatientDashboard() {
                         </span>
                       </div>
                       {s.assinatura_paciente && (
-                        <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                          <FileSignature className="h-3 w-3" /> {s.assinatura_paciente} em{' '}
-                          {new Date(s.data_assinatura).toLocaleDateString('pt-BR')}
-                        </p>
+                        <div className="mt-3">
+                          <p className="text-xs text-emerald-600 flex items-center gap-1 mb-1">
+                            <FileSignature className="h-3 w-3" /> Presença assinada em{' '}
+                            {new Date(s.data_assinatura).toLocaleDateString('pt-BR')}
+                          </p>
+                          {s.assinatura_paciente.startsWith('data:image') ? (
+                            <img
+                              src={s.assinatura_paciente}
+                              alt="Assinatura"
+                              className="h-10 border bg-white rounded"
+                            />
+                          ) : (
+                            <p className="text-xs font-mono">{s.assinatura_paciente}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
@@ -250,7 +349,7 @@ export default function PatientDashboard() {
                       </span>
                       {(!s.assinatura_paciente || s.status !== 'Confirmado') && (
                         <Button
-                          onClick={() => handleConfirmPresence(s.id)}
+                          onClick={() => setSessionToSign(s)}
                           className="w-full sm:w-auto bg-[#C5A059] hover:bg-[#A88640] text-[#FDFCF0]"
                         >
                           <PenTool className="h-4 w-4 mr-2" /> Assinar Presença
@@ -265,7 +364,7 @@ export default function PatientDashboard() {
                 <Info className="h-10 w-10 mx-auto mb-3 text-[#C5A059]/50" />
                 <p className="text-[#333333] font-medium">Nenhuma sessão pendente de assinatura.</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Você está com as assinaturas de suas sessões em dia!
+                  Você está com as assinaturas em dia!
                 </p>
               </div>
             )}
@@ -273,6 +372,51 @@ export default function PatientDashboard() {
 
           <TabsContent value="documentos" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
+              {anamneses.map((a) => (
+                <Card
+                  key={a.anamnese_id}
+                  className="border-[#C5A059]/20 hover:border-[#C5A059]/50 transition-colors"
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-[#001F3F]">
+                      <FileText className="h-4 w-4 text-[#C5A059]" />
+                      {a.anamnese_templates?.nome_template || 'Anamnese e Ficha Clínica'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {a.assinatura_paciente ? (
+                      <div>
+                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                          Assinado
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Registrado em{' '}
+                          {new Date(
+                            a.assinatura_paciente.data || a.atualizado_em,
+                          ).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center mt-2">
+                        <Badge
+                          variant="outline"
+                          className="text-amber-600 border-amber-200 bg-amber-50"
+                        >
+                          Pendente
+                        </Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => setDocToSign(a)}
+                          className="bg-[#C5A059] hover:bg-[#A88640] text-white"
+                        >
+                          <PenTool className="h-4 w-4 mr-2" /> Assinar
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
               {tcles.map((tcle) => (
                 <Card
                   key={tcle.id}
@@ -294,6 +438,7 @@ export default function PatientDashboard() {
                   </CardContent>
                 </Card>
               ))}
+
               {prescricoes.map((prescricao) => (
                 <Card
                   key={prescricao.id}
@@ -313,7 +458,8 @@ export default function PatientDashboard() {
                   </CardContent>
                 </Card>
               ))}
-              {tcles.length === 0 && prescricoes.length === 0 && (
+
+              {tcles.length === 0 && prescricoes.length === 0 && anamneses.length === 0 && (
                 <div className="col-span-2 text-center py-12 bg-white rounded-xl border border-dashed border-[#C5A059]/30">
                   <AlertCircle className="h-8 w-8 text-[#C5A059]/50 mx-auto mb-2" />
                   <p className="text-muted-foreground">Nenhum documento encontrado.</p>
@@ -343,7 +489,7 @@ export default function PatientDashboard() {
                 </Card>
               ))
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-muted-foreground bg-white rounded-xl border border-dashed border-[#C5A059]/30">
                 Nenhum histórico encontrado.
               </div>
             )}
@@ -354,23 +500,27 @@ export default function PatientDashboard() {
               anamneses.map((a) => (
                 <Card key={a.anamnese_id} className="border-[#C5A059]/20">
                   <CardHeader className="bg-[#001F3F] text-white rounded-t-lg pb-3">
-                    <CardTitle className="text-[#C5A059] flex items-center gap-2">
+                    <CardTitle className="text-[#C5A059] flex items-center gap-2 text-base">
                       <FileText className="h-5 w-5" />
-                      Anamnese e Ficha Clínica
+                      {a.anamnese_templates?.nome_template || 'Anamnese e Ficha Clínica'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 bg-white">
                     <p className="text-sm text-[#333333] mb-4">
-                      Seus dados de saúde estão armazenados com segurança.
+                      Seus dados de saúde estão armazenados com segurança. Data do registro:{' '}
+                      {new Date(a.criado_em).toLocaleDateString('pt-BR')}
                     </p>
                     <div className="grid md:grid-cols-2 gap-4">
                       {Object.entries(a.respostas || {})
-                        .filter(([k, v]) => v && typeof v === 'string' && !k.startsWith('sec_'))
+                        .filter(
+                          ([k, v]) =>
+                            v && typeof v === 'string' && !k.startsWith('sec_') && v.trim() !== '',
+                        )
                         .slice(0, 10)
                         .map(([k, v]) => (
                           <div key={k} className="border-b border-gray-100 pb-2">
                             <span className="text-xs text-muted-foreground uppercase">
-                              {k.replace(/_/g, ' ')}
+                              {k.replace(/_/g, ' ').replace('dp ', '')}
                             </span>
                             <p className="font-medium text-[#333333] truncate">{String(v)}</p>
                           </div>
@@ -380,13 +530,110 @@ export default function PatientDashboard() {
                 </Card>
               ))
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-muted-foreground bg-white rounded-xl border border-dashed border-[#C5A059]/30">
                 Ficha clínica não disponível.
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!docToSign} onOpenChange={(o) => !o && setDocToSign(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assinar Documento</DialogTitle>
+            <DialogDescription>
+              Ao assinar, você concorda com as informações preenchidas em{' '}
+              {docToSign?.anamnese_templates?.nome_template || 'sua ficha clínica'}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="border rounded-md bg-secondary/20 p-2 flex flex-col items-center">
+            <p className="text-xs text-muted-foreground mb-2 w-full text-left font-medium">
+              Desenhe sua assinatura abaixo:
+            </p>
+            <canvas
+              ref={canvasRef}
+              width={400}
+              height={150}
+              className="border bg-white rounded-md cursor-crosshair touch-none max-w-full"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+            <div className="w-full flex justify-end mt-2">
+              <Button variant="ghost" size="sm" onClick={clearCanvas}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setDocToSign(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSignDocument}
+              className="bg-[#C5A059] hover:bg-[#A88640] text-white"
+            >
+              Confirmar Assinatura
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!sessionToSign} onOpenChange={(o) => !o && setSessionToSign(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar Presença</DialogTitle>
+            <DialogDescription>
+              Assine abaixo para confirmar sua presença na sessão de {sessionToSign?.tipo_consulta}{' '}
+              do dia {sessionToSign ? new Date(sessionToSign.data).toLocaleDateString('pt-BR') : ''}
+              .
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="border rounded-md bg-secondary/20 p-2 flex flex-col items-center">
+            <p className="text-xs text-muted-foreground mb-2 w-full text-left font-medium">
+              Desenhe sua assinatura:
+            </p>
+            <canvas
+              ref={canvasRef}
+              width={400}
+              height={150}
+              className="border bg-white rounded-md cursor-crosshair touch-none max-w-full"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+            <div className="w-full flex justify-end mt-2">
+              <Button variant="ghost" size="sm" onClick={clearCanvas}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setSessionToSign(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSignSession}
+              className="bg-[#C5A059] hover:bg-[#A88640] text-white"
+            >
+              Confirmar Assinatura
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
