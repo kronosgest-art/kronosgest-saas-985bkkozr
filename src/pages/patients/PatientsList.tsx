@@ -4,18 +4,21 @@ import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, Loader2, Phone, Mail, FileText } from 'lucide-react'
+import { CreatePatientDialog } from './CreatePatientDialog'
 
 export default function PatientsList() {
   const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  async function loadPacientes() {
+    setLoading(true)
+    const { data } = await supabase.from('pacientes').select('*').order('nome_completo')
+    if (data) setPacientes(data)
+    setLoading(false)
+  }
+
   useEffect(() => {
-    async function loadPacientes() {
-      const { data } = await supabase.from('pacientes').select('*').order('nome_completo')
-      if (data) setPacientes(data)
-      setLoading(false)
-    }
     loadPacientes()
   }, [])
 
@@ -34,9 +37,7 @@ export default function PatientsList() {
           <h1 className="text-3xl font-bold text-primary tracking-tight">Pacientes</h1>
           <p className="text-muted-foreground mt-1">Central de cadastro e prontuários.</p>
         </div>
-        <Button>
-          <Users className="mr-2 h-4 w-4" /> Novo Paciente
-        </Button>
+        <CreatePatientDialog onCreated={loadPacientes} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pacientes.map((p) => (

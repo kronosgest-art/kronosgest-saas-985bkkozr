@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from '@/hooks/use-toast'
 import { SellProtocolDialog } from '@/components/protocols/SellProtocolDialog'
+import { CreateProtocolDialog } from './CreateProtocolDialog'
 
 export default function Protocols() {
   const [protocolos, setProtocolos] = useState<any[]>([])
@@ -79,9 +80,7 @@ export default function Protocols() {
           <p className="text-muted-foreground mt-1">Gerencie e venda seus protocolos clínicos.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="text-[#333333] hover:border-[#C5A059]">
-            <Plus className="mr-2 h-4 w-4" /> Novo Protocolo
-          </Button>
+          <CreateProtocolDialog onCreated={loadProtocolos} />
           <SellProtocolDialog />
         </div>
       </div>
@@ -134,12 +133,7 @@ export default function Protocols() {
           <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground border rounded-lg border-dashed">
             <Info className="h-10 w-10 mb-2 opacity-50" />
             <p className="mb-4">Nenhum registro encontrado</p>
-            <Button
-              variant="outline"
-              className="text-[#C5A059] border-[#C5A059] hover:bg-[#FDFCF0]"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Criar Novo
-            </Button>
+            <CreateProtocolDialog onCreated={loadProtocolos} />
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@
     "analyze-bioresonance": 5,
     "analyze-exames": 5,
     "generate-prescription": 5,
-    "create-paciente": 4,
+    "create-paciente": 5,
     "uploadExame": 2,
     "interpretarExame": 8,
     "transcreverExame": 5,

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus, FileSignature } from 'lucide-react'
 import { SellProtocolDialog } from '@/components/protocols/SellProtocolDialog'
+import { CreatePrescriptionDialog } from './CreatePrescriptionDialog'
 import {
   Dialog,
   DialogContent,
@@ -17,15 +18,17 @@ export default function PrescriptionsList() {
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState<any>(null)
 
+  async function loadPrescricoes() {
+    setLoading(true)
+    const { data } = await supabase
+      .from('prescricoes')
+      .select('*, pacientes(nome_completo)')
+      .order('created_at', { ascending: false })
+    if (data) setPrescricoes(data)
+    setLoading(false)
+  }
+
   useEffect(() => {
-    async function loadPrescricoes() {
-      const { data } = await supabase
-        .from('prescricoes')
-        .select('*, pacientes(nome_completo)')
-        .order('created_at', { ascending: false })
-      if (data) setPrescricoes(data)
-      setLoading(false)
-    }
     loadPrescricoes()
   }, [])
 
@@ -49,9 +52,7 @@ export default function PrescriptionsList() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline">
-            <Plus className="mr-2 h-4 w-4" /> Nova Prescrição
-          </Button>
+          <CreatePrescriptionDialog onCreated={loadPrescricoes} />
           <SellProtocolDialog />
         </div>
       </div>

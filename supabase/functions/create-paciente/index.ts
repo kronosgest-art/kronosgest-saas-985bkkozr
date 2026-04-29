@@ -38,9 +38,9 @@ Deno.serve(async (req: Request) => {
       .from('pacientes')
       .insert({
         nome_completo,
-        cpf: cpf || null,
-        email: email || null,
-        telefone: telefone || null,
+        cpf: cpf && cpf.trim() !== '' ? cpf : null,
+        email: email && email.trim() !== '' ? email : null,
+        telefone: telefone && telefone.trim() !== '' ? telefone : null,
         data_nascimento: reqData.dataNascimento || null,
         sexo: reqData.sexo || null,
         endereco: reqData.endereco || null,
