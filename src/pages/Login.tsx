@@ -44,6 +44,7 @@ export default function Login() {
       title: 'Paciente',
       description: 'Visualizar sessões e dados',
       path: '/login/paciente',
+      credentials: { email: 'marcelus@kronosgest.com', password: '12345678900' },
     },
   ]
 
