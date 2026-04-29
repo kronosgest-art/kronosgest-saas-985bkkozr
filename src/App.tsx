@@ -16,6 +16,10 @@ import Protocols from '@/pages/protocols/Protocols'
 import AnamneseTemplates from '@/pages/settings/AnamneseTemplates'
 import PatientMedicalRecord from '@/pages/patients/PatientMedicalRecord'
 import Settings from '@/pages/settings/Settings'
+import PatientExams from '@/pages/patient/PatientExams'
+import PatientPrescriptions from '@/pages/patient/PatientPrescriptions'
+import PatientSessions from '@/pages/patient/PatientSessions'
+import PatientHistory from '@/pages/patient/PatientHistory'
 import SessionsList from '@/pages/sessions/SessionsList'
 import BiochemicalExams from '@/pages/exams/BiochemicalExams'
 import BiophysicalExams from '@/pages/exams/BiophysicalExams'
@@ -62,16 +66,10 @@ const App = () => (
             <Route path="/reports" element={<FeaturePlaceholder title="Relatórios" />} />
 
             {/* Patient Routes */}
-            <Route path="/patient/exams" element={<FeaturePlaceholder title="Meus Exames" />} />
-            <Route
-              path="/patient/prescriptions"
-              element={<FeaturePlaceholder title="Minhas Prescrições" />}
-            />
-            <Route
-              path="/patient/sessions"
-              element={<FeaturePlaceholder title="Minhas Sessões Agendadas" />}
-            />
-            <Route path="/patient/history" element={<FeaturePlaceholder title="Meu Histórico" />} />
+            <Route path="/patient/exams" element={<PatientExams />} />
+            <Route path="/patient/prescriptions" element={<PatientPrescriptions />} />
+            <Route path="/patient/sessions" element={<PatientSessions />} />
+            <Route path="/patient/history" element={<PatientHistory />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

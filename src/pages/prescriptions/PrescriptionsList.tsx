@@ -61,7 +61,17 @@ export default function PrescriptionsList() {
                 <p>Gerada em: {new Date(prescricao.created_at).toLocaleDateString('pt-BR')}</p>
               </div>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="outline" className="w-full" size="sm">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                  onClick={() => {
+                    if (prescricao.arquivo_pdf_url) {
+                      window.open(prescricao.arquivo_pdf_url, '_blank')
+                    }
+                  }}
+                  disabled={!prescricao.arquivo_pdf_url}
+                >
                   <FileSignature className="mr-2 h-4 w-4" />
                   Ver Prescrição Completa
                 </Button>

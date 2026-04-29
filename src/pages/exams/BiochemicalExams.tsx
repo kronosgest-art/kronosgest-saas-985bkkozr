@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Upload, FileText } from 'lucide-react'
+import { Loader2, Upload, FileText, Trash2 } from 'lucide-react'
 import { SellProtocolDialog } from '@/components/protocols/SellProtocolDialog'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from 'sonner'
 
 export default function BiochemicalExams() {
+  const { user } = useAuth()
+  const isPatient = ['paciente', 'cliente', 'patient'].includes(user?.user_metadata?.role || '')
   const [exames, setExames] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -22,6 +26,19 @@ export default function BiochemicalExams() {
     }
     loadExames()
   }, [])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja apagar este exame?')) return
+
+    const { error } = await supabase.from('exames').delete().eq('id', id)
+    if (error) {
+      toast.error('Erro ao apagar o exame')
+      console.error(error)
+    } else {
+      toast.success('Exame apagado com sucesso')
+      setExames(exames.filter((e) => e.id !== id))
+    }
+  }
 
   if (loading) {
     return (
@@ -64,10 +81,30 @@ export default function BiochemicalExams() {
                 </Badge>
               </div>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="outline" className="w-full" size="sm">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                  onClick={() => {
+                    if (exame.arquivo_pdf_url) window.open(exame.arquivo_pdf_url, '_blank')
+                    else if (exame.resultado_json)
+                      alert(JSON.stringify(exame.resultado_json, null, 2))
+                  }}
+                >
                   <FileText className="mr-2 h-4 w-4" />
                   Ver Detalhes
                 </Button>
+                {!isPatient && (
+                  <Button
+                    variant="ghost"
+                    className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
+                    size="sm"
+                    onClick={() => handleDelete(exame.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Apagar
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

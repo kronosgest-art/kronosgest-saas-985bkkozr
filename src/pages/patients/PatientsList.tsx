@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, Loader2, Phone, Mail, FileText } from 'lucide-react'
 
 export default function PatientsList() {
+  const navigate = useNavigate()
   const [pacientes, setPacientes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -51,7 +53,11 @@ export default function PatientsList() {
                 <Phone className="mr-2 h-4 w-4 shrink-0" />
                 {p.telefone || 'Não informado'}
               </div>
-              <Button variant="ghost" className="w-full mt-4 text-primary hover:text-primary/80">
+              <Button
+                variant="ghost"
+                className="w-full mt-4 text-primary hover:text-primary/80"
+                onClick={() => navigate(`/patients/${p.id}/medical-record`)}
+              >
                 <FileText className="mr-2 h-4 w-4" /> Abrir Prontuário
               </Button>
             </CardContent>

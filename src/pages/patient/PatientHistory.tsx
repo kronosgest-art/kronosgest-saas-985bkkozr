@@ -1,0 +1,69 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2, History } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+
+export default function PatientHistory() {
+  const { user } = useAuth()
+  const [consultas, setConsultas] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      if (!user) return
+      const { data: patient } = await supabase
+        .from('pacientes')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (patient) {
+        const { data } = await supabase
+          .from('consultas')
+          .select('*')
+          .eq('patient_id', patient.id)
+          .order('consultation_date', { ascending: false })
+        if (data) setConsultas(data)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [user])
+
+  if (loading)
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <h1 className="text-3xl font-bold text-primary tracking-tight">Meu Histórico</h1>
+      <div className="space-y-4">
+        {consultas.map((c) => (
+          <Card key={c.id} className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="h-5 w-5" /> {c.consultation_type}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm">
+                <strong>Data:</strong> {new Date(c.consultation_date).toLocaleDateString('pt-BR')}
+              </p>
+              <Badge variant="outline">{c.status}</Badge>
+            </CardContent>
+          </Card>
+        ))}
+        {consultas.length === 0 && (
+          <div className="py-12 text-center text-muted-foreground border rounded-lg border-dashed">
+            Nenhum histórico encontrado.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
