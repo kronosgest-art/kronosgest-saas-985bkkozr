@@ -141,11 +141,11 @@ export default function Layout() {
         { to: '/protocols', label: 'Protocolos', icon: BookOpen },
         { to: '/sessions', label: 'Sessões', icon: Calendar },
         { to: '/financial', label: 'Financeiro', icon: FileText },
-        { to: '/reports', label: 'Relatórios', icon: PieChart },
         { to: '/settings', label: 'Configurações', icon: SettingsIcon },
         { to: '/settings/anamnesis-templates', label: 'Modelos de Anamnese', icon: ClipboardList },
         ...(isAdmin
           ? [
+              { to: '/reports', label: 'Relatórios', icon: PieChart },
               { to: '/admin/dashboard', label: 'Dashboard SaaS', icon: LayoutDashboard },
               { to: '/admin/subscribers', label: 'Assinantes', icon: Users },
               { to: '/admin/billing', label: 'Faturamento', icon: FileText },
@@ -174,7 +174,12 @@ export default function Layout() {
 
   const allowedPaths = isPatient
     ? allLinks.map((l) => l.to)
-    : ['/consultation', '/upgrade', ...allLinks.map((l) => l.to)]
+    : [
+        '/consultation',
+        '/upgrade',
+        ...(isAdmin ? ['/admin/credits'] : []),
+        ...allLinks.map((l) => l.to),
+      ]
 
   const isAllowed = allowedPaths.some(
     (path) =>
