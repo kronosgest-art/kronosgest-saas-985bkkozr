@@ -25,6 +25,8 @@ import BiochemicalExams from '@/pages/exams/BiochemicalExams'
 import BiophysicalExams from '@/pages/exams/BiophysicalExams'
 import NotFound from '@/pages/NotFound'
 import FeaturePlaceholder from '@/pages/shared/FeaturePlaceholder'
+import PatientLogin from '@/pages/patient/PatientLogin'
+import PatientDashboard from '@/pages/patient/PatientDashboard'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
@@ -40,6 +42,8 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/patient-login" element={<PatientLogin />} />
+          <Route path="/patient-dashboard" element={<PatientDashboard />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/consultation" element={<ConsultationWizard />} />
