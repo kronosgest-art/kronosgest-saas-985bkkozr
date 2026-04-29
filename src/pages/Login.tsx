@@ -20,6 +20,7 @@ export default function Login() {
       title: 'Admin',
       description: 'Gerenciamento geral da plataforma',
       path: '/login/admin',
+      credentials: { email: 'admin@kronosgest.com', password: 'Admin@123456' },
     },
     {
       id: 'clinica',
@@ -27,6 +28,7 @@ export default function Login() {
       title: 'Clínica',
       description: 'Gerenciar profissionais e pacientes',
       path: '/login/clinica',
+      credentials: { email: 'clinica@kronosgest.com', password: 'Clinica@123456' },
     },
     {
       id: 'profissional',
@@ -34,6 +36,7 @@ export default function Login() {
       title: 'Profissional',
       description: 'Acessar dados pessoais e pacientes',
       path: '/login/profissional',
+      credentials: { email: 'dra.morganavieira@gmail.com', password: 'Skip@Pass' },
     },
     {
       id: 'paciente',
@@ -66,36 +69,69 @@ export default function Login() {
           <img
             src="/logo.png"
             alt="Logomarca KronosGest"
-            className="w-full max-w-[320px] md:max-w-[480px] lg:max-w-[560px] h-auto object-contain mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-700"
+            className="w-full max-w-[400px] md:max-w-[600px] lg:max-w-[800px] h-auto object-contain mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-700"
             onError={(e) => {
               e.currentTarget.src =
-                'https://img.usecurling.com/p/600/300?q=luxury%20gold%20logo&color=black'
+                'https://img.usecurling.com/p/800/300?q=luxury%20gold%20logo&color=black'
             }}
           />
         </div>
 
         {/* Selection Area */}
         <div className="w-full max-w-5xl animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-          <h2 className="text-sm md:text-base font-medium text-[#C5A059] text-center mb-8 tracking-[0.2em] uppercase">
+          <h2 className="text-sm md:text-base font-medium text-[#C5A059] text-center mb-2 tracking-[0.2em] uppercase">
             Selecione seu tipo de acesso
           </h2>
+          <p className="text-xs text-[#FDFCF0]/60 text-center mb-8 max-w-lg mx-auto px-4">
+            * Dados de acesso exibidos provisoriamente para homologação. Serão removidos na
+            conclusão da configuração.
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {accessOptions.map((option) => (
               <button
                 key={option.id}
                 onClick={() => navigate(option.path)}
-                className="group relative flex flex-col items-center justify-center p-8 bg-[#FFFFFF] border border-transparent rounded-2xl transition-all duration-500 hover:bg-[#FDFCF0] hover:-translate-y-2 hover:border-[#C5A059]/40 hover:shadow-[0_15px_40px_-10px_rgba(197,160,89,0.15)] focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-[#001F3F] lg:h-[240px]"
+                className="group relative flex flex-col items-center justify-start pt-8 pb-6 px-6 bg-[#FFFFFF] border border-transparent rounded-2xl transition-all duration-500 hover:bg-[#FDFCF0] hover:-translate-y-2 hover:border-[#C5A059]/40 hover:shadow-[0_15px_40px_-10px_rgba(197,160,89,0.15)] focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-[#001F3F] h-full min-h-[280px]"
               >
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-[#C5A059]/10 text-[#C5A059] transition-transform duration-500 group-hover:scale-110 group-hover:bg-[#C5A059] group-hover:text-[#FFFFFF]">
-                  <option.icon className="w-8 h-8" />
+                <div className="flex-1 flex flex-col items-center justify-center w-full">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-[#C5A059]/10 text-[#C5A059] transition-transform duration-500 group-hover:scale-110 group-hover:bg-[#C5A059] group-hover:text-[#FFFFFF]">
+                    <option.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-3 text-[#001F3F] text-center transition-colors">
+                    {option.title}
+                  </h3>
+                  <p className="text-sm text-[#333333]/80 text-center leading-relaxed mb-4">
+                    {option.description}
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold mb-3 text-[#001F3F] text-center transition-colors">
-                  {option.title}
-                </h3>
-                <p className="text-sm text-[#333333]/80 text-center leading-relaxed">
-                  {option.description}
-                </p>
+
+                {option.credentials && (
+                  <div className="w-full mt-auto pt-4 border-t border-[#C5A059]/10">
+                    <div className="bg-[#FDFCF0] rounded-lg p-3 border border-[#C5A059]/20 text-xs text-left shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                      <div className="text-[#C5A059] font-bold mb-1.5 text-center uppercase tracking-wider text-[10px]">
+                        Acesso Provisório
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex flex-col">
+                          <span className="text-[#001F3F]/60 font-medium text-[10px]">Login:</span>
+                          <span
+                            className="font-mono text-[#001F3F] truncate"
+                            title={option.credentials.email}
+                          >
+                            {option.credentials.email}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[#001F3F]/60 font-medium text-[10px]">Senha:</span>
+                          <span className="font-mono text-[#001F3F] truncate">
+                            {option.credentials.password}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </button>
             ))}
           </div>
