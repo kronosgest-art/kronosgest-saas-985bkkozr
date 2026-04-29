@@ -498,6 +498,47 @@ export type Database = {
         }
         Relationships: []
       }
+      pacientes_acesso: {
+        Row: {
+          ativo: boolean
+          cpf: string
+          created_at: string
+          criado_por: string
+          email: string
+          id: string
+          paciente_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cpf: string
+          created_at?: string
+          criado_por: string
+          email: string
+          id?: string
+          paciente_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cpf?: string
+          created_at?: string
+          criado_por?: string
+          email?: string
+          id?: string
+          paciente_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pacientes_acesso_paciente_id_fkey'
+            columns: ['paciente_id']
+            isOneToOne: false
+            referencedRelation: 'pacientes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1361,6 +1402,15 @@ export const Constants = {
 //   profissao: text (nullable)
 //   observacoes: text (nullable)
 //   deleted_at: timestamp with time zone (nullable)
+// Table: pacientes_acesso
+//   id: uuid (not null, default: gen_random_uuid())
+//   paciente_id: uuid (not null)
+//   email: text (not null)
+//   cpf: text (not null)
+//   ativo: boolean (not null, default: true)
+//   criado_por: uuid (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: payments
 //   id: uuid (not null, default: gen_random_uuid())
 //   subscription_id: uuid (nullable)
@@ -1521,6 +1571,12 @@ export const Constants = {
 // Table: pacientes
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY pacientes_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: pacientes_acesso
+//   UNIQUE pacientes_acesso_cpf_key: UNIQUE (cpf)
+//   FOREIGN KEY pacientes_acesso_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE pacientes_acesso_email_key: UNIQUE (email)
+//   FOREIGN KEY pacientes_acesso_paciente_id_fkey: FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
+//   PRIMARY KEY pacientes_acesso_pkey: PRIMARY KEY (id)
 // Table: payments
 //   PRIMARY KEY payments_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY payments_subscription_id_fkey: FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
@@ -1574,10 +1630,16 @@ export const Constants = {
 //   Policy "agendamentos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
+//   Policy "anon_select_agendamentos" (SELECT, PERMISSIVE) roles={anon}
+//     USING: true
+//   Policy "anon_update_agendamentos" (UPDATE, PERMISSIVE) roles={anon}
+//     USING: true
 // Table: anamnese
 //   Policy "anamnese_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = anamnese.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = anamnese.patient_id) AND (pacientes.user_id = auth.uid()))))
+//   Policy "anon_select_anamnese" (SELECT, PERMISSIVE) roles={anon}
+//     USING: true
 // Table: anamnese_templates
 //   Policy "Users can delete their own templates" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = profissional_id)
@@ -1628,9 +1690,22 @@ export const Constants = {
 //   Policy "authenticated_update_org" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: pacientes
+//   Policy "anon_select_pacientes" (SELECT, PERMISSIVE) roles={anon}
+//     USING: true
 //   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
+// Table: pacientes_acesso
+//   Policy "anon_select_acesso" (SELECT, PERMISSIVE) roles={anon}
+//     USING: (ativo = true)
+//   Policy "profissional_delete_acesso" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (criado_por = auth.uid())
+//   Policy "profissional_insert_acesso" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (criado_por = auth.uid())
+//   Policy "profissional_select_acesso" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (criado_por = auth.uid())
+//   Policy "profissional_update_acesso" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (criado_por = auth.uid())
 // Table: payments
 //   Policy "Admin can insert payments" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -2020,5 +2095,8 @@ export const Constants = {
 // Table: pacientes
 //   CREATE UNIQUE INDEX pacientes_cpf_active_idx ON public.pacientes USING btree (cpf) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (cpf IS NOT NULL) AND (cpf <> ''::text))
 //   CREATE UNIQUE INDEX pacientes_email_active_idx ON public.pacientes USING btree (email) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (email IS NOT NULL) AND (email <> ''::text))
+// Table: pacientes_acesso
+//   CREATE UNIQUE INDEX pacientes_acesso_cpf_key ON public.pacientes_acesso USING btree (cpf)
+//   CREATE UNIQUE INDEX pacientes_acesso_email_key ON public.pacientes_acesso USING btree (email)
 // Table: subscriptions
 //   CREATE UNIQUE INDEX subscriptions_user_id_key ON public.subscriptions USING btree (user_id)

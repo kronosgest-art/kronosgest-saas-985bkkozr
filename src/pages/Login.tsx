@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Crown, Building, User } from 'lucide-react'
 
 export default function Login() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,12 +38,19 @@ export default function Login() {
       setEmail('clinica@kronosgest.com')
       setPassword('Clinica@123456')
     } else if (value === 'paciente') {
-      setEmail('paciente@kronosgest.com')
-      setPassword('Paciente@123456')
+      setEmail('')
+      setPassword('')
     }
   }
 
-  if (!authLoading && user) {
+  useEffect(() => {
+    const patientSession = localStorage.getItem('kronosgest_patient_session')
+    if (patientSession && accessType === 'paciente') {
+      navigate('/patient-dashboard')
+    }
+  }, [accessType, navigate])
+
+  if (!authLoading && user && accessType !== 'paciente') {
     return <Navigate to="/" replace />
   }
 
@@ -49,6 +58,43 @@ export default function Login() {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+
+    if (accessType === 'paciente') {
+      try {
+        const { data, error: dbError } = await supabase
+          .from('pacientes_acesso')
+          .select('*, pacientes(*)')
+          .eq('email', email)
+          .eq('cpf', password)
+          .eq('ativo', true)
+
+        if (dbError) throw dbError
+
+        if (data && data.length > 0) {
+          const acesso = data[0]
+
+          localStorage.setItem(
+            'kronosgest_patient_session',
+            JSON.stringify({
+              id: acesso.id,
+              paciente_id: acesso.paciente_id,
+              email: acesso.email,
+              cpf: acesso.cpf,
+              nome: acesso.pacientes?.nome_completo || 'Paciente',
+            }),
+          )
+
+          navigate('/patient-dashboard')
+        } else {
+          setError('Email ou CPF inválidos.')
+          setIsSubmitting(false)
+        }
+      } catch (err) {
+        setError('Erro ao conectar. Tente novamente.')
+        setIsSubmitting(false)
+      }
+      return
+    }
 
     const { error: signInError } = await signIn(email, password)
 
@@ -128,7 +174,7 @@ export default function Login() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="font-semibold text-foreground/80">
-                    Senha
+                    {accessType === 'paciente' ? 'Senha (CPF apenas números)' : 'Senha'}
                   </Label>
                   <Input
                     id="password"
@@ -139,13 +185,19 @@ export default function Login() {
                     className="h-11"
                   />
                   <div className="flex justify-end pt-1">
-                    <a
-                      href="#"
-                      className="text-sm font-medium hover:underline"
-                      style={{ color: '#1E3A8A' }}
-                    >
-                      Recuperar Senha
-                    </a>
+                    {accessType === 'paciente' ? (
+                      <span className="text-xs text-muted-foreground">
+                        Sua senha é o seu CPF (apenas números).
+                      </span>
+                    ) : (
+                      <a
+                        href="#"
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: '#1E3A8A' }}
+                      >
+                        Recuperar Senha
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -188,7 +240,7 @@ export default function Login() {
                   <User className="w-4 h-4 text-primary" /> Paciente
                 </span>
                 <span className="font-mono text-xs text-foreground/80 mt-1 sm:mt-0">
-                  paciente@kronosgest.com / Paciente@123456
+                  Acesse com o e-mail e CPF cadastrados
                 </span>
               </div>
             </div>
