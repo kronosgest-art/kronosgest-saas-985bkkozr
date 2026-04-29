@@ -4,10 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus, FileSignature } from 'lucide-react'
 import { SellProtocolDialog } from '@/components/protocols/SellProtocolDialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function PrescriptionsList() {
   const [prescricoes, setPrescricoes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
 
   useEffect(() => {
     async function loadPrescricoes() {
@@ -65,12 +73,7 @@ export default function PrescriptionsList() {
                   variant="outline"
                   className="w-full"
                   size="sm"
-                  onClick={() => {
-                    if (prescricao.arquivo_pdf_url) {
-                      window.open(prescricao.arquivo_pdf_url, '_blank')
-                    }
-                  }}
-                  disabled={!prescricao.arquivo_pdf_url}
+                  onClick={() => setSelectedItem(prescricao)}
                 >
                   <FileSignature className="mr-2 h-4 w-4" />
                   Ver Prescrição Completa
@@ -86,6 +89,66 @@ export default function PrescriptionsList() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Prescrição</DialogTitle>
+            <DialogDescription>
+              {selectedItem?.pacientes?.nome_completo || 'Paciente Desconhecido'} -{' '}
+              {selectedItem && new Date(selectedItem.created_at).toLocaleDateString('pt-BR')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {selectedItem?.conteudo_json?.prescricao && (
+              <div>
+                <h4 className="font-semibold text-sm text-slate-800">Fórmula/Medicação</h4>
+                <p className="whitespace-pre-wrap bg-slate-50 p-3 rounded-md text-sm text-slate-700 mt-1">
+                  {selectedItem.conteudo_json.prescricao}
+                </p>
+              </div>
+            )}
+            {selectedItem?.conteudo_json?.posologia && (
+              <div>
+                <h4 className="font-semibold text-sm text-slate-800">Posologia</h4>
+                <p className="whitespace-pre-wrap bg-slate-50 p-3 rounded-md text-sm text-slate-700 mt-1">
+                  {selectedItem.conteudo_json.posologia}
+                </p>
+              </div>
+            )}
+            {selectedItem?.conteudo_json?.avisos &&
+              Array.isArray(selectedItem.conteudo_json.avisos) &&
+              selectedItem.conteudo_json.avisos.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm text-amber-900">Orientações/Avisos</h4>
+                  <ul className="list-disc pl-5 space-y-1 bg-amber-50 text-amber-800 p-3 rounded-md text-sm mt-1">
+                    {selectedItem.conteudo_json.avisos.map((aviso: string, i: number) => (
+                      <li key={i}>{aviso}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            {selectedItem?.arquivo_pdf_url && (
+              <div className="pt-4 border-t">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary/5"
+                >
+                  <a href={selectedItem.arquivo_pdf_url} target="_blank" rel="noopener noreferrer">
+                    <FileSignature className="mr-2 h-4 w-4" /> Abrir PDF Original
+                  </a>
+                </Button>
+              </div>
+            )}
+            {!selectedItem?.conteudo_json && !selectedItem?.arquivo_pdf_url && (
+              <p className="text-muted-foreground text-sm text-center py-8">
+                Nenhum detalhe disponível para esta prescrição.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

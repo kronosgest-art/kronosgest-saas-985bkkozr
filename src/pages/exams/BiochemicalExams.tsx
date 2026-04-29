@@ -7,12 +7,105 @@ import { SellProtocolDialog } from '@/components/protocols/SellProtocolDialog'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function BiochemicalExams() {
   const { user } = useAuth()
   const isPatient = ['paciente', 'cliente', 'patient'].includes(user?.user_metadata?.role || '')
   const [exames, setExames] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
+  const renderJson = (json: any) => {
+    if (!json) return null
+    if (typeof json === 'string') return <p className="text-sm text-slate-700">{json}</p>
+
+    if (
+      json.valores_alterados ||
+      json.interpretacao ||
+      json.alerta ||
+      json.alteracoes ||
+      json.frequencias_criticas ||
+      json.recomendacoes
+    ) {
+      return (
+        <div className="space-y-4 text-sm">
+          {json.valores_alterados && (
+            <div>
+              <strong className="block text-amber-800 mb-1">Valores Alterados:</strong>
+              <ul className="list-disc pl-5 text-amber-700 space-y-1">
+                {Array.isArray(json.valores_alterados) ? (
+                  json.valores_alterados.map((v: string, i: number) => <li key={i}>{v}</li>)
+                ) : (
+                  <li>{json.valores_alterados}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {json.alteracoes && (
+            <div>
+              <strong className="block text-amber-800 mb-1">Alterações:</strong>
+              <ul className="list-disc pl-5 text-amber-700 space-y-1">
+                {Array.isArray(json.alteracoes) ? (
+                  json.alteracoes.map((v: string, i: number) => <li key={i}>{v}</li>)
+                ) : (
+                  <li>{json.alteracoes}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {json.frequencias_criticas && (
+            <div>
+              <strong className="block text-red-800 mb-1">Frequências Críticas:</strong>
+              <ul className="list-disc pl-5 text-red-700 space-y-1">
+                {Array.isArray(json.frequencias_criticas) ? (
+                  json.frequencias_criticas.map((v: string, i: number) => <li key={i}>{v}</li>)
+                ) : (
+                  <li>{json.frequencias_criticas}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {json.recomendacoes && (
+            <div>
+              <strong className="block text-green-800 mb-1">Recomendações:</strong>
+              <ul className="list-disc pl-5 text-green-700 space-y-1">
+                {Array.isArray(json.recomendacoes) ? (
+                  json.recomendacoes.map((v: string, i: number) => <li key={i}>{v}</li>)
+                ) : (
+                  <li>{json.recomendacoes}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {json.interpretacao && (
+            <div>
+              <strong className="block text-slate-800 mb-1">Interpretação:</strong>
+              <p className="text-slate-700 leading-relaxed">{json.interpretacao}</p>
+            </div>
+          )}
+          {json.alerta && (
+            <div>
+              <strong className="block text-red-800 mb-1">Alerta:</strong>
+              <p className="text-red-700 font-medium">{json.alerta}</p>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <pre className="bg-slate-900 text-slate-50 p-4 rounded-md text-xs overflow-x-auto">
+        {JSON.stringify(json, null, 2)}
+      </pre>
+    )
+  }
 
   useEffect(() => {
     async function loadExames() {
@@ -85,11 +178,7 @@ export default function BiochemicalExams() {
                   variant="outline"
                   className="w-full"
                   size="sm"
-                  onClick={() => {
-                    if (exame.arquivo_pdf_url) window.open(exame.arquivo_pdf_url, '_blank')
-                    else if (exame.resultado_json)
-                      alert(JSON.stringify(exame.resultado_json, null, 2))
-                  }}
+                  onClick={() => setSelectedItem(exame)}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   Ver Detalhes
@@ -116,6 +205,61 @@ export default function BiochemicalExams() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Exame Bioquímico</DialogTitle>
+            <DialogDescription>
+              {selectedItem?.pacientes?.nome_completo || 'Paciente Desconhecido'} -{' '}
+              {selectedItem && new Date(selectedItem.created_at).toLocaleDateString('pt-BR')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            {selectedItem?.interpretacao_ia && (
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-blue-900 flex items-center gap-2">
+                  <FileText className="h-4 w-4" /> Interpretação IA
+                </h4>
+                <div className="bg-blue-50/50 p-4 rounded-md border border-blue-100 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedItem.interpretacao_ia}
+                </div>
+              </div>
+            )}
+
+            {selectedItem?.resultado_json && (
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-slate-800">Dados Extraídos</h4>
+                <div className="bg-slate-50 p-4 rounded-md border">
+                  {renderJson(selectedItem.resultado_json)}
+                </div>
+              </div>
+            )}
+
+            {selectedItem?.arquivo_pdf_url && (
+              <div className="pt-4 border-t">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary/5"
+                >
+                  <a href={selectedItem.arquivo_pdf_url} target="_blank" rel="noopener noreferrer">
+                    <FileText className="mr-2 h-4 w-4" /> Abrir Documento Original (PDF)
+                  </a>
+                </Button>
+              </div>
+            )}
+
+            {!selectedItem?.resultado_json &&
+              !selectedItem?.interpretacao_ia &&
+              !selectedItem?.arquivo_pdf_url && (
+                <p className="text-muted-foreground text-sm text-center py-8">
+                  Nenhum detalhe disponível para este exame.
+                </p>
+              )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
