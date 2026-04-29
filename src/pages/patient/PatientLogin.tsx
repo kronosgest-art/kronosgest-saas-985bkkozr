@@ -20,21 +20,27 @@ export default function PatientLogin() {
     try {
       const cleanCpf = cpf.replace(/\D/g, '')
       const { data, error } = await supabase
-        .from('pacientes')
-        .select('*')
+        .from('pacientes_acesso')
+        .select('*, pacientes(nome_completo, id)')
         .eq('email', email)
         .eq('cpf', cleanCpf)
+        .eq('ativo', true)
         .single()
 
       if (error || !data) {
         toast({
           title: 'Acesso Negado',
-          description: 'Email ou CPF incorretos. Tente novamente.',
+          description: 'Email ou CPF inválidos.',
           variant: 'destructive',
         })
       } else {
-        localStorage.setItem('patient_session', JSON.stringify(data))
-        toast({ title: 'Bem-vindo(a)', description: `Olá, ${data.nome_completo}!` })
+        const sessionData = {
+          acesso_id: data.id,
+          paciente_id: data.paciente_id,
+          nome_completo: data.pacientes?.nome_completo || 'Paciente',
+        }
+        localStorage.setItem('patient_session', JSON.stringify(sessionData))
+        toast({ title: 'Bem-vindo(a)', description: `Olá, ${sessionData.nome_completo}!` })
         navigate('/patient-dashboard')
       }
     } catch (err) {
@@ -51,9 +57,12 @@ export default function PatientLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FDFCF0] px-4">
       <Card className="w-full max-w-md shadow-lg border-[#C5A059]">
-        <CardHeader className="text-center bg-[#001F3F] text-white rounded-t-xl">
-          <CardTitle className="text-2xl text-[#C5A059]">Portal do Paciente</CardTitle>
-          <CardDescription className="text-gray-300">
+        <CardHeader className="text-center bg-[#FDFCF0] rounded-t-xl border-b border-[#C5A059]/20">
+          <div className="mx-auto mb-4 bg-[#001F3F] text-[#C5A059] p-3 rounded-full w-16 h-16 flex items-center justify-center font-bold text-xl">
+            KG
+          </div>
+          <CardTitle className="text-2xl text-[#001F3F]">Acesso do Paciente</CardTitle>
+          <CardDescription className="text-[#333333]">
             Acesse seus agendamentos e histórico
           </CardDescription>
         </CardHeader>
@@ -74,7 +83,7 @@ export default function PatientLogin() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cpf" className="text-[#333333]">
-                Senha (Seu CPF, apenas números)
+                Senha
               </Label>
               <Input
                 id="cpf"
@@ -82,16 +91,28 @@ export default function PatientLogin() {
                 required
                 value={cpf}
                 onChange={(e) => setCpf(e.target.value)}
+                placeholder="CPF sem formatação"
                 className="focus-visible:ring-[#C5A059]"
               />
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#C5A059] hover:bg-[#A88640] text-[#333333] font-bold"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Entrar
-            </Button>
+            <div className="pt-2 space-y-4">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#C5A059] hover:bg-[#A88640] text-[#FDFCF0] font-bold"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Entrar
+              </Button>
+              <div className="text-center">
+                <Button
+                  variant="link"
+                  onClick={() => navigate('/login')}
+                  className="text-[#333333] hover:text-[#001F3F]"
+                >
+                  Voltar para Login do Profissional
+                </Button>
+              </div>
+            </div>
           </form>
         </CardContent>
       </Card>

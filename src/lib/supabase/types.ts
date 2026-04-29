@@ -443,6 +443,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           data_nascimento: string | null
+          deleted_at: string | null
           email: string | null
           endereco: string | null
           id: string
@@ -461,6 +462,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
+          deleted_at?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -479,6 +481,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
+          deleted_at?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -1357,6 +1360,7 @@ export const Constants = {
 //   endereco: text (nullable)
 //   profissao: text (nullable)
 //   observacoes: text (nullable)
+//   deleted_at: timestamp with time zone (nullable)
 // Table: payments
 //   id: uuid (not null, default: gen_random_uuid())
 //   subscription_id: uuid (nullable)
@@ -1515,8 +1519,6 @@ export const Constants = {
 //   FOREIGN KEY organizations_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: pacientes
-//   UNIQUE pacientes_cpf_key: UNIQUE (cpf)
-//   UNIQUE pacientes_email_key: UNIQUE (email)
 //   PRIMARY KEY pacientes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY pacientes_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: payments
@@ -2016,7 +2018,7 @@ export const Constants = {
 
 // --- INDEXES ---
 // Table: pacientes
-//   CREATE UNIQUE INDEX pacientes_cpf_key ON public.pacientes USING btree (cpf)
-//   CREATE UNIQUE INDEX pacientes_email_key ON public.pacientes USING btree (email)
+//   CREATE UNIQUE INDEX pacientes_cpf_active_idx ON public.pacientes USING btree (cpf) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (cpf IS NOT NULL) AND (cpf <> ''::text))
+//   CREATE UNIQUE INDEX pacientes_email_active_idx ON public.pacientes USING btree (email) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (email IS NOT NULL) AND (email <> ''::text))
 // Table: subscriptions
 //   CREATE UNIQUE INDEX subscriptions_user_id_key ON public.subscriptions USING btree (user_id)
