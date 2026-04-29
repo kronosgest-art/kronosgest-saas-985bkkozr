@@ -4,8 +4,20 @@ import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Calendar, Clock, LogOut, FileText, Info, CheckCircle2, UserCircle } from 'lucide-react'
+import {
+  Calendar,
+  Clock,
+  LogOut,
+  FileText,
+  Info,
+  CheckCircle2,
+  UserCircle,
+  PenTool,
+  FileSignature,
+  AlertCircle,
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 
 export default function PatientDashboard() {
@@ -13,6 +25,8 @@ export default function PatientDashboard() {
   const [patient, setPatient] = useState<any>(null)
   const [sessoes, setSessoes] = useState<any[]>([])
   const [anamneses, setAnamneses] = useState<any[]>([])
+  const [tcles, setTcles] = useState<any[]>([])
+  const [prescricoes, setPrescricoes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,16 +40,21 @@ export default function PatientDashboard() {
 
     const loadData = async () => {
       const patientId = p.paciente_id || p.id
-      const [{ data: sData }, { data: aData }] = await Promise.all([
-        supabase
-          .from('agendamentos')
-          .select('*')
-          .eq('patient_id', patientId)
-          .order('data', { ascending: true }),
-        supabase.from('anamnese').select('*').eq('patient_id', patientId),
-      ])
+      const [{ data: sData }, { data: aData }, { data: tData }, { data: pData }] =
+        await Promise.all([
+          supabase
+            .from('agendamentos')
+            .select('*')
+            .eq('patient_id', patientId)
+            .order('data', { ascending: true }),
+          supabase.from('anamnese').select('*').eq('patient_id', patientId),
+          supabase.from('tcle_assinado').select('*').eq('patient_id', patientId),
+          supabase.from('prescricoes').select('*').eq('patient_id', patientId),
+        ])
       if (sData) setSessoes(sData)
       if (aData) setAnamneses(aData)
+      if (tData) setTcles(tData)
+      if (pData) setPrescricoes(pData)
       setLoading(false)
     }
     loadData()
@@ -47,16 +66,39 @@ export default function PatientDashboard() {
   }
 
   const handleConfirmPresence = async (id: string) => {
+    const timestamp = new Date().toISOString()
+    const assinatura = `Assinado digitalmente por ${patient.nome_completo}`
     const { error } = await supabase
       .from('agendamentos')
-      .update({ status: 'Confirmado' })
+      .update({
+        status: 'Confirmado',
+        assinatura_paciente: assinatura,
+        data_assinatura: timestamp,
+      })
       .eq('id', id)
     if (!error) {
       toast({
-        title: 'Presença confirmada!',
-        description: 'Sua confirmação foi registrada com sucesso.',
+        title: 'Presença e assinatura confirmadas!',
+        description: 'Sua assinatura foi registrada com sucesso.',
       })
-      setSessoes((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'Confirmado' } : s)))
+      setSessoes((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: 'Confirmado',
+                assinatura_paciente: assinatura,
+                data_assinatura: timestamp,
+              }
+            : s,
+        ),
+      )
+    } else {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível registrar a assinatura.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -77,13 +119,17 @@ export default function PatientDashboard() {
   if (!patient) return null
 
   const now = new Date()
-  const futuras = sessoes.filter((s) => new Date(`${s.data}T${s.horario}`) >= now)
-  const historico = sessoes.filter((s) => new Date(`${s.data}T${s.horario}`) < now)
+  const futuras = sessoes.filter(
+    (s) => new Date(`${s.data}T${s.horario}`) >= now || !s.assinatura_paciente,
+  )
+  const historico = sessoes.filter(
+    (s) => new Date(`${s.data}T${s.horario}`) < now && s.assinatura_paciente,
+  )
   const ultimaConsulta = historico.length > 0 ? historico[historico.length - 1] : null
 
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-8 text-[#333333]">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
         <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-[#C5A059]/20 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-[#001F3F] p-2 rounded-full">
@@ -106,28 +152,26 @@ export default function PatientDashboard() {
           <Card className="border-[#C5A059] bg-white shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-[#333333] uppercase tracking-wider">
-                Próximas Sessões
+                Sessões Pendentes
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-[#001F3F]">{futuras.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Sessões agendadas</p>
+              <p className="text-xs text-muted-foreground mt-1">Aguardando sua assinatura</p>
             </CardContent>
           </Card>
           <Card className="border-[#C5A059] bg-white shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-[#333333] uppercase tracking-wider">
-                Última Consulta
+                Documentos Assinados
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-xl font-bold text-[#001F3F]">
-                {ultimaConsulta
-                  ? new Date(ultimaConsulta.data).toLocaleDateString('pt-BR')
-                  : '--/--/----'}
+                {tcles.length + anamneses.length}
               </div>
               <p className="text-xs text-muted-foreground mt-1 truncate">
-                {ultimaConsulta ? ultimaConsulta.tipo_consulta : 'Nenhum histórico'}
+                TCLEs e Anamneses registradas
               </p>
             </CardContent>
           </Card>
@@ -147,12 +191,18 @@ export default function PatientDashboard() {
         </div>
 
         <Tabs defaultValue="proximas" className="w-full">
-          <TabsList className="mb-6 bg-white border border-[#C5A059]/20 p-1">
+          <TabsList className="mb-6 bg-white border border-[#C5A059]/20 p-1 flex-wrap h-auto gap-1">
             <TabsTrigger
               value="proximas"
               className="data-[state=active]:bg-[#001F3F] data-[state=active]:text-[#FDFCF0]"
             >
-              Próximas Sessões
+              Minhas Sessões
+            </TabsTrigger>
+            <TabsTrigger
+              value="documentos"
+              className="data-[state=active]:bg-[#001F3F] data-[state=active]:text-[#FDFCF0]"
+            >
+              Meus Documentos
             </TabsTrigger>
             <TabsTrigger
               value="historico"
@@ -164,7 +214,7 @@ export default function PatientDashboard() {
               value="dados"
               className="data-[state=active]:bg-[#001F3F] data-[state=active]:text-[#FDFCF0]"
             >
-              Meus Dados
+              Ficha Clínica
             </TabsTrigger>
           </TabsList>
 
@@ -187,17 +237,23 @@ export default function PatientDashboard() {
                           <Clock className="h-4 w-4 text-[#C5A059]" /> {s.horario}
                         </span>
                       </div>
+                      {s.assinatura_paciente && (
+                        <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                          <FileSignature className="h-3 w-3" /> {s.assinatura_paciente} em{' '}
+                          {new Date(s.data_assinatura).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
                       <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         Status: {s.status || 'Agendada'}
                       </span>
-                      {s.status !== 'Confirmado' && (
+                      {(!s.assinatura_paciente || s.status !== 'Confirmado') && (
                         <Button
                           onClick={() => handleConfirmPresence(s.id)}
                           className="w-full sm:w-auto bg-[#C5A059] hover:bg-[#A88640] text-[#FDFCF0]"
                         >
-                          <CheckCircle2 className="h-4 w-4 mr-2" /> Confirmar Presença
+                          <PenTool className="h-4 w-4 mr-2" /> Assinar Presença
                         </Button>
                       )}
                     </div>
@@ -207,12 +263,63 @@ export default function PatientDashboard() {
             ) : (
               <div className="text-center bg-white border border-dashed border-[#C5A059]/50 rounded-xl py-12">
                 <Info className="h-10 w-10 mx-auto mb-3 text-[#C5A059]/50" />
-                <p className="text-[#333333] font-medium">Nenhuma sessão agendada.</p>
+                <p className="text-[#333333] font-medium">Nenhuma sessão pendente de assinatura.</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Seu próximo passo aparecerá aqui.
+                  Você está com as assinaturas de suas sessões em dia!
                 </p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="documentos" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {tcles.map((tcle) => (
+                <Card
+                  key={tcle.id}
+                  className="border-[#C5A059]/20 hover:border-[#C5A059]/50 transition-colors"
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-[#001F3F]">
+                      <FileText className="h-4 w-4 text-[#C5A059]" />
+                      TCLE - {tcle.tipo_assinatura}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                      Assinado
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Registrado em {new Date(tcle.data_assinatura).toLocaleDateString('pt-BR')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+              {prescricoes.map((prescricao) => (
+                <Card
+                  key={prescricao.id}
+                  className="border-[#C5A059]/20 hover:border-[#C5A059]/50 transition-colors"
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-[#001F3F]">
+                      <FileText className="h-4 w-4 text-[#C5A059]" />
+                      Prescrição Médica
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">Disponível</Badge>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Gerada em {new Date(prescricao.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+              {tcles.length === 0 && prescricoes.length === 0 && (
+                <div className="col-span-2 text-center py-12 bg-white rounded-xl border border-dashed border-[#C5A059]/30">
+                  <AlertCircle className="h-8 w-8 text-[#C5A059]/50 mx-auto mb-2" />
+                  <p className="text-muted-foreground">Nenhum documento encontrado.</p>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="historico" className="space-y-4">
@@ -230,7 +337,7 @@ export default function PatientDashboard() {
                       </div>
                     </div>
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-                      Concluída
+                      Concluída e Assinada
                     </span>
                   </CardContent>
                 </Card>

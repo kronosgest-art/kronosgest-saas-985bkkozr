@@ -35,8 +35,10 @@ export type Database = {
       }
       agendamentos: {
         Row: {
+          assinatura_paciente: string | null
           criado_em: string
           data: string
+          data_assinatura: string | null
           google_event_id: string | null
           horario: string
           id: string
@@ -47,8 +49,10 @@ export type Database = {
           tipo_consulta: string
         }
         Insert: {
+          assinatura_paciente?: string | null
           criado_em?: string
           data: string
+          data_assinatura?: string | null
           google_event_id?: string | null
           horario: string
           id?: string
@@ -59,8 +63,10 @@ export type Database = {
           tipo_consulta: string
         }
         Update: {
+          assinatura_paciente?: string | null
           criado_em?: string
           data?: string
+          data_assinatura?: string | null
           google_event_id?: string | null
           horario?: string
           id?: string
@@ -1296,6 +1302,8 @@ export const Constants = {
 //   profissional_id: uuid (nullable)
 //   status: text (nullable, default: 'Agendado'::text)
 //   google_event_id: text (nullable)
+//   assinatura_paciente: text (nullable)
+//   data_assinatura: timestamp with time zone (nullable)
 // Table: anamnese
 //   anamnese_id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (nullable)

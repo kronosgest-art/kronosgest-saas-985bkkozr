@@ -154,12 +154,31 @@ export default function PremiumConsultationWizard() {
       toast({ title: 'Etapa concluída', description: 'Os dados foram salvos temporariamente.' })
     } else {
       try {
+        let finalAnamneseId = formData.anamnese_id
+        if (!finalAnamneseId) {
+          const { data: lastAnamnese } = await supabase
+            .from('anamnese')
+            .select('anamnese_id')
+            .eq('patient_id', formData.patient_id)
+            .order('criado_em', { ascending: false })
+            .limit(1)
+            .single()
+          if (lastAnamnese) {
+            finalAnamneseId = lastAnamnese.anamnese_id
+          }
+        }
+
+        const dataToSave = {
+          ...formData,
+          anamnese_id: finalAnamneseId,
+        }
+
         const { error } = await (supabase as any).from('consultas').insert({
           patient_id: formData.patient_id,
           consultation_type: 'Premium',
           consultation_date: new Date().toISOString(),
           status: 'Finalizada',
-          data_collected: formData,
+          data_collected: dataToSave,
         })
 
         if (error) throw error

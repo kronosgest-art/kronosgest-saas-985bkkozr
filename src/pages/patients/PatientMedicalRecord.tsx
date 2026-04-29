@@ -190,9 +190,19 @@ export default function PatientMedicalRecord() {
       ) : (
         <div className="space-y-4">
           {consultas.map((consulta) => {
-            const anamnese = anamneses.find(
+            let anamnese = anamneses.find(
               (a) => a.anamnese_id === consulta.data_collected?.anamnese_id,
             )
+            if (!anamnese && anamneses.length > 0) {
+              const consultDate = new Date(consulta.consultation_date).getTime()
+              const validAnamneses = anamneses.filter(
+                (a) => new Date(a.criado_em).getTime() <= consultDate + 86400000,
+              )
+              anamnese =
+                validAnamneses.sort(
+                  (a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime(),
+                )[0] || anamneses[0]
+            }
             const prescricao = prescricoes.find(
               (p) => p.id === consulta.data_collected?.prescricao_id,
             )
