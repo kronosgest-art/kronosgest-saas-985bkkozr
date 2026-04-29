@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 
-export default function DespesaFormModal({
+export default function ReceitaFormModal({
   isOpen,
   onClose,
   onReload,
@@ -31,27 +31,41 @@ export default function DespesaFormModal({
   onReload: () => void
 }) {
   const { user } = useAuth()
+  const [protocolos, setProtocolos] = useState<any[]>([])
+  const [loadingProts, setLoadingProts] = useState(false)
+
   const [formData, setFormData] = useState({
-    categoria: '',
-    descricao: '',
+    tipo_receita: 'Protocolo',
+    protocolo_id: '',
+    descricao_customizada: '',
     valor: '',
-    data_despesa: new Date().toISOString().split('T')[0],
+    data_receita: new Date().toISOString().split('T')[0],
     forma_pagamento: 'Pix',
-    tipo_conta: 'Conta Empresa',
-    banco: '',
     recorrente: false,
     frequencia_recorrencia: 'mensal',
     status: 'paga',
   })
 
+  useEffect(() => {
+    if (isOpen && user) {
+      setLoadingProts(true)
+      supabase
+        .from('protocolos')
+        .select('id, nome, valor_total')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          if (data) setProtocolos(data)
+          setLoadingProts(false)
+        })
+    }
+  }, [isOpen, user])
+
   const handleSave = async () => {
     if (
-      !formData.categoria ||
-      !formData.descricao ||
+      !formData.tipo_receita ||
       !formData.valor ||
-      !formData.data_despesa ||
+      !formData.data_receita ||
       !formData.forma_pagamento ||
-      !formData.tipo_conta ||
       !formData.status
     ) {
       toast({
@@ -59,6 +73,14 @@ export default function DespesaFormModal({
         description: 'Preencha todos os campos obrigatórios.',
         variant: 'destructive',
       })
+      return
+    }
+    if (formData.tipo_receita === 'Protocolo' && !formData.protocolo_id) {
+      toast({ title: 'Erro', description: 'Selecione um protocolo.', variant: 'destructive' })
+      return
+    }
+    if (formData.tipo_receita === 'Outro' && !formData.descricao_customizada) {
+      toast({ title: 'Erro', description: 'Preencha a descrição.', variant: 'destructive' })
       return
     }
     if (Number(formData.valor) <= 0) {
@@ -70,48 +92,36 @@ export default function DespesaFormModal({
       return
     }
     if (formData.recorrente && !formData.frequencia_recorrencia) {
-      toast({
-        title: 'Erro',
-        description: 'Selecione a frequência para despesas recorrentes.',
-        variant: 'destructive',
-      })
-      return
-    }
-    if (['Pix', 'Cartão'].includes(formData.forma_pagamento) && !formData.banco) {
-      toast({
-        title: 'Erro',
-        description: 'Banco é obrigatório para Pix ou Cartão.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro', description: 'Selecione a frequência.', variant: 'destructive' })
       return
     }
 
-    const { error } = await supabase.from('despesas').insert({
+    const insertData = {
       user_id: user?.id,
-      categoria: formData.categoria,
-      descricao: formData.descricao,
+      tipo_receita: formData.tipo_receita,
+      protocolo_id: formData.tipo_receita === 'Protocolo' ? formData.protocolo_id : null,
+      descricao_customizada:
+        formData.tipo_receita === 'Outro' ? formData.descricao_customizada : null,
       valor: Number(formData.valor),
-      data_despesa: formData.data_despesa,
+      data_receita: formData.data_receita,
       forma_pagamento: formData.forma_pagamento,
-      tipo_conta: formData.tipo_conta,
-      banco: ['Pix', 'Cartão'].includes(formData.forma_pagamento) ? formData.banco : null,
       recorrente: formData.recorrente,
       frequencia_recorrencia: formData.recorrente ? formData.frequencia_recorrencia : null,
       status: formData.status,
-    })
+    }
 
+    const { error } = await supabase.from('receitas').insert(insertData)
     if (error) {
-      toast({ title: 'Erro', description: 'Erro ao cadastrar despesa.', variant: 'destructive' })
+      toast({ title: 'Erro', description: 'Erro ao cadastrar receita.', variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Despesa cadastrada com sucesso!' })
+      toast({ title: 'Sucesso', description: 'Receita cadastrada com sucesso!' })
       setFormData({
-        categoria: '',
-        descricao: '',
+        tipo_receita: 'Protocolo',
+        protocolo_id: '',
+        descricao_customizada: '',
         valor: '',
-        data_despesa: new Date().toISOString().split('T')[0],
+        data_receita: new Date().toISOString().split('T')[0],
         forma_pagamento: 'Pix',
-        tipo_conta: 'Conta Empresa',
-        banco: '',
         recorrente: false,
         frequencia_recorrencia: 'mensal',
         status: 'paga',
@@ -121,51 +131,105 @@ export default function DespesaFormModal({
     }
   }
 
+  const handleProtocoloChange = (val: string) => {
+    const prot = protocolos.find((p) => p.id === val)
+    setFormData({
+      ...formData,
+      protocolo_id: val,
+      valor: prot?.valor_total ? String(prot.valor_total) : formData.valor,
+    })
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-[#333333] text-white border-none sm:max-w-[500px] overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-[#333333] text-white border-none sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-[#C5A059]">Nova Despesa</DialogTitle>
+          <DialogTitle className="text-[#C5A059]">Nova Receita</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Tipo de Receita *</Label>
+            <Select
+              value={formData.tipo_receita}
+              onValueChange={(v) =>
+                setFormData({
+                  ...formData,
+                  tipo_receita: v,
+                  protocolo_id: '',
+                  descricao_customizada: '',
+                })
+              }
+            >
+              <SelectTrigger className="bg-transparent border-[#C5A059] focus:ring-[#C5A059]">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Protocolo">Protocolo</SelectItem>
+                <SelectItem value="Outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.tipo_receita === 'Protocolo' && (
+            <div className="space-y-2 animate-fade-in">
+              <Label>Protocolo *</Label>
+              {loadingProts ? (
+                <div className="text-sm text-gray-400">Carregando protocolos...</div>
+              ) : protocolos.length === 0 ? (
+                <div className="text-sm text-red-400">
+                  Nenhum protocolo cadastrado. Crie um em /protocols primeiro.
+                </div>
+              ) : (
+                <Select value={formData.protocolo_id} onValueChange={handleProtocoloChange}>
+                  <SelectTrigger className="bg-transparent border-[#C5A059] focus:ring-[#C5A059]">
+                    <SelectValue placeholder="Selecione um protocolo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {protocolos.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
+          {formData.tipo_receita === 'Outro' && (
+            <div className="space-y-2 animate-fade-in">
+              <Label>Descrição *</Label>
+              <Input
+                value={formData.descricao_customizada}
+                onChange={(e) =>
+                  setFormData({ ...formData, descricao_customizada: e.target.value })
+                }
+                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
+                placeholder="Ex: Consulta avulsa"
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Categoria *</Label>
-              <Select
-                value={formData.categoria}
-                onValueChange={(v) => setFormData({ ...formData, categoria: v })}
-              >
-                <SelectTrigger className="bg-transparent border-[#C5A059] focus:ring-[#C5A059]">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['Insumos', 'Salário', 'Aluguel', 'Cursos', 'Utilitários', 'Outros'].map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Valor (R$) *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.valor}
+                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059]"
+              />
             </div>
             <div className="space-y-2">
               <Label>Data *</Label>
               <Input
                 type="date"
-                value={formData.data_despesa}
-                onChange={(e) => setFormData({ ...formData, data_despesa: e.target.value })}
+                value={formData.data_receita}
+                onChange={(e) => setFormData({ ...formData, data_receita: e.target.value })}
                 className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] [color-scheme:dark]"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Descrição *</Label>
-            <Input
-              value={formData.descricao}
-              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-              className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
-              placeholder="Ex: Material de escritório"
-            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -185,46 +249,6 @@ export default function DespesaFormModal({
                   <SelectItem value="Boleto">Boleto</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo de Conta *</Label>
-              <Select
-                value={formData.tipo_conta}
-                onValueChange={(v) => setFormData({ ...formData, tipo_conta: v })}
-              >
-                <SelectTrigger className="bg-transparent border-[#C5A059] focus:ring-[#C5A059]">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Conta Empresa">Conta Empresa</SelectItem>
-                  <SelectItem value="Conta Pessoa Física">Conta Pessoa Física</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {['Pix', 'Cartão'].includes(formData.forma_pagamento) && (
-            <div className="space-y-2 animate-fade-in">
-              <Label>Banco *</Label>
-              <Input
-                value={formData.banco}
-                onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
-                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
-                placeholder="Ex: Itaú, Nubank"
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Valor (R$) *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.valor}
-                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059]"
-              />
             </div>
             <div className="space-y-2">
               <Label>Status *</Label>
@@ -249,7 +273,7 @@ export default function DespesaFormModal({
               onCheckedChange={(c) => setFormData({ ...formData, recorrente: c })}
               id="recorrente"
             />
-            <Label htmlFor="recorrente">Despesa Recorrente</Label>
+            <Label htmlFor="recorrente">Receita Recorrente</Label>
           </div>
           {formData.recorrente && (
             <div className="space-y-2 animate-fade-in">

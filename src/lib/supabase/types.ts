@@ -256,6 +256,48 @@ export type Database = {
           },
         ]
       }
+      despesas: {
+        Row: {
+          categoria: string
+          created_at: string
+          data_despesa: string
+          descricao: string
+          frequencia_recorrencia: string | null
+          id: string
+          recorrente: boolean
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          data_despesa: string
+          descricao: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          recorrente?: boolean
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          data_despesa?: string
+          descricao?: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          recorrente?: boolean
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       exames: {
         Row: {
           arquivo_pdf_url: string | null
@@ -861,6 +903,7 @@ export type Database = {
           profissional_id: string | null
           protocolo_id: string | null
           status: string
+          tipo: string | null
           valor: number
         }
         Insert: {
@@ -871,6 +914,7 @@ export type Database = {
           profissional_id?: string | null
           protocolo_id?: string | null
           status?: string
+          tipo?: string | null
           valor: number
         }
         Update: {
@@ -881,6 +925,7 @@ export type Database = {
           profissional_id?: string | null
           protocolo_id?: string | null
           status?: string
+          tipo?: string | null
           valor?: number
         }
         Relationships: [
@@ -1177,6 +1222,18 @@ export const Constants = {
 //   payment_method: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+// Table: despesas
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   categoria: text (not null)
+//   descricao: text (not null)
+//   valor: numeric (not null)
+//   data_despesa: date (not null)
+//   recorrente: boolean (not null, default: false)
+//   frequencia_recorrencia: text (nullable)
+//   status: text (not null, default: 'pendente'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1335,6 +1392,7 @@ export const Constants = {
 //   data_venda: timestamp with time zone (not null, default: now())
 //   status: text (not null, default: 'pendente'::text)
 //   created_at: timestamp with time zone (not null, default: now())
+//   tipo: text (nullable, default: 'entrada'::text)
 
 // --- CONSTRAINTS ---
 // Table: admin_audit_logs
@@ -1358,6 +1416,9 @@ export const Constants = {
 //   FOREIGN KEY credit_purchases_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY credit_purchases_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY credit_purchases_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: despesas
+//   PRIMARY KEY despesas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY despesas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
@@ -1443,6 +1504,10 @@ export const Constants = {
 //     USING: true
 //   Policy "Admins can view all credit purchases" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: despesas
+//   Policy "despesas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
 // Table: exames
 //   Policy "exames_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))

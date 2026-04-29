@@ -33,6 +33,7 @@ export default function DespesasList({
     return (
       d.descricao.toLowerCase().includes(term) ||
       d.categoria.toLowerCase().includes(term) ||
+      (d.forma_pagamento || '').toLowerCase().includes(term) ||
       d.data_despesa.includes(term)
     )
   })
@@ -59,9 +60,9 @@ export default function DespesasList({
 
   if (despesas.length === 0)
     return (
-      <div className="flex flex-col items-center justify-center py-12 border rounded-lg border-dashed">
+      <div className="flex flex-col items-center justify-center py-12 border rounded-lg border-dashed bg-white">
         <Info className="h-10 w-10 mb-2 opacity-50" />
-        <p className="mb-4">Nenhuma despesa cadastrada</p>
+        <p className="mb-4 text-muted-foreground">Nenhuma despesa cadastrada</p>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
@@ -88,43 +89,46 @@ export default function DespesasList({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center py-8 text-muted-foreground">
-          Nenhuma despesa encontrada para a busca.
+        <p className="text-center py-8 text-muted-foreground bg-white border rounded-lg">
+          Nenhuma transação encontrada.
         </p>
       ) : (
         <>
-          <div className="hidden md:grid grid-cols-6 gap-4 font-semibold text-[#001F3F] border-b pb-2 px-4">
+          <div className="hidden lg:grid grid-cols-9 gap-4 font-semibold text-[#001F3F] border-b pb-2 px-4 text-sm">
             <div>Data</div>
             <div>Categoria</div>
-            <div>Descrição</div>
+            <div className="col-span-2">Descrição</div>
+            <div>Forma Pag.</div>
+            <div>Conta</div>
+            <div>Banco</div>
             <div>Valor</div>
-            <div>Status</div>
             <div className="text-right">Ações</div>
           </div>
-          <div className="hidden md:block space-y-2">
+          <div className="hidden lg:block space-y-2">
             {filtered.map((d) => (
               <div
                 key={d.id}
-                className="grid grid-cols-6 gap-4 items-center p-4 border rounded-lg hover:bg-[#FDFCF0] group transition-colors bg-white"
+                className="grid grid-cols-9 gap-4 items-center p-4 border rounded-lg hover:bg-[#FDFCF0] group transition-colors bg-white text-sm"
               >
-                <div className="text-sm text-muted-foreground">{formatDate(d.data_despesa)}</div>
-                <div className="text-sm">{d.categoria}</div>
-                <div className="font-medium text-[#001F3F]">{d.descricao}</div>
+                <div className="text-muted-foreground">{formatDate(d.data_despesa)}</div>
+                <div>{d.categoria}</div>
+                <div className="col-span-2 font-medium text-[#001F3F] truncate">{d.descricao}</div>
+                <div>{d.forma_pagamento}</div>
+                <div className="truncate text-xs">{d.tipo_conta}</div>
+                <div className="truncate text-xs text-muted-foreground">{d.banco || '-'}</div>
                 <div className="font-bold text-red-600">
                   -{' '}
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                     d.valor,
                   )}
                 </div>
-                <div>
+                <div className="text-right flex items-center justify-end gap-2">
                   <Badge
                     variant={d.status === 'paga' ? 'default' : 'secondary'}
                     className={d.status === 'paga' ? 'bg-green-600' : ''}
                   >
                     {d.status.toUpperCase()}
                   </Badge>
-                </div>
-                <div className="text-right">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -138,7 +142,7 @@ export default function DespesasList({
             ))}
           </div>
 
-          <div className="block md:hidden space-y-4">
+          <div className="block lg:hidden space-y-4">
             {filtered.map((d) => (
               <div
                 key={d.id}
@@ -149,6 +153,9 @@ export default function DespesasList({
                     <p className="font-medium text-[#001F3F]">{d.descricao}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatDate(d.data_despesa)} • {d.categoria}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {d.forma_pagamento} • {d.tipo_conta} {d.banco ? `(${d.banco})` : ''}
                     </p>
                   </div>
                   <Badge
@@ -201,11 +208,6 @@ export default function DespesasList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <DespesaFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onReload={onReload}
-      />
     </div>
   )
 }
