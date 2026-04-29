@@ -38,7 +38,7 @@ export default function DespesaFormModal({
     data_despesa: new Date().toISOString().split('T')[0],
     forma_pagamento: 'Pix',
     tipo_conta: 'Conta Empresa',
-    banco: '',
+    banco_retirada: '',
     recorrente: false,
     frequencia_recorrencia: 'mensal',
     status: 'paga',
@@ -77,10 +77,10 @@ export default function DespesaFormModal({
       })
       return
     }
-    if (['Pix', 'Cartão'].includes(formData.forma_pagamento) && !formData.banco) {
+    if (['Pix', 'Cartão'].includes(formData.forma_pagamento) && !formData.banco_retirada) {
       toast({
         title: 'Erro',
-        description: 'Banco é obrigatório para Pix ou Cartão.',
+        description: 'Banco que Retirou é obrigatório para Pix ou Cartão.',
         variant: 'destructive',
       })
       return
@@ -94,7 +94,9 @@ export default function DespesaFormModal({
       data_despesa: formData.data_despesa,
       forma_pagamento: formData.forma_pagamento,
       tipo_conta: formData.tipo_conta,
-      banco: ['Pix', 'Cartão'].includes(formData.forma_pagamento) ? formData.banco : null,
+      banco_retirada: ['Pix', 'Cartão'].includes(formData.forma_pagamento)
+        ? formData.banco_retirada
+        : null,
       recorrente: formData.recorrente,
       frequencia_recorrencia: formData.recorrente ? formData.frequencia_recorrencia : null,
       status: formData.status,
@@ -111,7 +113,7 @@ export default function DespesaFormModal({
         data_despesa: new Date().toISOString().split('T')[0],
         forma_pagamento: 'Pix',
         tipo_conta: 'Conta Empresa',
-        banco: '',
+        banco_retirada: '',
         recorrente: false,
         frequencia_recorrencia: 'mensal',
         status: 'paga',
@@ -205,12 +207,12 @@ export default function DespesaFormModal({
 
           {['Pix', 'Cartão'].includes(formData.forma_pagamento) && (
             <div className="space-y-2 animate-fade-in">
-              <Label>Banco *</Label>
+              <Label>Banco que Retirou *</Label>
               <Input
-                value={formData.banco}
-                onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
+                value={formData.banco_retirada}
+                onChange={(e) => setFormData({ ...formData, banco_retirada: e.target.value })}
                 className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
-                placeholder="Ex: Itaú, Nubank"
+                placeholder="Ex: Itaú, Bradesco, Nubank, Caixa"
               />
             </div>
           )}

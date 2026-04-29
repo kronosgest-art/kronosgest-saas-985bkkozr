@@ -34,6 +34,8 @@ export default function ReceitaFormModal({
   const [protocolos, setProtocolos] = useState<any[]>([])
   const [loadingProts, setLoadingProts] = useState(false)
 
+  const [erroProts, setErroProts] = useState(false)
+
   const [formData, setFormData] = useState({
     tipo_receita: 'Protocolo',
     protocolo_id: '',
@@ -41,6 +43,7 @@ export default function ReceitaFormModal({
     valor: '',
     data_receita: new Date().toISOString().split('T')[0],
     forma_pagamento: 'Pix',
+    banco_recebimento: '',
     recorrente: false,
     frequencia_recorrencia: 'mensal',
     status: 'paga',
@@ -49,12 +52,15 @@ export default function ReceitaFormModal({
   useEffect(() => {
     if (isOpen && user) {
       setLoadingProts(true)
+      setErroProts(false)
       supabase
         .from('protocolos')
         .select('id, nome, valor_total')
         .eq('user_id', user.id)
-        .then(({ data }) => {
-          if (data) setProtocolos(data)
+        .order('nome', { ascending: true })
+        .then(({ data, error }) => {
+          if (error) setErroProts(true)
+          else if (data) setProtocolos(data)
           setLoadingProts(false)
         })
     }
@@ -79,8 +85,16 @@ export default function ReceitaFormModal({
       toast({ title: 'Erro', description: 'Selecione um protocolo.', variant: 'destructive' })
       return
     }
-    if (formData.tipo_receita === 'Outro' && !formData.descricao_customizada) {
+    if (!formData.descricao_customizada) {
       toast({ title: 'Erro', description: 'Preencha a descrição.', variant: 'destructive' })
+      return
+    }
+    if (['Pix', 'Cartão'].includes(formData.forma_pagamento) && !formData.banco_recebimento) {
+      toast({
+        title: 'Erro',
+        description: 'Banco que Recebeu é obrigatório para Pix ou Cartão.',
+        variant: 'destructive',
+      })
       return
     }
     if (Number(formData.valor) <= 0) {
@@ -100,11 +114,13 @@ export default function ReceitaFormModal({
       user_id: user?.id,
       tipo_receita: formData.tipo_receita,
       protocolo_id: formData.tipo_receita === 'Protocolo' ? formData.protocolo_id : null,
-      descricao_customizada:
-        formData.tipo_receita === 'Outro' ? formData.descricao_customizada : null,
+      descricao_customizada: formData.descricao_customizada,
       valor: Number(formData.valor),
       data_receita: formData.data_receita,
       forma_pagamento: formData.forma_pagamento,
+      banco_recebimento: ['Pix', 'Cartão'].includes(formData.forma_pagamento)
+        ? formData.banco_recebimento
+        : null,
       recorrente: formData.recorrente,
       frequencia_recorrencia: formData.recorrente ? formData.frequencia_recorrencia : null,
       status: formData.status,
@@ -122,6 +138,7 @@ export default function ReceitaFormModal({
         valor: '',
         data_receita: new Date().toISOString().split('T')[0],
         forma_pagamento: 'Pix',
+        banco_recebimento: '',
         recorrente: false,
         frequencia_recorrencia: 'mensal',
         status: 'paga',
@@ -136,6 +153,7 @@ export default function ReceitaFormModal({
     setFormData({
       ...formData,
       protocolo_id: val,
+      descricao_customizada: prot?.nome || '',
       valor: prot?.valor_total ? String(prot.valor_total) : formData.valor,
     })
   }
@@ -175,6 +193,10 @@ export default function ReceitaFormModal({
               <Label>Protocolo *</Label>
               {loadingProts ? (
                 <div className="text-sm text-gray-400">Carregando protocolos...</div>
+              ) : erroProts ? (
+                <div className="text-sm text-red-400">
+                  Erro ao carregar protocolos. Tente novamente.
+                </div>
               ) : protocolos.length === 0 ? (
                 <div className="text-sm text-red-400">
                   Nenhum protocolo cadastrado. Crie um em /protocols primeiro.
@@ -196,19 +218,19 @@ export default function ReceitaFormModal({
             </div>
           )}
 
-          {formData.tipo_receita === 'Outro' && (
-            <div className="space-y-2 animate-fade-in">
-              <Label>Descrição *</Label>
-              <Input
-                value={formData.descricao_customizada}
-                onChange={(e) =>
-                  setFormData({ ...formData, descricao_customizada: e.target.value })
-                }
-                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
-                placeholder="Ex: Consulta avulsa"
-              />
-            </div>
-          )}
+          <div className="space-y-2 animate-fade-in">
+            <Label>Descrição *</Label>
+            <Input
+              value={formData.descricao_customizada}
+              onChange={(e) => setFormData({ ...formData, descricao_customizada: e.target.value })}
+              className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
+              placeholder={
+                formData.tipo_receita === 'Protocolo'
+                  ? 'Nome do protocolo...'
+                  : 'Ex: Consulta avulsa'
+              }
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -266,6 +288,18 @@ export default function ReceitaFormModal({
               </Select>
             </div>
           </div>
+
+          {['Pix', 'Cartão'].includes(formData.forma_pagamento) && (
+            <div className="space-y-2 animate-fade-in">
+              <Label>Banco que Recebeu *</Label>
+              <Input
+                value={formData.banco_recebimento}
+                onChange={(e) => setFormData({ ...formData, banco_recebimento: e.target.value })}
+                className="bg-transparent border-[#C5A059] focus-visible:ring-[#C5A059] placeholder:text-gray-500"
+                placeholder="Ex: Itaú, Bradesco, Nubank, Caixa"
+              />
+            </div>
+          )}
 
           <div className="flex items-center space-x-2 mt-2">
             <Switch

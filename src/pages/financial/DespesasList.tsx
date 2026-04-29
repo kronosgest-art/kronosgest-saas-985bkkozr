@@ -65,9 +65,9 @@ export default function DespesasList({
         <p className="mb-4 text-muted-foreground">Nenhuma despesa cadastrada</p>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
+          className="bg-white border border-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
         >
-          <Plus className="mr-2 h-4 w-4" /> Nova Despesa
+          <Plus className="mr-2 h-4 w-4 text-[#C5A059]" /> Nova Despesa
         </Button>
         <DespesaFormModal
           isOpen={isModalOpen}
@@ -82,9 +82,9 @@ export default function DespesasList({
       <div className="flex justify-end">
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
+          className="bg-white border border-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
         >
-          <Plus className="mr-2 h-4 w-4" /> Nova Despesa
+          <Plus className="mr-2 h-4 w-4 text-[#C5A059]" /> Nova Despesa
         </Button>
       </div>
 
@@ -115,7 +115,9 @@ export default function DespesasList({
                 <div className="col-span-2 font-medium text-[#001F3F] truncate">{d.descricao}</div>
                 <div>{d.forma_pagamento}</div>
                 <div className="truncate text-xs">{d.tipo_conta}</div>
-                <div className="truncate text-xs text-muted-foreground">{d.banco || '-'}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {d.banco_retirada || '-'}
+                </div>
                 <div className="font-bold text-red-600">
                   -{' '}
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
@@ -155,7 +157,8 @@ export default function DespesasList({
                       {formatDate(d.data_despesa)} • {d.categoria}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {d.forma_pagamento} • {d.tipo_conta} {d.banco ? `(${d.banco})` : ''}
+                      {d.forma_pagamento} • {d.tipo_conta}{' '}
+                      {d.banco_retirada ? `(${d.banco_retirada})` : ''}
                     </p>
                   </div>
                   <Badge

@@ -258,40 +258,49 @@ export type Database = {
       }
       despesas: {
         Row: {
+          banco: string | null
           categoria: string
           created_at: string
           data_despesa: string
           descricao: string
+          forma_pagamento: string
           frequencia_recorrencia: string | null
           id: string
           recorrente: boolean
           status: string
+          tipo_conta: string
           updated_at: string
           user_id: string
           valor: number
         }
         Insert: {
+          banco?: string | null
           categoria: string
           created_at?: string
           data_despesa: string
           descricao: string
+          forma_pagamento?: string
           frequencia_recorrencia?: string | null
           id?: string
           recorrente?: boolean
           status?: string
+          tipo_conta?: string
           updated_at?: string
           user_id: string
           valor: number
         }
         Update: {
+          banco?: string | null
           categoria?: string
           created_at?: string
           data_despesa?: string
           descricao?: string
+          forma_pagamento?: string
           frequencia_recorrencia?: string | null
           id?: string
           recorrente?: boolean
           status?: string
+          tipo_conta?: string
           updated_at?: string
           user_id?: string
           valor?: number
@@ -707,6 +716,62 @@ export type Database = {
           vezes_prescrito?: number | null
         }
         Relationships: []
+      }
+      receitas: {
+        Row: {
+          created_at: string
+          data_receita: string
+          descricao_customizada: string | null
+          forma_pagamento: string
+          frequencia_recorrencia: string | null
+          id: string
+          protocolo_id: string | null
+          recorrente: boolean
+          status: string
+          tipo_receita: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_receita: string
+          descricao_customizada?: string | null
+          forma_pagamento: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          protocolo_id?: string | null
+          recorrente?: boolean
+          status?: string
+          tipo_receita: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_receita?: string
+          descricao_customizada?: string | null
+          forma_pagamento?: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          protocolo_id?: string | null
+          recorrente?: boolean
+          status?: string
+          tipo_receita?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'receitas_protocolo_id_fkey'
+            columns: ['protocolo_id']
+            isOneToOne: false
+            referencedRelation: 'protocolos'
+            referencedColumns: ['id']
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -1234,6 +1299,9 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   forma_pagamento: text (not null, default: 'Pix'::text)
+//   tipo_conta: text (not null, default: 'Conta Empresa'::text)
+//   banco: text (nullable)
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1344,6 +1412,20 @@ export const Constants = {
 //   criado_por: uuid (nullable)
 //   valor_sessao_avulsa: numeric (nullable)
 //   desconto_progressivo: text (nullable)
+// Table: receitas
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   tipo_receita: text (not null)
+//   protocolo_id: uuid (nullable)
+//   descricao_customizada: text (nullable)
+//   valor: numeric (not null)
+//   data_receita: date (not null)
+//   forma_pagamento: text (not null)
+//   recorrente: boolean (not null, default: false)
+//   frequencia_recorrencia: text (nullable)
+//   status: text (not null, default: 'pendente'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -1448,6 +1530,10 @@ export const Constants = {
 //   FOREIGN KEY protocolos_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: receitas
+//   PRIMARY KEY receitas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY receitas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE SET NULL
+//   FOREIGN KEY receitas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: subscriptions
 //   PRIMARY KEY subscriptions_pkey: PRIMARY KEY (id)
 //   CHECK subscriptions_status_check: CHECK ((status = ANY (ARRAY['trial'::text, 'free_access'::text, 'suspended'::text, 'active'::text, 'blocked'::text])))
@@ -1505,7 +1591,13 @@ export const Constants = {
 //   Policy "Admins can view all credit purchases" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: despesas
-//   Policy "despesas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//   Policy "despesas_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//   Policy "despesas_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (user_id = auth.uid())
+//   Policy "despesas_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//   Policy "despesas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
 // Table: exames
@@ -1553,6 +1645,16 @@ export const Constants = {
 //   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
 //     WITH CHECK: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
+// Table: receitas
+//   Policy "receitas_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//   Policy "receitas_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (user_id = auth.uid())
+//   Policy "receitas_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//   Policy "receitas_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
 // Table: subscriptions
 //   Policy "Users can update own subscription" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
