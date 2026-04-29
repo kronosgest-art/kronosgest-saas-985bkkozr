@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Stethoscope, Loader2, ArrowLeft } from 'lucide-react'
 
 export default function ProfissionalLogin() {
-  const [email, setEmail] = useState('dra.morganavieira@gmail.com')
-  const [password, setPassword] = useState('Skip@Pass')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,21 +60,6 @@ export default function ProfissionalLogin() {
             )}
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            {/* Credenciais Box */}
-            <div className="mb-6 p-4 rounded-xl bg-[#FDFCF0] border border-[#C5A059]/20 flex flex-col items-center justify-center text-sm shadow-sm">
-              <span className="text-[#C5A059] font-bold mb-2 uppercase tracking-wider text-xs">
-                Credenciais de Teste
-              </span>
-              <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-[#333333] text-left w-full max-w-[280px]">
-                <span className="text-right text-[#001F3F]/60 font-medium">Login:</span>
-                <span className="font-mono font-medium text-[#001F3F]">
-                  dra.morganavieira@gmail.com
-                </span>
-                <span className="text-right text-[#001F3F]/60 font-medium">Senha:</span>
-                <span className="font-mono font-medium text-[#001F3F]">Skip@Pass</span>
-              </div>
-            </div>
-
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-[#001F3F] font-semibold text-sm">

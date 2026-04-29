@@ -20,7 +20,6 @@ export default function Login() {
       title: 'Admin',
       description: 'Gerenciamento geral da plataforma',
       path: '/login/admin',
-      credentials: { email: 'admin@kronosgest.com', password: 'Admin@123456' },
     },
     {
       id: 'clinica',
@@ -28,7 +27,6 @@ export default function Login() {
       title: 'Clínica',
       description: 'Gerenciar profissionais e pacientes',
       path: '/login/clinica',
-      credentials: { email: 'clinica@kronosgest.com', password: 'Clinica@123456' },
     },
     {
       id: 'profissional',
@@ -36,7 +34,6 @@ export default function Login() {
       title: 'Profissional',
       description: 'Acessar dados pessoais e pacientes',
       path: '/login/profissional',
-      credentials: { email: 'dra.morganavieira@gmail.com', password: 'Skip@Pass' },
     },
     {
       id: 'paciente',
@@ -44,7 +41,6 @@ export default function Login() {
       title: 'Paciente',
       description: 'Visualizar sessões e dados',
       path: '/login/paciente',
-      credentials: { email: 'marcelus@kronosgest.com', password: '12345678900' },
     },
   ]
 
@@ -86,13 +82,9 @@ export default function Login() {
 
         {/* Selection Area */}
         <div className="w-full max-w-5xl animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-          <h2 className="text-sm md:text-base font-medium text-[#C5A059] text-center mb-2 tracking-[0.2em] uppercase">
+          <h2 className="text-sm md:text-base font-medium text-[#C5A059] text-center mb-8 tracking-[0.2em] uppercase">
             Selecione seu tipo de acesso
           </h2>
-          <p className="text-xs text-[#FDFCF0]/60 text-center mb-8 max-w-lg mx-auto px-4">
-            * Dados de acesso exibidos provisoriamente para homologação. Serão removidos na
-            conclusão da configuração.
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {accessOptions.map((option) => (
@@ -112,33 +104,6 @@ export default function Login() {
                     {option.description}
                   </p>
                 </div>
-
-                {option.credentials && (
-                  <div className="w-full mt-auto pt-4 border-t border-[#C5A059]/10">
-                    <div className="bg-[#FDFCF0] rounded-lg p-3 border border-[#C5A059]/20 text-xs text-left shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
-                      <div className="text-[#C5A059] font-bold mb-1.5 text-center uppercase tracking-wider text-[10px]">
-                        Acesso Provisório
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex flex-col">
-                          <span className="text-[#001F3F]/60 font-medium text-[10px]">Login:</span>
-                          <span
-                            className="font-mono text-[#001F3F] truncate"
-                            title={option.credentials.email}
-                          >
-                            {option.credentials.email}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[#001F3F]/60 font-medium text-[10px]">Senha:</span>
-                          <span className="font-mono text-[#001F3F] truncate">
-                            {option.credentials.password}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </button>
             ))}
           </div>

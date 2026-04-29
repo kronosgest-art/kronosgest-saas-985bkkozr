@@ -272,6 +272,7 @@ export type Database = {
           forma_pagamento: string
           frequencia_recorrencia: string | null
           id: string
+          profissional_id: string | null
           recorrente: boolean
           status: string
           tipo_conta: string
@@ -288,6 +289,7 @@ export type Database = {
           forma_pagamento?: string
           frequencia_recorrencia?: string | null
           id?: string
+          profissional_id?: string | null
           recorrente?: boolean
           status?: string
           tipo_conta?: string
@@ -304,6 +306,7 @@ export type Database = {
           forma_pagamento?: string
           frequencia_recorrencia?: string | null
           id?: string
+          profissional_id?: string | null
           recorrente?: boolean
           status?: string
           tipo_conta?: string
@@ -311,7 +314,15 @@ export type Database = {
           user_id?: string
           valor?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'despesas_profissional_id_fkey'
+            columns: ['profissional_id']
+            isOneToOne: false
+            referencedRelation: 'profissionais'
+            referencedColumns: ['id']
+          },
+        ]
       }
       exames: {
         Row: {
@@ -628,6 +639,7 @@ export type Database = {
         Row: {
           cpf: string | null
           created_at: string
+          email: string | null
           especialidade: string | null
           foto_url: string | null
           google_calendar_id: string | null
@@ -635,7 +647,10 @@ export type Database = {
           nome_completo: string
           numero_registro: string | null
           organization_id: string | null
+          pode_ver_financeiro_clinica: boolean | null
           status: boolean | null
+          telefone: string | null
+          tipo_profissional: string | null
           tipo_registro: string | null
           updated_at: string
           user_id: string | null
@@ -643,6 +658,7 @@ export type Database = {
         Insert: {
           cpf?: string | null
           created_at?: string
+          email?: string | null
           especialidade?: string | null
           foto_url?: string | null
           google_calendar_id?: string | null
@@ -650,7 +666,10 @@ export type Database = {
           nome_completo: string
           numero_registro?: string | null
           organization_id?: string | null
+          pode_ver_financeiro_clinica?: boolean | null
           status?: boolean | null
+          telefone?: string | null
+          tipo_profissional?: string | null
           tipo_registro?: string | null
           updated_at?: string
           user_id?: string | null
@@ -658,6 +677,7 @@ export type Database = {
         Update: {
           cpf?: string | null
           created_at?: string
+          email?: string | null
           especialidade?: string | null
           foto_url?: string | null
           google_calendar_id?: string | null
@@ -665,7 +685,10 @@ export type Database = {
           nome_completo?: string
           numero_registro?: string | null
           organization_id?: string | null
+          pode_ver_financeiro_clinica?: boolean | null
           status?: boolean | null
+          telefone?: string | null
+          tipo_profissional?: string | null
           tipo_registro?: string | null
           updated_at?: string
           user_id?: string | null
@@ -776,6 +799,7 @@ export type Database = {
           forma_pagamento: string
           frequencia_recorrencia: string | null
           id: string
+          profissional_id: string | null
           protocolo_id: string | null
           recorrente: boolean
           status: string
@@ -792,6 +816,7 @@ export type Database = {
           forma_pagamento: string
           frequencia_recorrencia?: string | null
           id?: string
+          profissional_id?: string | null
           protocolo_id?: string | null
           recorrente?: boolean
           status?: string
@@ -808,6 +833,7 @@ export type Database = {
           forma_pagamento?: string
           frequencia_recorrencia?: string | null
           id?: string
+          profissional_id?: string | null
           protocolo_id?: string | null
           recorrente?: boolean
           status?: string
@@ -817,6 +843,13 @@ export type Database = {
           valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: 'receitas_profissional_id_fkey'
+            columns: ['profissional_id']
+            isOneToOne: false
+            referencedRelation: 'profissionais'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'receitas_protocolo_id_fkey'
             columns: ['protocolo_id']
@@ -1357,6 +1390,7 @@ export const Constants = {
 //   forma_pagamento: text (not null, default: 'Pix'::text)
 //   tipo_conta: text (not null, default: 'Conta Empresa'::text)
 //   banco_retirada: text (nullable)
+//   profissional_id: uuid (nullable)
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1450,6 +1484,10 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   google_calendar_id: text (nullable)
+//   telefone: text (nullable)
+//   email: text (nullable)
+//   tipo_profissional: text (nullable, default: 'proprietario'::text)
+//   pode_ver_financeiro_clinica: boolean (nullable, default: false)
 // Table: protocolos
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1492,6 +1530,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   banco_recebimento: text (nullable)
+//   profissional_id: uuid (nullable)
 // Table: subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -1566,6 +1605,7 @@ export const Constants = {
 //   FOREIGN KEY credit_purchases_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: despesas
 //   PRIMARY KEY despesas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY despesas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 //   FOREIGN KEY despesas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
@@ -1602,6 +1642,7 @@ export const Constants = {
 //   FOREIGN KEY protocolos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: receitas
 //   PRIMARY KEY receitas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY receitas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 //   FOREIGN KEY receitas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE SET NULL
 //   FOREIGN KEY receitas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: subscriptions
@@ -1636,8 +1677,8 @@ export const Constants = {
 //     USING: true
 // Table: agendamentos
 //   Policy "agendamentos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = agendamentos.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     USING: ((profissional_id IN ( SELECT profissionais.id    FROM profissionais   WHERE (profissionais.user_id = auth.uid()))) OR (EXISTS ( SELECT 1    FROM pacientes p   WHERE ((p.id = agendamentos.patient_id) AND ((p.user_id = auth.uid()) OR (p.organization_id IN ( SELECT organizations.id            FROM organizations           WHERE (organizations.owner_id = auth.uid()))))))))
+//     WITH CHECK: ((profissional_id IN ( SELECT profissionais.id    FROM profissionais   WHERE (profissionais.user_id = auth.uid()))) OR (EXISTS ( SELECT 1    FROM pacientes p   WHERE ((p.id = agendamentos.patient_id) AND ((p.user_id = auth.uid()) OR (p.organization_id IN ( SELECT organizations.id            FROM organizations           WHERE (organizations.owner_id = auth.uid()))))))))
 //   Policy "anon_select_agendamentos" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true
 //   Policy "anon_update_agendamentos" (UPDATE, PERMISSIVE) roles={anon}
@@ -1677,7 +1718,7 @@ export const Constants = {
 //   Policy "despesas_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (user_id = auth.uid())
 //   Policy "despesas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (user_id = auth.uid())
+//     USING: ((user_id = auth.uid()) OR (profissional_id IN ( SELECT profissionais.id    FROM profissionais   WHERE (profissionais.user_id = auth.uid()))) OR (EXISTS ( SELECT 1    FROM (profissionais p      JOIN organizations o ON ((p.organization_id = o.id)))   WHERE ((p.id = despesas.profissional_id) AND (o.owner_id = auth.uid())))))
 //   Policy "despesas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
@@ -1706,8 +1747,8 @@ export const Constants = {
 //   Policy "anon_select_pacientes" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true
 //   Policy "pacientes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (user_id = auth.uid())
-//     WITH CHECK: (user_id = auth.uid())
+//     USING: ((user_id = auth.uid()) OR (organization_id IN ( SELECT organizations.id    FROM organizations   WHERE (organizations.owner_id = auth.uid()))))
+//     WITH CHECK: ((user_id = auth.uid()) OR (organization_id IN ( SELECT organizations.id    FROM organizations   WHERE (organizations.owner_id = auth.uid()))))
 // Table: pacientes_acesso
 //   Policy "anon_select_acesso" (SELECT, PERMISSIVE) roles={anon}
 //     USING: (ativo = true)
@@ -1726,8 +1767,8 @@ export const Constants = {
 //     USING: true
 // Table: prescricoes
 //   Policy "prescricoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = prescricoes.patient_id) AND (pacientes.user_id = auth.uid()))))
+//     USING: (EXISTS ( SELECT 1    FROM pacientes p   WHERE ((p.id = prescricoes.patient_id) AND ((p.user_id = auth.uid()) OR (p.organization_id IN ( SELECT organizations.id            FROM organizations           WHERE (organizations.owner_id = auth.uid())))))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes p   WHERE ((p.id = prescricoes.patient_id) AND ((p.user_id = auth.uid()) OR (p.organization_id IN ( SELECT organizations.id            FROM organizations           WHERE (organizations.owner_id = auth.uid())))))))
 // Table: profissionais
 //   Policy "authenticated_insert_prof" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1745,7 +1786,7 @@ export const Constants = {
 //   Policy "receitas_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (user_id = auth.uid())
 //   Policy "receitas_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (user_id = auth.uid())
+//     USING: ((user_id = auth.uid()) OR (profissional_id IN ( SELECT profissionais.id    FROM profissionais   WHERE (profissionais.user_id = auth.uid()))) OR (EXISTS ( SELECT 1    FROM (profissionais p      JOIN organizations o ON ((p.organization_id = o.id)))   WHERE ((p.id = receitas.profissional_id) AND (o.owner_id = auth.uid())))))
 //   Policy "receitas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
@@ -2088,6 +2129,19 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION set_profissional_id()
+//   CREATE OR REPLACE FUNCTION public.set_profissional_id()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF NEW.profissional_id IS NULL THEN
+//       NEW.profissional_id := (SELECT id FROM public.profissionais WHERE user_id = NEW.user_id LIMIT 1);
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION update_leads_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_leads_updated_at()
 //    RETURNS trigger
@@ -2101,8 +2155,12 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: despesas
+//   set_despesas_profissional_id: CREATE TRIGGER set_despesas_profissional_id BEFORE INSERT ON public.despesas FOR EACH ROW EXECUTE FUNCTION set_profissional_id()
 // Table: leads
 //   update_leads_updated_at_trigger: CREATE TRIGGER update_leads_updated_at_trigger BEFORE UPDATE ON public.leads FOR EACH ROW EXECUTE FUNCTION update_leads_updated_at()
+// Table: receitas
+//   set_receitas_profissional_id: CREATE TRIGGER set_receitas_profissional_id BEFORE INSERT ON public.receitas FOR EACH ROW EXECUTE FUNCTION set_profissional_id()
 
 // --- INDEXES ---
 // Table: pacientes
