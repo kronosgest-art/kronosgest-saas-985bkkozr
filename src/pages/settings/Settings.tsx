@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import ProfissionaisClinica from './ProfissionaisClinica'
 
 export default function Settings() {
   const { user } = useAuth()
@@ -22,6 +23,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false)
 
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [isProprietario, setIsProprietario] = useState(true)
   const [clinicForm, setClinicForm] = useState({
     nome: '',
     cnpj: '',
@@ -35,6 +37,8 @@ export default function Settings() {
   const [profId, setProfId] = useState<string | null>(null)
   const [profForm, setProfForm] = useState({
     nome_completo: '',
+    email: '',
+    telefone: '',
     cpf: '',
     tipo_registro: 'Apenas CPF',
     numero_registro: '',
@@ -97,8 +101,14 @@ export default function Settings() {
           })
         }
 
+        setIsProprietario(
+          profData.tipo_profissional === 'proprietario' || !profData.tipo_profissional,
+        )
+
         setProfForm({
           nome_completo: profData.nome_completo || '',
+          email: profData.email || user?.email || '',
+          telefone: profData.telefone || '',
           cpf: profData.cpf || '',
           tipo_registro: profData.tipo_registro || 'Apenas CPF',
           numero_registro: profData.numero_registro || '',
@@ -187,86 +197,93 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs defaultValue="clinica" className="space-y-4">
+      <Tabs defaultValue={isProprietario ? 'clinica' : 'profissionais'} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="clinica">Dados da Clínica</TabsTrigger>
+          {isProprietario && <TabsTrigger value="clinica">Dados da Clínica</TabsTrigger>}
           <TabsTrigger value="profissionais">Cadastro Profissional</TabsTrigger>
+          {isProprietario && <TabsTrigger value="equipe">Equipe Clínica</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="clinica">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados da Clínica</CardTitle>
-              <CardDescription>Informações principais da sua organização.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Nome da Clínica</Label>
-                  <Input
-                    placeholder="Clínica Exemplo"
-                    value={clinicForm.nome}
-                    onChange={(e) => setClinicForm({ ...clinicForm, nome: e.target.value })}
-                  />
+        {isProprietario && (
+          <TabsContent value="clinica">
+            <Card>
+              <CardHeader>
+                <CardTitle>Dados da Clínica</CardTitle>
+                <CardDescription>Informações principais da sua organização.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Nome da Clínica</Label>
+                    <Input
+                      placeholder="Clínica Exemplo"
+                      value={clinicForm.nome}
+                      onChange={(e) => setClinicForm({ ...clinicForm, nome: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CNPJ</Label>
+                    <Input
+                      placeholder="00.000.000/0000-00"
+                      value={clinicForm.cnpj}
+                      onChange={(e) => setClinicForm({ ...clinicForm, cnpj: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telefone</Label>
+                    <Input
+                      placeholder="(00) 00000-0000"
+                      value={clinicForm.telefone}
+                      onChange={(e) => setClinicForm({ ...clinicForm, telefone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      placeholder="contato@clinica.com"
+                      value={clinicForm.email}
+                      onChange={(e) => setClinicForm({ ...clinicForm, email: e.target.value })}
+                      type="email"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Endereço</Label>
+                    <Input
+                      placeholder="Rua Exemplo, 123 - Cidade/UF"
+                      value={clinicForm.endereco}
+                      onChange={(e) => setClinicForm({ ...clinicForm, endereco: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Horário de Funcionamento</Label>
+                    <Input
+                      placeholder="Seg a Sex, 08h às 18h"
+                      value={clinicForm.horario_funcionamento}
+                      onChange={(e) =>
+                        setClinicForm({ ...clinicForm, horario_funcionamento: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Logo (URL)</Label>
+                    <Input
+                      placeholder="https://exemplo.com/logo.png"
+                      value={clinicForm.logo_url}
+                      onChange={(e) => setClinicForm({ ...clinicForm, logo_url: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>CNPJ</Label>
-                  <Input
-                    placeholder="00.000.000/0000-00"
-                    value={clinicForm.cnpj}
-                    onChange={(e) => setClinicForm({ ...clinicForm, cnpj: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Telefone</Label>
-                  <Input
-                    placeholder="(00) 00000-0000"
-                    value={clinicForm.telefone}
-                    onChange={(e) => setClinicForm({ ...clinicForm, telefone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input
-                    placeholder="contato@clinica.com"
-                    value={clinicForm.email}
-                    onChange={(e) => setClinicForm({ ...clinicForm, email: e.target.value })}
-                    type="email"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Endereço</Label>
-                  <Input
-                    placeholder="Rua Exemplo, 123 - Cidade/UF"
-                    value={clinicForm.endereco}
-                    onChange={(e) => setClinicForm({ ...clinicForm, endereco: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Horário de Funcionamento</Label>
-                  <Input
-                    placeholder="Seg a Sex, 08h às 18h"
-                    value={clinicForm.horario_funcionamento}
-                    onChange={(e) =>
-                      setClinicForm({ ...clinicForm, horario_funcionamento: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Logo (URL)</Label>
-                  <Input
-                    placeholder="https://exemplo.com/logo.png"
-                    value={clinicForm.logo_url}
-                    onChange={(e) => setClinicForm({ ...clinicForm, logo_url: e.target.value })}
-                  />
-                </div>
-              </div>
-              <Button onClick={handleSaveClinic} disabled={loading} className="mt-4">
-                Salvar Clínica
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <Button
+                  onClick={handleSaveClinic}
+                  disabled={loading}
+                  className="mt-4 bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0]"
+                >
+                  Salvar Clínica
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="profissionais">
           <Card>
@@ -284,6 +301,24 @@ export default function Settings() {
                     placeholder="Dr. Nome"
                     value={profForm.nome_completo}
                     onChange={(e) => setProfForm({ ...profForm, nome_completo: e.target.value })}
+                    disabled={!isProprietario}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="contato@profissional.com"
+                    value={profForm.email}
+                    onChange={(e) => setProfForm({ ...profForm, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={profForm.telefone}
+                    onChange={(e) => setProfForm({ ...profForm, telefone: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -292,6 +327,7 @@ export default function Settings() {
                     placeholder="000.000.000-00"
                     value={profForm.cpf}
                     onChange={(e) => setProfForm({ ...profForm, cpf: e.target.value })}
+                    disabled={!isProprietario}
                   />
                 </div>
                 <div className="space-y-2">
@@ -299,8 +335,9 @@ export default function Settings() {
                   <Select
                     value={profForm.tipo_registro}
                     onValueChange={(v) => setProfForm({ ...profForm, tipo_registro: v })}
+                    disabled={!isProprietario}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="disabled:opacity-50">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -322,6 +359,7 @@ export default function Settings() {
                       onChange={(e) =>
                         setProfForm({ ...profForm, numero_registro: e.target.value })
                       }
+                      disabled={!isProprietario}
                     />
                   </div>
                 )}
@@ -331,6 +369,7 @@ export default function Settings() {
                     placeholder="Clínico Geral"
                     value={profForm.especialidade}
                     onChange={(e) => setProfForm({ ...profForm, especialidade: e.target.value })}
+                    disabled={!isProprietario}
                   />
                 </div>
                 <div className="space-y-2">
@@ -376,12 +415,22 @@ export default function Settings() {
                   />
                 </div>
               </div>
-              <Button onClick={handleSaveProf} disabled={loading} className="mt-4">
+              <Button
+                onClick={handleSaveProf}
+                disabled={loading}
+                className="mt-4 bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0]"
+              >
                 Salvar Perfil
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isProprietario && (
+          <TabsContent value="equipe">
+            <ProfissionaisClinica organizationId={orgId} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

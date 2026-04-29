@@ -8,6 +8,7 @@
     "interpretarExame": 8,
     "transcreverExame": 5,
     "gerarSugestaoPrescricao": 5,
-    "sync-to-google-calendar": 1
+    "sync-to-google-calendar": 1,
+    "create-profissional": 1
   }
 }

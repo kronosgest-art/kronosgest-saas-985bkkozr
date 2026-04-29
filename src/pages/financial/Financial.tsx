@@ -30,13 +30,34 @@ export default function Financial() {
     if (!user) return
     setLoading(true)
     setError(false)
-    const [resReceitas, resDespesas] = await Promise.all([
-      supabase
-        .from('receitas')
-        .select('*, protocolos(nome)')
-        .order('data_receita', { ascending: false }),
-      supabase.from('despesas').select('*').order('data_despesa', { ascending: false }),
-    ])
+
+    // Check if user is proprietario or profissional
+    const { data: profData } = await supabase
+      .from('profissionais')
+      .select('id, tipo_profissional, pode_ver_financeiro_clinica')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const isProprietario =
+      !profData ||
+      profData.tipo_profissional === 'proprietario' ||
+      profData.pode_ver_financeiro_clinica
+
+    let queryReceitas = supabase
+      .from('receitas')
+      .select('*, protocolos(nome)')
+      .order('data_receita', { ascending: false })
+    let queryDespesas = supabase
+      .from('despesas')
+      .select('*')
+      .order('data_despesa', { ascending: false })
+
+    if (!isProprietario && profData?.id) {
+      queryReceitas = queryReceitas.eq('profissional_id', profData.id)
+      queryDespesas = queryDespesas.eq('profissional_id', profData.id)
+    }
+
+    const [resReceitas, resDespesas] = await Promise.all([queryReceitas, queryDespesas])
 
     if (resReceitas.error || resDespesas.error) {
       setError(true)

@@ -35,6 +35,20 @@ export default function ReceitaFormModal({
   const [loadingProts, setLoadingProts] = useState(false)
 
   const [erroProts, setErroProts] = useState(false)
+  const [profId, setProfId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profissionais')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setProfId(data.id)
+        })
+    }
+  }, [user])
 
   const [formData, setFormData] = useState({
     tipo_receita: 'Protocolo',
@@ -111,6 +125,7 @@ export default function ReceitaFormModal({
 
     const insertData = {
       user_id: user?.id,
+      profissional_id: profId,
       tipo_receita: formData.tipo_receita,
       protocolo_id: formData.tipo_receita === 'Protocolo' ? formData.protocolo_id : null,
       descricao_customizada: formData.descricao_customizada,
