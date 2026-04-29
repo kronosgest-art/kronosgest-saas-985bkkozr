@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Shield, Loader2, ArrowLeft } from 'lucide-react'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin@kronosgest.com')
+  const [password, setPassword] = useState('Admin@123456')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,38 +31,50 @@ export default function AdminLogin() {
     }
   }
 
-  const fillTestCredentials = () => {
-    setEmail('admin@kronosgest.com')
-    setPassword('Admin@123456')
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FDFCF0] px-4 py-8 font-sans">
-      <div className="w-full max-w-md animate-fade-in-up">
+    <div className="min-h-screen flex items-center justify-center bg-[#001F3F] px-4 py-8 font-sans relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#C5A059]/5 blur-[120px]"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10 animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-[#FDFCF0] rounded-2xl flex items-center justify-center mb-6 border-2 border-[#C5A059] shadow-lg">
+          <div className="mx-auto w-20 h-20 bg-[#FFFFFF] rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(197,160,89,0.15)]">
             <Shield className="w-10 h-10 text-[#C5A059]" />
           </div>
-          <h1 className="text-3xl font-bold text-[#001F3F] mb-2 font-display">Acesso Admin</h1>
-          <p className="text-[#333333]">Gerenciamento geral da plataforma KronosGest</p>
+          <h1 className="text-2xl font-light text-[#FDFCF0] mb-2 tracking-wide">Acesso Admin</h1>
         </div>
 
-        <Card className="border-[#C5A059] shadow-xl bg-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-[#001F3F] text-center">
-              Credenciais de Acesso
+        <Card className="border-0 shadow-2xl bg-[#FFFFFF] rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 pt-8 px-8">
+            <CardTitle className="text-xl text-[#001F3F] text-center font-bold">
+              Painel Administrativo
             </CardTitle>
             {error && (
-              <CardDescription className="text-destructive text-center font-medium mt-2 bg-destructive/10 py-2 rounded-md">
+              <CardDescription className="text-destructive text-center font-medium mt-4 bg-destructive/10 py-3 rounded-lg">
                 {error}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-8 pb-8">
+            {/* Credenciais Box */}
+            <div className="mb-6 p-4 rounded-xl bg-[#FDFCF0] border border-[#C5A059]/20 flex flex-col items-center justify-center text-sm shadow-sm">
+              <span className="text-[#C5A059] font-bold mb-2 uppercase tracking-wider text-xs">
+                Credenciais de Teste
+              </span>
+              <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-[#333333] text-left w-full max-w-[280px]">
+                <span className="text-right text-[#001F3F]/60 font-medium">Login:</span>
+                <span className="font-mono font-medium text-[#001F3F]">admin@kronosgest.com</span>
+                <span className="text-right text-[#001F3F]/60 font-medium">Senha:</span>
+                <span className="font-mono font-medium text-[#001F3F]">Admin@123456</span>
+              </div>
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#001F3F] font-semibold">
-                  E-mail Administrativo
+                <Label htmlFor="email" className="text-[#001F3F] font-semibold text-sm">
+                  E-mail
                 </Label>
                 <Input
                   id="email"
@@ -70,13 +82,13 @@ export default function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus-visible:ring-[#C5A059] h-11"
+                  className="focus-visible:ring-[#C5A059] h-12 bg-gray-50/50 border-gray-200"
                   placeholder="admin@kronosgest.com"
                 />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-[#001F3F] font-semibold">
+                  <Label htmlFor="password" className="text-[#001F3F] font-semibold text-sm">
                     Senha
                   </Label>
                 </div>
@@ -86,38 +98,29 @@ export default function AdminLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="focus-visible:ring-[#C5A059] h-11"
+                  className="focus-visible:ring-[#C5A059] h-12 bg-gray-50/50 border-gray-200"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#C5A059] hover:bg-[#A88640] text-[#FDFCF0] font-bold h-12 text-base transition-colors"
+                className="w-full bg-[#C5A059] hover:bg-[#A88640] text-[#FFFFFF] font-bold h-12 text-base transition-colors rounded-xl mt-2"
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                Acessar Painel Admin
+                Acessar Painel
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center space-y-4">
+        <div className="mt-8 text-center">
           <Button
             variant="ghost"
             onClick={() => navigate('/login')}
-            className="text-[#333333] hover:text-[#C5A059] hover:bg-transparent"
+            className="text-[#FDFCF0]/70 hover:text-[#FFFFFF] hover:bg-white/10 rounded-full px-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Seleção de Acesso
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Seleção
           </Button>
-
-          <div className="pt-8 text-xs text-[#333333]/60">
-            <button
-              onClick={fillTestCredentials}
-              className="hover:text-[#C5A059] underline underline-offset-2"
-            >
-              Preencher credenciais de teste
-            </button>
-          </div>
         </div>
       </div>
     </div>

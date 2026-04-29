@@ -50,33 +50,37 @@ export default function PatientLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FDFCF0] px-4 py-8 font-sans">
-      <div className="w-full max-w-md animate-fade-in-up">
+    <div className="min-h-screen flex items-center justify-center bg-[#001F3F] px-4 py-8 font-sans relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#C5A059]/5 blur-[120px]"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10 animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-[#FDFCF0] rounded-2xl flex items-center justify-center mb-6 border-2 border-[#001F3F] shadow-lg">
-            <User className="w-10 h-10 text-[#001F3F]" />
+          <div className="mx-auto w-20 h-20 bg-[#FFFFFF] rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(197,160,89,0.15)]">
+            <User className="w-10 h-10 text-[#C5A059]" />
           </div>
-          <h1 className="text-3xl font-bold text-[#001F3F] mb-2 font-display">
+          <h1 className="text-2xl font-light text-[#FDFCF0] mb-2 tracking-wide">
             Portal do Paciente
           </h1>
-          <p className="text-[#333333]">Acesse suas consultas, documentos e histórico</p>
         </div>
 
-        <Card className="border-[#001F3F]/20 shadow-xl bg-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-[#001F3F] text-center">
+        <Card className="border-0 shadow-2xl bg-[#FFFFFF] rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 pt-8 px-8">
+            <CardTitle className="text-xl text-[#001F3F] text-center font-bold">
               Seus Dados de Acesso
             </CardTitle>
             {error && (
-              <CardDescription className="text-destructive text-center font-medium mt-2 bg-destructive/10 py-2 rounded-md">
+              <CardDescription className="text-destructive text-center font-medium mt-4 bg-destructive/10 py-3 rounded-lg">
                 {error}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-8 pb-8 pt-2">
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#001F3F] font-semibold">
+                <Label htmlFor="email" className="text-[#001F3F] font-semibold text-sm">
                   E-mail Cadastrado
                 </Label>
                 <Input
@@ -85,14 +89,14 @@ export default function PatientLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus-visible:ring-[#001F3F] h-11 border-[#001F3F]/20"
+                  className="focus-visible:ring-[#C5A059] h-12 bg-gray-50/50 border-gray-200"
                   placeholder="seu.email@exemplo.com"
                 />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="cpf" className="text-[#001F3F] font-semibold">
-                    Senha de Acesso
+                  <Label htmlFor="cpf" className="text-[#001F3F] font-semibold text-sm">
+                    Senha de Acesso (CPF)
                   </Label>
                 </div>
                 <Input
@@ -101,8 +105,8 @@ export default function PatientLogin() {
                   required
                   value={cpf}
                   onChange={(e) => setCpf(e.target.value)}
-                  placeholder="Seu CPF (apenas números)"
-                  className="focus-visible:ring-[#001F3F] h-11 border-[#001F3F]/20"
+                  placeholder="Apenas números"
+                  className="focus-visible:ring-[#C5A059] h-12 bg-gray-50/50 border-gray-200"
                 />
                 <p className="text-xs text-[#333333]/70 pt-1">
                   Sua senha inicial é o seu CPF sem pontos ou traços.
@@ -111,7 +115,7 @@ export default function PatientLogin() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#001F3F] hover:bg-[#00152b] text-[#FDFCF0] font-bold h-12 text-base transition-colors shadow-md mt-2"
+                className="w-full bg-[#C5A059] hover:bg-[#A88640] text-[#FFFFFF] font-bold h-12 text-base transition-colors rounded-xl mt-4"
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                 Acessar Portal
@@ -120,13 +124,13 @@ export default function PatientLogin() {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center space-y-4">
+        <div className="mt-8 text-center">
           <Button
             variant="ghost"
             onClick={() => navigate('/login')}
-            className="text-[#333333] hover:text-[#001F3F] hover:bg-transparent"
+            className="text-[#FDFCF0]/70 hover:text-[#FFFFFF] hover:bg-white/10 rounded-full px-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Seleção de Acesso
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Seleção
           </Button>
         </div>
       </div>
