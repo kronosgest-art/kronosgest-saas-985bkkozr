@@ -208,6 +208,12 @@ export default function ReceitasList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReceitaFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onReload={onReload}
+      />
     </div>
   )
 }

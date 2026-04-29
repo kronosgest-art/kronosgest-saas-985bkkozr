@@ -211,6 +211,12 @@ export default function DespesasList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DespesaFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onReload={onReload}
+      />
     </div>
   )
 }
