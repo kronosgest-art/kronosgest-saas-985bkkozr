@@ -34,13 +34,8 @@ export default function Financial() {
       supabase
         .from('receitas')
         .select('*, protocolos(nome)')
-        .eq('user_id', user.id)
         .order('data_receita', { ascending: false }),
-      supabase
-        .from('despesas')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('data_despesa', { ascending: false }),
+      supabase.from('despesas').select('*').order('data_despesa', { ascending: false }),
     ])
 
     if (resReceitas.error || resDespesas.error) {
@@ -105,7 +100,7 @@ export default function Financial() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div className="grid gap-4 md:grid-cols-2 mb-6">
         <Card className="bg-[#FDFCF0] border-[#C5A059] shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#001F3F]">Total de Receitas</CardTitle>
@@ -128,24 +123,6 @@ export default function Financial() {
             <div className="text-2xl font-bold text-red-600">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                 totalDespesas,
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-[#FDFCF0] border-[#C5A059] shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#001F3F]">Lucro Líquido</CardTitle>
-            <DollarSign className="h-4 w-4 text-[#C5A059]" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={cn(
-                'text-2xl font-bold',
-                saldoConsolidado >= 0 ? 'text-green-600' : 'text-red-600',
-              )}
-            >
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                saldoConsolidado,
               )}
             </div>
           </CardContent>

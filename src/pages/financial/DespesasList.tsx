@@ -65,9 +65,9 @@ export default function DespesasList({
         <p className="mb-4 text-muted-foreground">Nenhuma despesa cadastrada</p>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-white border border-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
+          className="bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
         >
-          <Plus className="mr-2 h-4 w-4 text-[#C5A059]" /> Nova Despesa
+          <Plus className="mr-2 h-4 w-4" /> Nova Despesa
         </Button>
         <DespesaFormModal
           isOpen={isModalOpen}
@@ -82,9 +82,9 @@ export default function DespesasList({
       <div className="flex justify-end">
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-white border border-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
+          className="bg-[#C5A059] text-[#333333] hover:bg-[#FDFCF0] min-h-[44px]"
         >
-          <Plus className="mr-2 h-4 w-4 text-[#C5A059]" /> Nova Despesa
+          <Plus className="mr-2 h-4 w-4" /> Nova Despesa
         </Button>
       </div>
 

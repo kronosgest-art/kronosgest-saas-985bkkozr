@@ -258,7 +258,7 @@ export type Database = {
       }
       despesas: {
         Row: {
-          banco: string | null
+          banco_retirada: string | null
           categoria: string
           created_at: string
           data_despesa: string
@@ -274,7 +274,7 @@ export type Database = {
           valor: number
         }
         Insert: {
-          banco?: string | null
+          banco_retirada?: string | null
           categoria: string
           created_at?: string
           data_despesa: string
@@ -290,7 +290,7 @@ export type Database = {
           valor: number
         }
         Update: {
-          banco?: string | null
+          banco_retirada?: string | null
           categoria?: string
           created_at?: string
           data_despesa?: string
@@ -719,6 +719,7 @@ export type Database = {
       }
       receitas: {
         Row: {
+          banco_recebimento: string | null
           created_at: string
           data_receita: string
           descricao_customizada: string | null
@@ -734,6 +735,7 @@ export type Database = {
           valor: number
         }
         Insert: {
+          banco_recebimento?: string | null
           created_at?: string
           data_receita: string
           descricao_customizada?: string | null
@@ -749,6 +751,7 @@ export type Database = {
           valor: number
         }
         Update: {
+          banco_recebimento?: string | null
           created_at?: string
           data_receita?: string
           descricao_customizada?: string | null
@@ -1301,7 +1304,7 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   forma_pagamento: text (not null, default: 'Pix'::text)
 //   tipo_conta: text (not null, default: 'Conta Empresa'::text)
-//   banco: text (nullable)
+//   banco_retirada: text (nullable)
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1426,6 +1429,7 @@ export const Constants = {
 //   status: text (not null, default: 'pendente'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   banco_recebimento: text (nullable)
 // Table: subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

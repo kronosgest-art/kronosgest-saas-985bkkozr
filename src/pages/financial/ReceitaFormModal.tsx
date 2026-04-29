@@ -56,7 +56,6 @@ export default function ReceitaFormModal({
       supabase
         .from('protocolos')
         .select('id, nome, valor_total')
-        .eq('user_id', user.id)
         .order('nome', { ascending: true })
         .then(({ data, error }) => {
           if (error) setErroProts(true)
