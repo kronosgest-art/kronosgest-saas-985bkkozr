@@ -45,7 +45,8 @@ export default function ConfiguracaoIA() {
       if (errProtos) throw errProtos
       setProtocols(protos || [])
 
-      const { data: conf, error: errConf } = await (supabase.from('configuracao_ia' as any) as any)
+      const { data: conf, error: errConf } = await supabase
+        .from('configuracao_ia')
         .select('*')
         .eq('profissional_id', user.id)
         .maybeSingle()
@@ -56,7 +57,7 @@ export default function ConfiguracaoIA() {
         setConfig({
           id: conf.id,
           prompt_personalizado: conf.prompt_personalizado || '',
-          protocolos_selecionados: conf.protocolos_selecionados || [],
+          protocolos_selecionados: (conf.protocolos_selecionados as string[]) || [],
         })
       } else {
         setConfig({
@@ -87,12 +88,11 @@ export default function ConfiguracaoIA() {
       }
 
       if (config.id) {
-        const { error } = await (supabase.from('configuracao_ia' as any) as any)
-          .update(payload)
-          .eq('id', config.id)
+        const { error } = await supabase.from('configuracao_ia').update(payload).eq('id', config.id)
         if (error) throw error
       } else {
-        const { data, error } = await (supabase.from('configuracao_ia' as any) as any)
+        const { data, error } = await supabase
+          .from('configuracao_ia')
           .insert([payload])
           .select()
           .single()
