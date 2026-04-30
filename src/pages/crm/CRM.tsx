@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCRMState } from './use-crm-state'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Plus, Settings, AlertCircle, RefreshCw } from 'lucide-react'
@@ -12,7 +12,14 @@ import { LeadDialog } from './components/LeadDialog'
 
 export default function CRM() {
   const state = useCRMState()
-  const [activeTabId, setActiveTabId] = useState<string>(state.tabs[0]?.id || '')
+  const [activeTabId, setActiveTabId] = useState<string>('')
+
+  // Set initial active tab when tabs load
+  useEffect(() => {
+    if (!activeTabId && state.tabs.length > 0) {
+      setActiveTabId(state.tabs[0].id)
+    }
+  }, [state.tabs, activeTabId])
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 300)
 
@@ -146,13 +153,19 @@ export default function CRM() {
         tabId={editingTabId}
         tabs={state.tabs}
         tags={state.tags}
-        onSave={(id, data) => {
-          const tab = id ? state.updateTab(id, data) : state.addTab(data)
-          if (!id && tab) setActiveTabId((tab as any).id)
+        onSave={async (id, data) => {
+          if (id) {
+            await state.updateTab(id, data)
+          } else {
+            const tab = await state.addTab(data)
+            if (tab) setActiveTabId(tab.id)
+          }
         }}
         onDelete={(id) => {
           state.deleteTab(id)
-          if (activeTabId === id) setActiveTabId(state.tabs[0]?.id || '')
+          if (activeTabId === id) {
+            setActiveTabId(state.tabs.find((t) => t.id !== id)?.id || '')
+          }
         }}
       />
 
@@ -160,7 +173,10 @@ export default function CRM() {
         open={isTagManagerOpen}
         onOpenChange={setIsTagManagerOpen}
         tags={state.tags}
-        onSave={(id, data) => (id ? state.updateTag(id, data) : state.addTag(data))}
+        onSave={(id, data) => {
+          if (id) state.updateTag(id, data)
+          else state.addTag(data)
+        }}
         onDelete={state.deleteTag}
       />
 
@@ -170,7 +186,10 @@ export default function CRM() {
         leadId={editingLeadId}
         leads={state.leads}
         tags={state.tags}
-        onSave={(id, data) => (id ? state.updateLead(id, data) : state.addLead(data))}
+        onSave={(id, data) => {
+          if (id) state.updateLead(id, data)
+          else state.addLead(data)
+        }}
       />
     </div>
   )
