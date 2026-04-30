@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Tag, Tab, Lead } from './types'
+import { Column, Lead } from './types'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 
 export function useCRMState() {
   const { user } = useAuth()
-  const [tags, setTags] = useState<Tag[]>([])
-  const [tabs, setTabs] = useState<Tab[]>([])
+  const [columns, setColumns] = useState<Column[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,25 +17,22 @@ export function useCRMState() {
     setError(null)
 
     try {
-      const [tagsRes, tabsRes, leadsRes] = await Promise.all([
+      const [tagsRes, leadsRes] = await Promise.all([
         supabase.from('etiquetas').select('*').order('created_at', { ascending: true }),
-        supabase.from('abas_crm').select('*').order('created_at', { ascending: true }),
         supabase.from('leads').select('*').order('created_at', { ascending: false }),
       ])
 
       if (tagsRes.error) throw tagsRes.error
-      if (tabsRes.error) throw tabsRes.error
       if (leadsRes.error) throw leadsRes.error
 
-      setTags(tagsRes.data.map((t: any) => ({ id: t.id, name: t.nome, color: t.cor })))
-      setTabs(tabsRes.data.map((t: any) => ({ id: t.id, name: t.nome, tagId: t.etiqueta_id })))
+      setColumns(tagsRes.data.map((t: any) => ({ id: t.id, name: t.nome, color: t.cor })))
       setLeads(
         leadsRes.data.map((l: any) => ({
           id: l.id,
           name: l.name,
           email: l.email || '',
           phone: l.phone || '',
-          tagId: l.etiqueta_id,
+          columnId: l.etiqueta_id,
           status: l.status,
           createdAt: l.created_at,
         })),
@@ -61,11 +57,6 @@ export function useCRMState() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'etiquetas' }, loadData)
       .subscribe()
 
-    const tabsSub = supabase
-      .channel('tabs-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'abas_crm' }, loadData)
-      .subscribe()
-
     const leadsSub = supabase
       .channel('leads-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, loadData)
@@ -73,85 +64,45 @@ export function useCRMState() {
 
     return () => {
       supabase.removeChannel(tagsSub)
-      supabase.removeChannel(tabsSub)
       supabase.removeChannel(leadsSub)
     }
   }, [user, loadData])
 
-  const addTab = async (tab: Omit<Tab, 'id'>) => {
-    if (!user) return null
-    const { data, error } = await supabase
-      .from('abas_crm')
-      .insert({
-        user_id: user.id,
-        nome: tab.name,
-        etiqueta_id: tab.tagId,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      toast.error('Erro ao criar aba')
-      return null
-    }
-    toast.success('Aba criada com sucesso!')
-    const newTab = { id: data.id, name: data.nome, tagId: data.etiqueta_id }
-    setTabs((prev) => [...prev, newTab])
-    return newTab
-  }
-
-  const updateTab = async (id: string, updates: Partial<Tab>) => {
-    const payload: any = {}
-    if (updates.name !== undefined) payload.nome = updates.name
-    if (updates.tagId !== undefined) payload.etiqueta_id = updates.tagId
-
-    const { error } = await supabase.from('abas_crm').update(payload).eq('id', id)
-    if (error) toast.error('Erro ao atualizar aba')
-    else toast.success('Aba atualizada com sucesso!')
-  }
-
-  const deleteTab = async (id: string) => {
-    const { error } = await supabase.from('abas_crm').delete().eq('id', id)
-    if (error) toast.error('Erro ao deletar aba')
-    else toast.success('Aba deletada com sucesso!')
-  }
-
-  const addTag = async (tag: Omit<Tag, 'id'>) => {
+  const addColumn = async (column: Omit<Column, 'id'>) => {
     if (!user) return null
     const { data, error } = await supabase
       .from('etiquetas')
       .insert({
         user_id: user.id,
-        nome: tag.name,
-        cor: tag.color,
+        nome: column.name,
+        cor: column.color || '#C5A059',
       })
       .select()
       .single()
 
     if (error) {
-      toast.error('Erro ao criar etiqueta')
+      toast.error('Erro ao criar coluna')
       return null
     }
-    toast.success('Etiqueta criada com sucesso!')
-    const newTag = { id: data.id, name: data.nome, color: data.cor }
-    setTags((prev) => [...prev, newTag])
-    return newTag
+    toast.success('Coluna criada com sucesso!')
+    const newCol = { id: data.id, name: data.nome, color: data.cor }
+    setColumns((prev) => [...prev, newCol])
+    return newCol
   }
 
-  const updateTag = async (id: string, updates: Partial<Tag>) => {
+  const updateColumn = async (id: string, updates: Partial<Column>) => {
     const payload: any = {}
     if (updates.name !== undefined) payload.nome = updates.name
-    if (updates.color !== undefined) payload.cor = updates.color
 
     const { error } = await supabase.from('etiquetas').update(payload).eq('id', id)
-    if (error) toast.error('Erro ao atualizar etiqueta')
-    else toast.success('Etiqueta atualizada com sucesso!')
+    if (error) toast.error('Erro ao atualizar coluna')
+    else toast.success('Coluna atualizada com sucesso!')
   }
 
-  const deleteTag = async (id: string) => {
+  const deleteColumn = async (id: string) => {
     const { error } = await supabase.from('etiquetas').delete().eq('id', id)
-    if (error) toast.error('Erro ao deletar etiqueta')
-    else toast.success('Etiqueta deletada com sucesso!')
+    if (error) toast.error('Erro ao deletar coluna')
+    else toast.success('Coluna deletada com sucesso!')
   }
 
   const addLead = async (lead: Omit<Lead, 'id' | 'createdAt'>) => {
@@ -161,7 +112,7 @@ export function useCRMState() {
       name: lead.name,
       email: lead.email,
       phone: lead.phone,
-      etiqueta_id: lead.tagId,
+      etiqueta_id: lead.columnId,
       status: lead.status,
     })
     if (error) toast.error('Erro ao adicionar lead')
@@ -173,7 +124,7 @@ export function useCRMState() {
     if (updates.name !== undefined) payload.name = updates.name
     if (updates.email !== undefined) payload.email = updates.email
     if (updates.phone !== undefined) payload.phone = updates.phone
-    if (updates.tagId !== undefined) payload.etiqueta_id = updates.tagId
+    if (updates.columnId !== undefined) payload.etiqueta_id = updates.columnId
     if (updates.status !== undefined) payload.status = updates.status
 
     const { error } = await supabase.from('leads').update(payload).eq('id', id)
@@ -187,21 +138,32 @@ export function useCRMState() {
     else toast.success('Lead deletado com sucesso!')
   }
 
+  const moveLead = async (leadId: string, newColumnId: string | null) => {
+    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, columnId: newColumnId } : l)))
+    const { error } = await supabase
+      .from('leads')
+      .update({ etiqueta_id: newColumnId })
+      .eq('id', leadId)
+    if (error) {
+      toast.error('Erro ao mover lead')
+      loadData()
+    } else {
+      toast.success('Lead movido com sucesso!')
+    }
+  }
+
   return {
-    tags,
-    tabs,
+    columns,
     leads,
     isLoading,
     error,
     loadData,
-    addTab,
-    updateTab,
-    deleteTab,
-    addTag,
-    updateTag,
-    deleteTag,
+    addColumn,
+    updateColumn,
+    deleteColumn,
     addLead,
     updateLead,
     deleteLead,
+    moveLead,
   }
 }

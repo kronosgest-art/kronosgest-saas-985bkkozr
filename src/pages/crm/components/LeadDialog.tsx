@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Lead, Tag } from '../types'
+import { Lead, Column } from '../types'
 import {
   Dialog,
   DialogContent,
@@ -23,15 +23,24 @@ interface LeadDialogProps {
   onOpenChange: (open: boolean) => void
   leadId: string | null
   leads: Lead[]
-  tags: Tag[]
+  columns: Column[]
+  prefilledColumnId?: string
   onSave: (id: string | null, data: Omit<Lead, 'id' | 'createdAt'>) => void
 }
 
-export function LeadDialog({ open, onOpenChange, leadId, leads, tags, onSave }: LeadDialogProps) {
+export function LeadDialog({
+  open,
+  onOpenChange,
+  leadId,
+  leads,
+  columns,
+  prefilledColumnId,
+  onSave,
+}: LeadDialogProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [tagId, setTagId] = useState<string>('none')
+  const [columnId, setColumnId] = useState<string>('none')
   const [status, setStatus] = useState('Novo')
 
   useEffect(() => {
@@ -41,21 +50,21 @@ export function LeadDialog({ open, onOpenChange, leadId, leads, tags, onSave }: 
         setName(lead?.name || '')
         setEmail(lead?.email || '')
         setPhone(lead?.phone || '')
-        setTagId(lead?.tagId || 'none')
+        setColumnId(lead?.columnId || 'none')
         setStatus(lead?.status || 'Novo')
       } else {
         setName('')
         setEmail('')
         setPhone('')
-        setTagId('none')
+        setColumnId(prefilledColumnId || 'none')
         setStatus('Novo')
       }
     }
-  }, [open, leadId, leads])
+  }, [open, leadId, leads, prefilledColumnId])
 
   const handleSave = () => {
     if (!name.trim()) return
-    onSave(leadId, { name, email, phone, tagId: tagId === 'none' ? null : tagId, status })
+    onSave(leadId, { name, email, phone, columnId: columnId === 'none' ? null : columnId, status })
     onOpenChange(false)
   }
 
@@ -98,16 +107,16 @@ export function LeadDialog({ open, onOpenChange, leadId, leads, tags, onSave }: 
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Etiqueta</Label>
-              <Select value={tagId} onValueChange={setTagId}>
+              <Label>Coluna / Etiqueta</Label>
+              <Select value={columnId} onValueChange={setColumnId}>
                 <SelectTrigger className="focus:ring-[#C5A059]">
-                  <SelectValue placeholder="Sem etiqueta" />
+                  <SelectValue placeholder="Sem coluna" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sem etiqueta</SelectItem>
-                  {tags.map((tag) => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      {tag.name}
+                  {columns.map((col) => (
+                    <SelectItem key={col.id} value={col.id}>
+                      {col.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

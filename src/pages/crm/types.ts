@@ -1,13 +1,7 @@
-export type Tag = {
+export type Column = {
   id: string
   name: string
-  color: string
-}
-
-export type Tab = {
-  id: string
-  name: string
-  tagId: string | null
+  color?: string
 }
 
 export type Lead = {
@@ -15,7 +9,7 @@ export type Lead = {
   name: string
   email: string
   phone: string
-  tagId: string | null
+  columnId: string | null
   status: string
   createdAt: string
 }

@@ -206,6 +206,33 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracao_ia: {
+        Row: {
+          created_at: string
+          id: string
+          profissional_id: string
+          prompt_personalizado: string | null
+          protocolos_selecionados: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profissional_id: string
+          prompt_personalizado?: string | null
+          protocolos_selecionados?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profissional_id?: string
+          prompt_personalizado?: string | null
+          protocolos_selecionados?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consultas: {
         Row: {
           consultation_date: string
@@ -1428,6 +1455,13 @@ export const Constants = {
 //   perguntas: jsonb (not null, default: '[]'::jsonb)
 //   criado_em: timestamp with time zone (not null, default: now())
 //   atualizado_em: timestamp with time zone (not null, default: now())
+// Table: configuracao_ia
+//   id: uuid (not null, default: gen_random_uuid())
+//   profissional_id: uuid (not null)
+//   prompt_personalizado: text (nullable)
+//   protocolos_selecionados: jsonb (nullable, default: '[]'::jsonb)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: consultas
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1680,6 +1714,9 @@ export const Constants = {
 // Table: anamnese_templates
 //   PRIMARY KEY anamnese_templates_pkey: PRIMARY KEY (template_id)
 //   FOREIGN KEY anamnese_templates_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: configuracao_ia
+//   PRIMARY KEY configuracao_ia_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY configuracao_ia_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: consultas
 //   FOREIGN KEY consultas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY consultas_pkey: PRIMARY KEY (id)
@@ -1795,6 +1832,16 @@ export const Constants = {
 //     USING: (auth.uid() = profissional_id)
 //   Policy "anon_select_anamnese_templates" (SELECT, PERMISSIVE) roles={anon}
 //     USING: true
+// Table: configuracao_ia
+//   Policy "configuracao_ia_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (profissional_id = auth.uid())
+//   Policy "configuracao_ia_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (profissional_id = auth.uid())
+//   Policy "configuracao_ia_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (profissional_id = auth.uid())
+//   Policy "configuracao_ia_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (profissional_id = auth.uid())
+//     WITH CHECK: (profissional_id = auth.uid())
 // Table: consultas
 //   Policy "consultas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
@@ -2238,6 +2285,17 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION update_config_ia_updated_at()
+//   CREATE OR REPLACE FUNCTION public.update_config_ia_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     NEW.updated_at = NOW();
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION update_leads_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_leads_updated_at()
 //    RETURNS trigger
@@ -2251,6 +2309,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: configuracao_ia
+//   update_config_ia_updated_at_trigger: CREATE TRIGGER update_config_ia_updated_at_trigger BEFORE UPDATE ON public.configuracao_ia FOR EACH ROW EXECUTE FUNCTION update_config_ia_updated_at()
 // Table: despesas
 //   set_despesas_profissional_id: CREATE TRIGGER set_despesas_profissional_id BEFORE INSERT ON public.despesas FOR EACH ROW EXECUTE FUNCTION set_profissional_id()
 // Table: leads
