@@ -507,6 +507,36 @@ export type Database = {
           },
         ]
       }
+      mensagens_whatsapp: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          numero_whatsapp: string
+          processada: boolean | null
+          resposta_ia: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          numero_whatsapp: string
+          processada?: boolean | null
+          resposta_ia?: string | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          numero_whatsapp?: string
+          processada?: boolean | null
+          resposta_ia?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           cnpj: string | null
@@ -1528,6 +1558,14 @@ export const Constants = {
 //   phone: text (nullable)
 //   email: text (nullable)
 //   etiqueta_id: uuid (nullable)
+// Table: mensagens_whatsapp
+//   id: uuid (not null, default: gen_random_uuid())
+//   numero_whatsapp: text (not null)
+//   mensagem: text (not null)
+//   tipo: text (not null)
+//   processada: boolean (nullable, default: false)
+//   resposta_ia: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: organizations
 //   id: uuid (not null, default: gen_random_uuid())
 //   owner_id: uuid (nullable)
@@ -1738,6 +1776,8 @@ export const Constants = {
 //   FOREIGN KEY leads_etiqueta_id_fkey: FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id) ON DELETE SET NULL
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: mensagens_whatsapp
+//   PRIMARY KEY mensagens_whatsapp_pkey: PRIMARY KEY (id)
 // Table: organizations
 //   FOREIGN KEY organizations_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
@@ -1879,6 +1919,16 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can view their own leads" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: mensagens_whatsapp
+//   Policy "authenticated_delete_mensagens_whatsapp" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_insert_mensagens_whatsapp" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_select_mensagens_whatsapp" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_update_mensagens_whatsapp" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: organizations
 //   Policy "authenticated_insert_org" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true

@@ -40,6 +40,18 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
+    const incomingApiKey = req.headers.get('apikey') || req.headers.get('x-api-key')
+    if (evolutionApiKey && incomingApiKey && incomingApiKey !== evolutionApiKey) {
+      return new Response(
+        JSON.stringify({ error: 'Acesso não autorizado. Chave da Evolution API inválida.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey =
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
