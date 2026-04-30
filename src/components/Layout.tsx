@@ -21,6 +21,7 @@ import {
   History,
   Filter,
   Star,
+  Bot,
   User,
   Settings as SettingsIcon,
 } from 'lucide-react'
@@ -133,6 +134,7 @@ export default function Layout() {
       links: [
         { to: '/', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/crm', label: 'CRM & Leads', icon: Filter },
+        { to: '/crm/configuracao-ia', label: 'Configuração IA', icon: Bot },
         { to: '/premium-consultation', label: 'Consulta Premium', icon: Star, isPremium: true },
         { to: '/patients', label: 'Paciente', icon: User },
         { to: '/exams/biochemical', label: 'Exames Bioquímicos', icon: Activity },

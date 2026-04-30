@@ -9,6 +9,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      abas_crm: {
+        Row: {
+          created_at: string
+          etiqueta_id: string | null
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          etiqueta_id?: string | null
+          id?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          etiqueta_id?: string | null
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'abas_crm_etiqueta_id_fkey'
+            columns: ['etiqueta_id']
+            isOneToOne: false
+            referencedRelation: 'etiquetas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       admin_audit_logs: {
         Row: {
           action: string
@@ -324,6 +356,30 @@ export type Database = {
           },
         ]
       }
+      etiquetas: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          id?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exames: {
         Row: {
           arquivo_pdf_url: string | null
@@ -378,6 +434,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          etiqueta_id: string | null
           id: string
           msg: string | null
           name: string
@@ -390,6 +447,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          etiqueta_id?: string | null
           id?: string
           msg?: string | null
           name: string
@@ -402,6 +460,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          etiqueta_id?: string | null
           id?: string
           msg?: string | null
           name?: string
@@ -411,7 +470,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'leads_etiqueta_id_fkey'
+            columns: ['etiqueta_id']
+            isOneToOne: false
+            referencedRelation: 'etiquetas'
+            referencedColumns: ['id']
+          },
+        ]
       }
       organizations: {
         Row: {
@@ -1318,6 +1385,12 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: abas_crm
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   nome: text (not null)
+//   etiqueta_id: uuid (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: admin_audit_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   admin_id: uuid (nullable)
@@ -1391,6 +1464,12 @@ export const Constants = {
 //   tipo_conta: text (not null, default: 'Conta Empresa'::text)
 //   banco_retirada: text (nullable)
 //   profissional_id: uuid (nullable)
+// Table: etiquetas
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   nome: text (not null)
+//   cor: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: exames
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1414,6 +1493,7 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   phone: text (nullable)
 //   email: text (nullable)
+//   etiqueta_id: uuid (nullable)
 // Table: organizations
 //   id: uuid (not null, default: gen_random_uuid())
 //   owner_id: uuid (nullable)
@@ -1582,6 +1662,10 @@ export const Constants = {
 //   tipo: text (nullable, default: 'entrada'::text)
 
 // --- CONSTRAINTS ---
+// Table: abas_crm
+//   FOREIGN KEY abas_crm_etiqueta_id_fkey: FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id) ON DELETE SET NULL
+//   PRIMARY KEY abas_crm_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY abas_crm_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: admin_audit_logs
 //   FOREIGN KEY admin_audit_logs_admin_id_fkey: FOREIGN KEY (admin_id) REFERENCES auth.users(id) ON DELETE SET NULL
 //   PRIMARY KEY admin_audit_logs_pkey: PRIMARY KEY (id)
@@ -1607,10 +1691,14 @@ export const Constants = {
 //   PRIMARY KEY despesas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY despesas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 //   FOREIGN KEY despesas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: etiquetas
+//   PRIMARY KEY etiquetas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY etiquetas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
 // Table: leads
+//   FOREIGN KEY leads_etiqueta_id_fkey: FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id) ON DELETE SET NULL
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: organizations
@@ -1670,6 +1758,10 @@ export const Constants = {
 //   FOREIGN KEY vendas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: abas_crm
+//   Policy "abas_crm_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
 // Table: admin_audit_logs
 //   Policy "Admin can insert audit logs" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1720,6 +1812,10 @@ export const Constants = {
 //   Policy "despesas_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (profissional_id IN ( SELECT profissionais.id    FROM profissionais   WHERE (profissionais.user_id = auth.uid()))) OR (EXISTS ( SELECT 1    FROM (profissionais p      JOIN organizations o ON ((p.organization_id = o.id)))   WHERE ((p.id = despesas.profissional_id) AND (o.owner_id = auth.uid())))))
 //   Policy "despesas_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
+//     WITH CHECK: (user_id = auth.uid())
+// Table: etiquetas
+//   Policy "etiquetas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
 // Table: exames

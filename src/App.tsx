@@ -12,6 +12,7 @@ import ProfissionalLogin from '@/pages/login/ProfissionalLogin'
 import ConsultationWizard from '@/pages/consultation/ConsultationWizard'
 import PremiumConsultationWizard from '@/pages/consultation/PremiumConsultationWizard'
 import CRM from '@/pages/crm/CRM'
+import ConfiguracaoIA from '@/pages/crm/ConfiguracaoIA'
 import Financial from '@/pages/financial/Financial'
 import PatientsList from '@/pages/patients/PatientsList'
 import PrescriptionsList from '@/pages/prescriptions/PrescriptionsList'
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/consultation" element={<ConsultationWizard />} />
             <Route path="/premium-consultation" element={<PremiumConsultationWizard />} />
             <Route path="/crm" element={<CRM />} />
+            <Route path="/crm/configuracao-ia" element={<ConfiguracaoIA />} />
             <Route path="/financial" element={<Financial />} />
             <Route path="/patients" element={<PatientsList />} />
             <Route path="/patients/:patientId/medical-record" element={<PatientMedicalRecord />} />
