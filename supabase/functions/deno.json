@@ -1,15 +1,15 @@
 {
   "_versions": {
-    "analyze-bioresonance": 7,
-    "analyze-exames": 7,
-    "generate-prescription": 7,
-    "create-paciente": 8,
-    "uploadExame": 4,
-    "interpretarExame": 10,
-    "transcreverExame": 7,
-    "gerarSugestaoPrescricao": 7,
-    "sync-to-google-calendar": 3,
-    "create-profissional": 3,
-    "whatsapp-webhook": 4
+    "analyze-bioresonance": 8,
+    "analyze-exames": 8,
+    "generate-prescription": 8,
+    "create-paciente": 9,
+    "uploadExame": 5,
+    "interpretarExame": 11,
+    "transcreverExame": 8,
+    "gerarSugestaoPrescricao": 8,
+    "sync-to-google-calendar": 4,
+    "create-profissional": 4,
+    "whatsapp-webhook": 5
   }
 }
