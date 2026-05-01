@@ -160,4 +160,13 @@
   .animate-slide-in-right {
     animation: slide-in-right 0.4s ease-out forwards;
   }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-150%) skewX(-12deg);
+    }
+    100% {
+      transform: translateX(150%) skewX(-12deg);
+    }
+  }
 }

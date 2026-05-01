@@ -83,7 +83,7 @@ export default function CheckoutPage() {
           toast({
             title: 'Cupom aplicado!',
             description: 'Você ganhou 20% de desconto.',
-            className: 'bg-green-500 text-white border-none',
+            className: 'bg-[#10B981] text-white border-none',
           })
           setError(null)
           return
@@ -111,7 +111,7 @@ export default function CheckoutPage() {
       toast({
         title: 'Cupom aplicado!',
         description: `Desconto aplicado com sucesso.`,
-        className: 'bg-green-500 text-white border-none',
+        className: 'bg-[#10B981] text-white border-none',
       })
     } catch (err) {
       console.error(err)
@@ -125,7 +125,6 @@ export default function CheckoutPage() {
       description: 'Aguarde enquanto preparamos seu ambiente.',
     })
 
-    // Simulate redirection to Edge Function
     setTimeout(() => {
       const gateway = paymentMethod === 'stripe' ? 'Stripe' : 'Infinitypay'
       toast({
@@ -150,335 +149,413 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-12 pb-24">
-      {/* Header com Nome da Marca */}
-      <div className="text-center space-y-4 animate-in fade-in duration-500">
-        <h2 className="text-2xl font-bold tracking-wider text-[#1E3A8A] uppercase">Kronos Gest</h2>
-        <h1 className="text-4xl font-bold text-[#B8860B]">Escolha seu Plano</h1>
-        <p className="text-lg text-[#3B82F6]">Potencialize sua clínica com a melhor tecnologia</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {loading
-          ? Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-[400px] w-full rounded-xl" />
-            ))
-          : plans.map((plan, i) => (
-              <Card
-                key={plan.id}
-                className={cn(
-                  'relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer animate-in fade-in slide-in-from-bottom-4 flex flex-col',
-                  selectedPlan?.id === plan.id
-                    ? 'border-2 border-[#B8860B] shadow-lg ring-4 ring-[#B8860B]/20'
-                    : 'border border-border',
-                )}
-                style={{ animationDelay: `${i * 100}ms` }}
-                onClick={() => handleSelectPlan(plan)}
-              >
-                {selectedPlan?.id === plan.id && (
-                  <div className="absolute top-0 right-0 bg-[#B8860B] text-white px-3 py-1 rounded-bl-lg text-sm font-medium z-10">
-                    Selecionado
-                  </div>
-                )}
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-2xl text-[#1E3A8A]">{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-foreground">R$ {plan.price}</span>
-                    <span className="text-muted-foreground">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 flex-1">
-                  <ul className="space-y-3">
-                    {plan.benefits.map((benefit, j) => (
-                      <li key={j} className="flex items-start text-sm text-muted-foreground">
-                        <Check className="h-5 w-5 text-[#B8860B] mr-2 shrink-0" />
-                        <span>{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="mt-auto">
-                  <Button
-                    className={cn(
-                      'w-full transition-all',
-                      selectedPlan?.id === plan.id
-                        ? 'bg-[#B8860B] hover:bg-[#B8860B]/90 text-white'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSelectPlan(plan)
-                    }}
-                  >
-                    {selectedPlan?.id === plan.id ? 'Plano Selecionado' : 'Escolher Plano'}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-      </div>
-
-      {!selectedPlan && !loading && (
-        <div className="text-center py-12 animate-in fade-in duration-500">
-          <div className="inline-flex items-center justify-center p-4 bg-[#B8860B]/10 rounded-full mb-4">
-            <AlertCircle className="h-8 w-8 text-[#B8860B]" />
-          </div>
-          <h3 className="text-xl font-medium text-[#1E3A8A]">Escolha um plano para começar</h3>
-          <p className="text-muted-foreground mt-2">
-            Selecione uma das opções acima para prosseguir com sua assinatura.
+    <div className="min-h-screen bg-gradient-to-b from-[#2A4365] to-[#1E3A8A] text-slate-100 selection:bg-[#B8860B]/30 font-sans">
+      <div className="max-w-6xl mx-auto p-6 md:p-12 space-y-16 pb-24">
+        {/* Header */}
+        <div className="text-center space-y-6 animate-in fade-in duration-700 pt-8">
+          <h2 className="text-5xl md:text-6xl font-display font-bold tracking-widest text-[#B8860B] uppercase drop-shadow-sm">
+            Kronos Gest
+          </h2>
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Escolha seu Plano</h1>
+          <p className="text-xl text-[#3B82F6] font-medium">
+            Potencialize sua clínica com a melhor tecnologia
           </p>
         </div>
-      )}
 
-      {selectedPlan && (
-        <div
-          ref={section2Ref}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8 animate-in fade-in duration-500"
-        >
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="border-border/50 shadow-sm transition-all duration-300 hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-xl text-[#1E3A8A]">Cupom de Desconto</CardTitle>
-                <CardDescription>Tem um cupom?</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      className="pl-9 transition-colors focus-visible:ring-[#B8860B]"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    onClick={applyCoupon}
-                    variant="outline"
-                    className="shrink-0 border-[#1E3A8A] text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white transition-colors"
-                  >
-                    Aplicar Cupom
-                  </Button>
-                </div>
-                {error && (
-                  <div className="mt-2 flex items-center justify-between">
-                    <p className="text-sm text-destructive font-medium">{error}</p>
+        {/* Planos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-[450px] w-full rounded-2xl bg-white/10" />
+              ))
+            : plans.map((plan, i) => (
+                <Card
+                  key={plan.id}
+                  className={cn(
+                    'relative overflow-hidden bg-white text-slate-900 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer animate-in fade-in slide-in-from-bottom-8 flex flex-col border-2',
+                    selectedPlan?.id === plan.id
+                      ? 'border-[#B8860B] shadow-[0_0_25px_rgba(184,134,11,0.3)] ring-4 ring-[#B8860B]/10 z-10'
+                      : 'border-transparent shadow-lg',
+                  )}
+                  style={{ animationDelay: `${i * 150}ms` }}
+                  onClick={() => handleSelectPlan(plan)}
+                >
+                  {selectedPlan?.id === plan.id && (
+                    <div className="absolute top-0 right-0 bg-[#B8860B] text-white px-4 py-1.5 rounded-bl-xl text-sm font-bold shadow-sm z-10 uppercase tracking-wide">
+                      Selecionado
+                    </div>
+                  )}
+                  <CardHeader className="text-center pb-4 pt-8">
+                    <CardTitle className="text-3xl font-display font-bold text-[#B8860B]">
+                      {plan.name}
+                    </CardTitle>
+                    <div className="mt-6">
+                      <span className="text-5xl font-extrabold text-[#1E3A8A]">
+                        R$ {plan.price}
+                      </span>
+                      <span className="text-slate-500 font-medium">/mês</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 flex-1 px-8">
+                    <ul className="space-y-4">
+                      {plan.benefits.map((benefit, j) => (
+                        <li key={j} className="flex items-start text-base text-slate-600">
+                          <Check className="h-6 w-6 text-[#10B981] mr-3 shrink-0" />
+                          <span className="leading-tight">{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  <CardFooter className="mt-auto p-8 pt-0">
                     <Button
-                      variant="link"
-                      size="sm"
-                      className="text-[#1E3A8A] p-0 h-auto"
-                      onClick={applyCoupon}
+                      className={cn(
+                        'w-full py-6 text-lg font-semibold transition-all duration-300 rounded-xl',
+                        selectedPlan?.id === plan.id
+                          ? 'bg-gradient-to-r from-[#B8860B] to-[#DAA520] hover:opacity-90 text-white shadow-md'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-[#1E3A8A]',
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSelectPlan(plan)
+                      }}
                     >
-                      Tentar novamente
+                      {selectedPlan?.id === plan.id ? 'Plano Selecionado' : 'Escolher Plano'}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+        </div>
+
+        {!selectedPlan && !loading && (
+          <div className="text-center py-16 animate-in fade-in duration-700">
+            <div className="inline-flex items-center justify-center p-5 bg-[#B8860B]/10 rounded-full mb-6 ring-1 ring-[#B8860B]/30">
+              <AlertCircle className="h-10 w-10 text-[#B8860B]" />
+            </div>
+            <h3 className="text-2xl font-display font-medium text-[#B8860B]">
+              Escolha um plano para começar
+            </h3>
+            <p className="text-slate-300 mt-3 text-lg">
+              Selecione uma das opções acima para prosseguir com sua assinatura.
+            </p>
+          </div>
+        )}
+
+        {selectedPlan && (
+          <div
+            ref={section2Ref}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-12 animate-in slide-in-from-bottom-12 duration-700"
+          >
+            <div className="lg:col-span-2 space-y-10">
+              {/* Cupom */}
+              <Card className="bg-white text-slate-900 border-none shadow-xl transition-all duration-300 hover:shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-slate-50/50 pb-6 border-b border-slate-100">
+                  <CardTitle className="text-2xl text-[#B8860B] font-display">
+                    Cupom de Desconto
+                  </CardTitle>
+                  <CardDescription className="text-slate-500 text-base">
+                    Tem um cupom?
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-8">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 group-focus-within:text-[#B8860B] transition-colors" />
+                      <Input
+                        className="pl-12 h-14 text-lg border-2 border-slate-200 rounded-xl transition-colors focus-visible:ring-0 focus-visible:border-[#B8860B]"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        placeholder=""
+                      />
+                    </div>
+                    <Button
+                      onClick={applyCoupon}
+                      variant="outline"
+                      className="shrink-0 h-14 px-8 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold text-lg hover:bg-[#1E3A8A] hover:text-white transition-all duration-300 rounded-xl"
+                    >
+                      Aplicar Cupom
                     </Button>
                   </div>
-                )}
-                {appliedCoupon && (
-                  <p className="text-sm text-green-600 mt-2 font-medium flex items-center animate-in fade-in">
-                    <Check className="h-4 w-4 mr-1" /> Cupom {appliedCoupon.code} aplicado com
-                    sucesso!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  {error && (
+                    <div className="mt-4 flex items-center justify-between animate-in fade-in">
+                      <p className="text-base text-red-500 font-medium">{error}</p>
+                      <Button
+                        variant="link"
+                        className="text-[#1E3A8A] font-semibold p-0 h-auto"
+                        onClick={applyCoupon}
+                      >
+                        Tentar novamente
+                      </Button>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="mt-4 p-4 bg-[#10B981]/10 rounded-xl border border-[#10B981]/20 flex items-center animate-in slide-in-from-top-2">
+                      <div className="bg-[#10B981] p-1.5 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-base text-[#10B981] font-semibold">
+                        Cupom {appliedCoupon.code} aplicado com sucesso!
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-            <Card className="border-border/50 shadow-sm transition-all duration-300 hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-xl text-[#1E3A8A]">Método de Pagamento</CardTitle>
-                <CardDescription>Escolha como deseja pagar sua assinatura.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={paymentTab} onValueChange={setPaymentTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger
-                      value="brasil"
-                      className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white"
-                      onClick={() => setPaymentMethod(null)}
-                    >
-                      Brasil
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="internacional"
-                      className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white"
-                      onClick={() => setPaymentMethod(null)}
-                    >
-                      Internacional
-                    </TabsTrigger>
-                  </TabsList>
+              {/* Pagamento */}
+              <Card className="bg-white text-slate-900 border-none shadow-xl transition-all duration-300 hover:shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-slate-50/50 pb-6 border-b border-slate-100">
+                  <CardTitle className="text-2xl text-[#B8860B] font-display">
+                    Método de Pagamento
+                  </CardTitle>
+                  <CardDescription className="text-slate-500 text-base">
+                    Escolha como deseja pagar sua assinatura.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-8">
+                  <Tabs value={paymentTab} onValueChange={setPaymentTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-100 p-1.5 rounded-xl">
+                      <TabsTrigger
+                        value="brasil"
+                        className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white rounded-lg text-base py-3 transition-all duration-300 font-medium"
+                        onClick={() => setPaymentMethod(null)}
+                      >
+                        Brasil
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="internacional"
+                        className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white rounded-lg text-base py-3 transition-all duration-300 font-medium"
+                        onClick={() => setPaymentMethod(null)}
+                      >
+                        Internacional
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <TabsContent value="brasil" className="space-y-6 animate-in fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
-                        {
-                          id: 'pix',
-                          name: 'Pix',
-                          description: 'Pagamento instantâneo',
-                          icon: QrCode,
-                        },
-                        {
-                          id: 'boleto',
-                          name: 'Boleto',
-                          description: 'Até 3 dias úteis',
-                          icon: Barcode,
-                        },
-                        {
-                          id: 'cartao',
-                          name: 'Cartão de Crédito',
-                          description: 'Aprovação na hora',
-                          icon: CreditCard,
-                        },
-                      ].map((method) => (
-                        <div
-                          key={method.id}
-                          className={cn(
-                            'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
-                            paymentMethod === method.id
-                              ? 'border-[#B8860B] bg-[#B8860B]/5 ring-2 ring-[#B8860B]/20'
-                              : 'border-transparent bg-secondary/50 hover:bg-[#B8860B]/5',
-                          )}
-                          onClick={() => setPaymentMethod(method.id)}
-                        >
-                          <method.icon
+                    <TabsContent value="brasil" className="space-y-8 animate-in fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        {[
+                          {
+                            id: 'pix',
+                            name: 'Pix',
+                            description: 'Pagamento instantâneo',
+                            icon: QrCode,
+                            colorClass: 'text-[#10B981]',
+                            hoverBg: 'hover:bg-[#10B981]/5',
+                          },
+                          {
+                            id: 'boleto',
+                            name: 'Boleto',
+                            description: 'Até 3 dias úteis',
+                            icon: Barcode,
+                            colorClass: 'text-[#3B82F6]',
+                            hoverBg: 'hover:bg-[#3B82F6]/5',
+                          },
+                          {
+                            id: 'cartao',
+                            name: 'Cartão de Crédito',
+                            description: 'Aprovação na hora',
+                            icon: CreditCard,
+                            colorClass: 'text-[#B8860B]',
+                            hoverBg: 'hover:bg-[#B8860B]/5',
+                          },
+                        ].map((method) => (
+                          <div
+                            key={method.id}
                             className={cn(
-                              'h-10 w-10 mb-2 transition-transform duration-200',
+                              'flex flex-col items-center justify-center p-8 rounded-2xl border-2 cursor-pointer transition-all duration-300 text-center',
                               paymentMethod === method.id
-                                ? 'scale-110 text-[#B8860B]'
-                                : 'scale-100 text-[#1E3A8A]',
+                                ? 'border-[#B8860B] bg-slate-50 shadow-md ring-4 ring-[#B8860B]/10'
+                                : `border-slate-100 bg-white ${method.hoverBg} hover:border-slate-200`,
+                            )}
+                            onClick={() => setPaymentMethod(method.id)}
+                          >
+                            <method.icon
+                              className={cn(
+                                'h-12 w-12 mb-4 transition-transform duration-300',
+                                paymentMethod === method.id
+                                  ? `scale-110 ${method.colorClass}`
+                                  : 'scale-100 text-slate-400',
+                              )}
+                            />
+                            <span className="font-bold text-slate-800 text-lg">{method.name}</span>
+                            <span className="text-sm text-slate-500 mt-2 font-medium">
+                              {method.description}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {paymentMethod === 'pix' && (
+                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center animate-in slide-in-from-top-4">
+                          <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
+                            <QrCode className="h-32 w-32 text-slate-800" />
+                          </div>
+                          <p className="font-bold text-lg text-slate-800">
+                            Escaneie o QR code para pagar
+                          </p>
+                          <p className="text-base text-slate-500 mt-2">
+                            A aprovação é instantânea.
+                          </p>
+                        </div>
+                      )}
+
+                      {paymentMethod === 'boleto' && (
+                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center animate-in slide-in-from-top-4">
+                          <div className="bg-[#3B82F6]/10 p-5 rounded-full mb-6">
+                            <Barcode className="h-16 w-16 text-[#3B82F6]" />
+                          </div>
+                          <p className="font-bold text-lg text-slate-800">
+                            Boleto gerado com sucesso
+                          </p>
+                          <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200 break-all font-mono text-base max-w-full shadow-sm text-slate-600">
+                            00000.00000 00000.000000 00000.000000 0 00000000000000
+                          </div>
+                        </div>
+                      )}
+
+                      {paymentMethod === 'cartao' && (
+                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 space-y-6 animate-in slide-in-from-top-4">
+                          <div className="space-y-3">
+                            <Label className="text-slate-700 font-semibold text-sm">
+                              Número do Cartão
+                            </Label>
+                            <Input
+                              placeholder=""
+                              className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                              <Label className="text-slate-700 font-semibold text-sm">
+                                Validade
+                              </Label>
+                              <Input
+                                placeholder=""
+                                className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <Label className="text-slate-700 font-semibold text-sm">CVV</Label>
+                              <Input
+                                placeholder=""
+                                className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            <Label className="text-slate-700 font-semibold text-sm">
+                              Nome no Cartão
+                            </Label>
+                            <Input
+                              placeholder=""
+                              className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="internacional" className="space-y-8 animate-in fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div
+                          className={cn(
+                            'flex flex-col items-center justify-center p-8 rounded-2xl border-2 cursor-pointer transition-all duration-300 text-center',
+                            paymentMethod === 'stripe'
+                              ? 'border-[#B8860B] bg-slate-50 shadow-md ring-4 ring-[#B8860B]/10'
+                              : 'border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-200',
+                          )}
+                          onClick={() => setPaymentMethod('stripe')}
+                        >
+                          <Globe
+                            className={cn(
+                              'h-12 w-12 mb-4 transition-transform duration-300',
+                              paymentMethod === 'stripe'
+                                ? 'scale-110 text-[#6366F1]'
+                                : 'scale-100 text-slate-400',
                             )}
                           />
-                          <span className="font-medium text-sm">{method.name}</span>
-                          <span className="text-xs text-muted-foreground mt-1">
-                            {method.description}
+                          <span className="font-bold text-slate-800 text-lg">
+                            Cartão de Crédito (Stripe)
+                          </span>
+                          <span className="text-sm text-slate-500 mt-2 font-medium">
+                            Cartão internacional
                           </span>
                         </div>
-                      ))}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Resumo */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-8 border-none shadow-2xl overflow-hidden animate-in slide-in-from-bottom-12 duration-700 bg-gradient-to-br from-[#1E3A8A] to-[#B8860B] rounded-2xl">
+                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
+                <div className="relative z-10">
+                  <CardHeader className="pb-6 pt-8 px-8">
+                    <CardTitle className="text-3xl font-display text-white drop-shadow-md">
+                      Resumo do Pedido
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 px-8">
+                    <div className="flex justify-between items-center py-4 border-b border-white/20">
+                      <span className="text-white/90 text-lg font-medium">
+                        Plano {selectedPlan.name}
+                      </span>
+                      <span className="font-bold text-xl text-white">
+                        R$ {selectedPlan.price.toFixed(2)}
+                      </span>
                     </div>
 
-                    {paymentMethod === 'pix' && (
-                      <div className="p-6 bg-secondary/30 rounded-xl border border-border flex flex-col items-center text-center animate-in slide-in-from-top-4">
-                        <QrCode className="h-32 w-32 text-muted-foreground mb-4" />
-                        <p className="font-medium">Escaneie o QR code para pagar</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          A aprovação é instantânea.
-                        </p>
-                      </div>
-                    )}
-
-                    {paymentMethod === 'boleto' && (
-                      <div className="p-6 bg-secondary/30 rounded-xl border border-border flex flex-col items-center text-center animate-in slide-in-from-top-4">
-                        <Barcode className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="font-medium">Boleto gerado com sucesso</p>
-                        <div className="mt-4 p-3 bg-background rounded-md border border-border break-all font-mono text-sm max-w-full">
-                          00000.00000 00000.000000 00000.000000 0 00000000000000
-                        </div>
-                      </div>
-                    )}
-
-                    {paymentMethod === 'cartao' && (
-                      <div className="p-6 bg-secondary/30 rounded-xl border border-border space-y-4 animate-in slide-in-from-top-4">
-                        <div className="space-y-2">
-                          <Label>Número do Cartão</Label>
-                          <Input placeholder="0000 0000 0000 0000" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Validade</Label>
-                            <Input placeholder="MM/AA" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>CVV</Label>
-                            <Input placeholder="123" />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Nome no Cartão</Label>
-                          <Input placeholder="NOME DO TITULAR" />
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="internacional" className="space-y-6 animate-in fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div
-                        className={cn(
-                          'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
-                          paymentMethod === 'stripe'
-                            ? 'border-[#B8860B] bg-[#B8860B]/5 ring-2 ring-[#B8860B]/20'
-                            : 'border-transparent bg-secondary/50 hover:bg-[#B8860B]/5',
-                        )}
-                        onClick={() => setPaymentMethod('stripe')}
-                      >
-                        <Globe
-                          className={cn(
-                            'h-10 w-10 mb-2 transition-transform duration-200',
-                            paymentMethod === 'stripe'
-                              ? 'scale-110 text-[#B8860B]'
-                              : 'scale-100 text-[#1E3A8A]',
-                          )}
-                        />
-                        <span className="font-medium text-sm">Cartão de Crédito (Stripe)</span>
-                        <span className="text-xs text-muted-foreground mt-1">
-                          Cartão internacional
+                    {appliedCoupon && (
+                      <div className="flex justify-between items-center py-4 border-b border-white/20 text-[#10B981] animate-in slide-in-from-top-2">
+                        <span className="flex items-center font-bold text-lg drop-shadow-sm">
+                          <Tag className="h-5 w-5 mr-2" /> Desconto ({appliedCoupon.code})
+                        </span>
+                        <span className="font-bold text-xl drop-shadow-sm">
+                          - R${' '}
+                          {appliedCoupon.type === 'percent'
+                            ? (selectedPlan.price * (appliedCoupon.discount / 100)).toFixed(2)
+                            : appliedCoupon.discount.toFixed(2)}
                         </span>
                       </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-6 animate-in slide-in-from-bottom-4 duration-500">
+                      <span className="text-2xl font-medium text-white/90">Total</span>
+                      <span className="text-5xl font-extrabold text-white transition-all duration-300 drop-shadow-lg tracking-tight">
+                        R$ {calculateTotal().toFixed(2)}
+                      </span>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24 border-none shadow-xl bg-gradient-to-br from-[#1E3A8A]/5 to-[#B8860B]/5 overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1E3A8A] to-[#B8860B]"></div>
-              <CardHeader>
-                <CardTitle className="text-xl text-[#1E3A8A]">Resumo do Pedido</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-border/50">
-                  <span className="text-muted-foreground">Plano {selectedPlan.name}</span>
-                  <span className="font-medium">R$ {selectedPlan.price.toFixed(2)}</span>
+                    <p className="text-sm text-white/70 text-right font-medium">
+                      Cobrado mensalmente
+                    </p>
+                  </CardContent>
+                  <CardFooter className="p-8 pt-4">
+                    <Button
+                      className={cn(
+                        'w-full py-8 text-xl font-bold transition-all duration-300 rounded-xl relative overflow-hidden group',
+                        !selectedPlan || !paymentMethod
+                          ? 'opacity-50 cursor-not-allowed bg-white/20 text-white hover:bg-white/20'
+                          : 'bg-gradient-to-r from-[#B8860B] to-[#DAA520] hover:opacity-100 shadow-[0_0_20px_rgba(184,134,11,0.5)] hover:shadow-[0_0_35px_rgba(184,134,11,0.8)] text-[#1E3A8A]',
+                      )}
+                      disabled={!selectedPlan || !paymentMethod}
+                      onClick={handleCheckout}
+                    >
+                      {(!selectedPlan || !paymentMethod) && <span>Prosseguir para Pagamento</span>}
+                      {selectedPlan && paymentMethod && (
+                        <>
+                          <span className="relative z-10">Prosseguir para Pagamento</span>
+                          <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
                 </div>
-
-                {appliedCoupon && (
-                  <div className="flex justify-between items-center py-2 border-b border-border/50 text-green-600 animate-in fade-in">
-                    <span className="flex items-center font-medium">
-                      <Tag className="h-3 w-3 mr-1" /> Desconto ({appliedCoupon.code})
-                    </span>
-                    <span className="font-bold">
-                      - R${' '}
-                      {appliedCoupon.type === 'percent'
-                        ? (selectedPlan.price * (appliedCoupon.discount / 100)).toFixed(2)
-                        : appliedCoupon.discount.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-4">
-                  <span className="text-lg font-medium text-[#1E3A8A]">Total</span>
-                  <span className="text-4xl font-bold text-[#B8860B] transition-all duration-300">
-                    R$ {calculateTotal().toFixed(2)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground text-right">Cobrado mensalmente</p>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className={cn(
-                    'w-full py-6 text-lg font-medium text-white transition-all duration-300',
-                    !selectedPlan || !paymentMethod
-                      ? 'opacity-50 cursor-not-allowed bg-gray-400'
-                      : 'bg-gradient-to-r from-[#1E3A8A] to-[#B8860B] hover:opacity-90 shadow-lg hover:shadow-[#B8860B]/20',
-                  )}
-                  disabled={!selectedPlan || !paymentMethod}
-                  onClick={handleCheckout}
-                >
-                  Prosseguir para Pagamento
-                </Button>
-              </CardFooter>
-            </Card>
+              </Card>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
