@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import ProfissionaisClinica from './ProfissionaisClinica'
+import WhatsAppConnection from './WhatsAppConnection'
 
 export default function Settings() {
   const { user } = useAuth()
@@ -202,6 +203,7 @@ export default function Settings() {
           {isProprietario && <TabsTrigger value="clinica">Dados da Clínica</TabsTrigger>}
           <TabsTrigger value="profissionais">Cadastro Profissional</TabsTrigger>
           {isProprietario && <TabsTrigger value="equipe">Equipe Clínica</TabsTrigger>}
+          {isProprietario && <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>}
         </TabsList>
 
         {isProprietario && (
@@ -429,6 +431,12 @@ export default function Settings() {
         {isProprietario && (
           <TabsContent value="equipe">
             <ProfissionaisClinica organizationId={orgId} />
+          </TabsContent>
+        )}
+
+        {isProprietario && (
+          <TabsContent value="whatsapp">
+            <WhatsAppConnection />
           </TabsContent>
         )}
       </Tabs>
