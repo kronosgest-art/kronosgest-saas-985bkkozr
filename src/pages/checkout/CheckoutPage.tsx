@@ -137,7 +137,32 @@ export default function CheckoutPage() {
       description: 'Aguarde enquanto preparamos seu ambiente.',
     })
 
-    if (paymentMethod !== 'stripe') {
+    if (paymentMethod === 'cartao_internacional') {
+      try {
+        const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
+          body: {
+            user_id: user.id,
+            plano: selectedPlan?.name,
+            metodo_pagamento: 'cartao_internacional',
+            cupom_codigo: appliedCoupon?.code || null,
+          },
+        })
+
+        if (error) throw new Error(error.message || 'Erro ao comunicar com o servidor')
+        if (data?.error) throw new Error(data.error)
+
+        if (data?.checkout_url) {
+          window.location.href = data.checkout_url
+        }
+      } catch (err: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro no pagamento',
+          description:
+            err.message || 'Não foi possível gerar a sessão de pagamento. Tente novamente.',
+        })
+      }
+    } else {
       try {
         const { data, error } = await supabase.functions.invoke('gerar-link-infinitypay', {
           body: {
@@ -167,14 +192,6 @@ export default function CheckoutPage() {
             err.message || 'Não foi possível gerar o link de pagamento. Tente novamente.',
         })
       }
-    } else {
-      setTimeout(() => {
-        toast({
-          title: 'Redirecionamento Stripe',
-          description: `Em breve: Integração com Stripe...`,
-          className: 'bg-[#1E3A8A] text-white border-none',
-        })
-      }, 1500)
     }
   }
 
@@ -501,16 +518,16 @@ export default function CheckoutPage() {
                         <div
                           className={cn(
                             'flex flex-col items-center justify-center p-8 rounded-2xl border-2 cursor-pointer transition-all duration-300 text-center',
-                            paymentMethod === 'stripe'
+                            paymentMethod === 'cartao_internacional'
                               ? 'border-[#B8860B] bg-slate-50 shadow-md ring-4 ring-[#B8860B]/10'
                               : 'border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-200',
                           )}
-                          onClick={() => setPaymentMethod('stripe')}
+                          onClick={() => setPaymentMethod('cartao_internacional')}
                         >
                           <Globe
                             className={cn(
                               'h-12 w-12 mb-4 transition-transform duration-300',
-                              paymentMethod === 'stripe'
+                              paymentMethod === 'cartao_internacional'
                                 ? 'scale-110 text-[#6366F1]'
                                 : 'scale-100 text-slate-400',
                             )}

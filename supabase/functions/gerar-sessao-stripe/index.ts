@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import Stripe from 'npm:stripe@14.20.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,6 +60,13 @@ Deno.serve(async (req: Request) => {
       })
     }
 
+    if (metodo_pagamento !== 'cartao_internacional' && metodo_pagamento !== 'stripe') {
+      return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const planosPrecos: Record<string, number> = {
       Starter: 49,
       Professional: 199,
@@ -76,7 +84,6 @@ Deno.serve(async (req: Request) => {
     let precoFinal = precoOriginal
     let desconto = 0
 
-    // Using service role client to fetch coupons if RLS prevents anon reads
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -122,97 +129,73 @@ Deno.serve(async (req: Request) => {
       precoFinal = Math.max(0, precoOriginal - desconto)
     }
 
-    const timestamp = Date.now()
-    const order_nsu = `kronos-${user_id}-${timestamp}`
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY não configurada no servidor.')
+    }
 
-    const infiniteTag = Deno.env.get('INFINITEPAY_HANDLE') || 'kronosgest'
-    const infinitepayApiKey = Deno.env.get('INFINITEPAY_API_KEY') || 'mock_key_for_test'
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2024-06-20',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
+
     const priceInCents = Math.round(precoFinal * 100)
-
-    let checkout_url = ''
+    let session: Stripe.Checkout.Session | null = null
     let attempt = 0
     const delays = [2000, 4000, 8000]
-    let apiSuccess = false
 
-    while (!apiSuccess) {
+    while (!session) {
       try {
-        const response = await fetch('https://api.checkout.infinitepay.io/links', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${infinitepayApiKey}`,
+        session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'brl',
+                product_data: {
+                  name: `Assinatura Plano ${plano}`,
+                },
+                unit_amount: priceInCents,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: `https://kronosgest.com.br/checkout-sucesso?order_nsu={CHECKOUT_SESSION_ID}`,
+          cancel_url: `https://kronosgest.com.br/checkout`,
+          customer_email: user.email,
+          metadata: {
+            user_id,
+            plano,
+            cupom_aplicado: cupom_codigo || '',
           },
-          body: JSON.stringify({
-            handle: infiniteTag,
-            items: [
-              {
-                quantity: 1,
-                price: priceInCents,
-                description: `Assinatura Plano ${plano}`,
-              },
-            ],
-            order_nsu: order_nsu,
-            redirect_url: `https://kronosgest.com.br/checkout-sucesso?order_nsu=${order_nsu}`,
-            webhook_url: `https://kronosgest.com.br/api/webhook-infinitypay`,
-          }),
         })
-
-        if (response.status === 503 && attempt < delays.length) {
-          console.log(`Infinitypay retornou 503. Tentando em ${delays[attempt]}ms...`)
-          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
+      } catch (err: any) {
+        if (err.statusCode === 503 && attempt < delays.length) {
+          console.log(`Stripe retornou 503. Tentando em ${delays[attempt]}ms...`)
+          await new Promise((r) => setTimeout(r, delays[attempt]))
           attempt++
           continue
         }
-
-        if (!response.ok) {
-          const errText = await response.text()
-          console.error(`Erro da API Infinitypay (${response.status}):`, errText)
-          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-            return new Response(
-              JSON.stringify({ error: 'Erro ao gerar o link com a Infinitypay.' }),
-              {
-                status: response.status,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              },
-            )
-          }
-          if (attempt < delays.length) {
-            await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
-            attempt++
-            continue
-          }
-          throw new Error('Falha contínua de comunicação com a Infinitypay.')
-        }
-
-        const apiResponseData = await response.json()
-        checkout_url =
-          apiResponseData.checkout_url ||
-          apiResponseData.url ||
-          `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
-        apiSuccess = true
-      } catch (err) {
-        if (attempt < delays.length) {
-          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
-          attempt++
-          continue
-        }
-        console.error(
-          'Falha de conexão com Infinitypay, gerando link mockado para demonstração.',
-          err,
+        console.error('Stripe API error:', err)
+        return new Response(
+          JSON.stringify({ error: 'Erro ao comunicar com o processador de pagamentos Stripe.' }),
+          {
+            status: err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
         )
-        checkout_url = `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
-        apiSuccess = true
       }
     }
 
-    // Inserir registro na tabela pagamentos
+    // Registra na tabela pagamentos usando o session.id como order_nsu para compatibilidade com o fluxo atual
     const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
       user_id,
       plano,
       valor: precoFinal,
-      order_nsu,
+      order_nsu: session.id,
       status: 'pendente',
-      metodo_pagamento,
+      metodo_pagamento: 'cartao_internacional',
       cupom_aplicado: cupom_codigo || null,
     })
 
@@ -220,7 +203,7 @@ Deno.serve(async (req: Request) => {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
-    return new Response(JSON.stringify({ checkout_url }), {
+    return new Response(JSON.stringify({ session_id: session.id, checkout_url: session.url }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
