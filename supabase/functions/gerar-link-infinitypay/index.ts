@@ -25,12 +25,15 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.replace('Bearer ', '')
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    
+
     const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseUserClient.auth.getUser()
 
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
@@ -57,9 +60,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const planosPrecos: Record<string, number> = {
-      'Starter': 49,
-      'Professional': 199,
-      'Enterprise': 499
+      Starter: 49,
+      Professional: 199,
+      Enterprise: 499,
     }
 
     if (!planosPrecos[plano]) {
@@ -84,34 +87,38 @@ Deno.serve(async (req: Request) => {
         .eq('codigo', cupom_codigo.toUpperCase())
         .eq('status', 'ativo')
         .single()
-        
+
       if (cupomError || !cupom) {
         return new Response(JSON.stringify({ error: 'Cupom inválido ou inativo.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
+
       if (new Date(cupom.data_fim) < new Date()) {
         return new Response(JSON.stringify({ error: 'O cupom informado está expirado.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
-      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
+
+      if (
+        cupom.uso_atual !== null &&
+        cupom.uso_maximo !== null &&
+        cupom.uso_atual >= cupom.uso_maximo
+      ) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
+
       if (cupom.desconto_percentual) {
         desconto = precoOriginal * (cupom.desconto_percentual / 100)
       } else if (cupom.desconto_fixo) {
         desconto = cupom.desconto_fixo
       }
-      
+
       precoFinal = Math.max(0, precoOriginal - desconto)
     }
 
@@ -133,7 +140,7 @@ Deno.serve(async (req: Request) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${infinitepayApiKey}`
+            Authorization: `Bearer ${infinitepayApiKey}`,
           },
           body: JSON.stringify({
             handle: infiniteTag,
@@ -141,33 +148,36 @@ Deno.serve(async (req: Request) => {
               {
                 quantity: 1,
                 price: priceInCents,
-                description: `Assinatura Plano ${plano}`
-              }
+                description: `Assinatura Plano ${plano}`,
+              },
             ],
             order_nsu: order_nsu,
             redirect_url: `https://kronosgest.com.br/checkout-sucesso?order_nsu=${order_nsu}`,
-            webhook_url: `https://kronosgest.com.br/api/webhook-infinitypay`
-          })
+            webhook_url: `https://kronosgest.com.br/api/webhook-infinitypay`,
+          }),
         })
 
         if (response.status === 503 && attempt < delays.length) {
           console.log(`Infinitypay retornou 503. Tentando em ${delays[attempt]}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
           attempt++
           continue
         }
-        
+
         if (!response.ok) {
           const errText = await response.text()
           console.error(`Erro da API Infinitypay (${response.status}):`, errText)
           if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-            return new Response(JSON.stringify({ error: 'Erro ao gerar o link com a Infinitypay.' }), {
-              status: response.status,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
+            return new Response(
+              JSON.stringify({ error: 'Erro ao gerar o link com a Infinitypay.' }),
+              {
+                status: response.status,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            )
           }
           if (attempt < delays.length) {
-            await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+            await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
             attempt++
             continue
           }
@@ -175,50 +185,53 @@ Deno.serve(async (req: Request) => {
         }
 
         const apiResponseData = await response.json()
-        checkout_url = apiResponseData.checkout_url || apiResponseData.url || `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
+        checkout_url =
+          apiResponseData.checkout_url ||
+          apiResponseData.url ||
+          `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
         apiSuccess = true
       } catch (err) {
         if (attempt < delays.length) {
-          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
           attempt++
           continue
         }
-        console.error('Falha de conexão com Infinitypay, gerando link mockado para demonstração.', err)
+        console.error(
+          'Falha de conexão com Infinitypay, gerando link mockado para demonstração.',
+          err,
+        )
         checkout_url = `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
-        apiSuccess = true 
+        apiSuccess = true
       }
     }
-    
+
     // Inserir registro na tabela pagamentos
-    const { error: pagamentoError } = await supabaseAdmin
-      .from('pagamentos')
-      .insert({
-        user_id,
-        plano,
-        valor: precoFinal,
-        order_nsu,
-        status: 'pendente',
-        metodo_pagamento,
-        cupom_aplicado: cupom_codigo || null
-      })
+    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
+      user_id,
+      plano,
+      valor: precoFinal,
+      order_nsu,
+      status: 'pendente',
+      metodo_pagamento,
+      cupom_aplicado: cupom_codigo || null,
+    })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
+    return new Response(JSON.stringify({ checkout_url }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error: any) {
+    console.error('Erro inesperado na edge function:', error)
     return new Response(
-      JSON.stringify({ checkout_url }),
+      JSON.stringify({ error: 'Ocorreu um erro interno ao processar a solicitação.' }),
       {
-        status: 200,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     )
-
-  } catch (error: any) {
-    console.error('Erro inesperado na edge function:', error)
-    return new Response(JSON.stringify({ error: 'Ocorreu um erro interno ao processar a solicitação.' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
   }
 })

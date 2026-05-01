@@ -34,6 +34,7 @@ import PatientDashboard from '@/pages/patient/PatientDashboard'
 import PatientDocuments from '@/pages/patient/PatientDocuments'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
 import CheckoutPage from '@/pages/checkout/CheckoutPage'
+import CheckoutSuccessPage from '@/pages/checkout/CheckoutSuccessPage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
 import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
 import Subscribers from '@/pages/admin/Subscribers'
@@ -57,6 +58,7 @@ const App = () => (
 
           {/* Public Checkout Route */}
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/checkout-sucesso" element={<CheckoutSuccessPage />} />
 
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
