@@ -10,6 +10,7 @@
     "gerarSugestaoPrescricao": 8,
     "sync-to-google-calendar": 4,
     "create-profissional": 4,
-    "whatsapp-webhook": 5
+    "whatsapp-webhook": 5,
+    "gerar-link-infinitypay": 1
   }
 }

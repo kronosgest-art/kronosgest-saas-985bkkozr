@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Check, Tag, QrCode, Barcode, CreditCard, Globe, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 const plans = [
   {
@@ -53,6 +54,7 @@ export default function CheckoutPage() {
 
   const { toast } = useToast()
   const section2Ref = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000)
@@ -119,20 +121,61 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Autenticação necessária',
+        description: 'Faça login ou crie uma conta para prosseguir com o pagamento.',
+      })
+      // Em um fluxo real, redirecionaria para criar conta / login
+      return
+    }
+
     toast({
       title: 'Processando pagamento...',
       description: 'Aguarde enquanto preparamos seu ambiente.',
     })
 
-    setTimeout(() => {
-      const gateway = paymentMethod === 'stripe' ? 'Stripe' : 'Infinitypay'
-      toast({
-        title: 'Redirecionamento',
-        description: `Redirecionando para a Edge Function de pagamento via ${gateway}...`,
-        className: 'bg-[#1E3A8A] text-white border-none',
-      })
-    }, 1500)
+    if (paymentMethod !== 'stripe') {
+      try {
+        const { data, error } = await supabase.functions.invoke('gerar-link-infinitypay', {
+          body: {
+            user_id: user.id,
+            plano: selectedPlan?.name,
+            metodo_pagamento: paymentMethod,
+            cupom_codigo: appliedCoupon?.code || null,
+          },
+        })
+
+        if (error) {
+          throw new Error(error.message || 'Erro ao comunicar com o servidor')
+        }
+
+        if (data?.error) {
+          throw new Error(data.error)
+        }
+
+        if (data?.checkout_url) {
+          window.location.href = data.checkout_url
+        }
+      } catch (err: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro no pagamento',
+          description:
+            err.message || 'Não foi possível gerar o link de pagamento. Tente novamente.',
+        })
+      }
+    } else {
+      setTimeout(() => {
+        toast({
+          title: 'Redirecionamento Stripe',
+          description: `Em breve: Integração com Stripe...`,
+          className: 'bg-[#1E3A8A] text-white border-none',
+        })
+      }, 1500)
+    }
   }
 
   const calculateTotal = () => {
