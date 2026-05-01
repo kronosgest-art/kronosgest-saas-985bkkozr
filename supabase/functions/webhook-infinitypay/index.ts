@@ -17,11 +17,16 @@ Deno.serve(async (req: Request) => {
     const reqData = await req.json()
     const { invoice_slug, order_nsu, status, amount, capture_method } = reqData
 
-    if (!invoice_slug || !order_nsu || !status || amount === undefined || !capture_method) {
+    if (
+      !invoice_slug ||
+      !order_nsu ||
+      !status ||
+      amount === undefined ||
+      !capture_method
+    ) {
       return new Response(
         JSON.stringify({
-          error:
-            'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
+          error: 'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
         }),
         {
           status: 400,
@@ -81,7 +86,7 @@ Deno.serve(async (req: Request) => {
           tokens_restantes: qtdTokens,
           expira_em: expiraEm.toISOString(),
           status: 'ativo',
-          metodo_pagamento: pagamento.metodo_pagamento,
+          metodo_pagamento: pagamento.metodo_pagamento
         })
 
         if (tokenError) {

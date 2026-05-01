@@ -4,8 +4,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -18,10 +17,10 @@ Deno.serve(async (req: Request) => {
     const { stripe_session_id, status, amount, customer_email } = body
 
     if (!stripe_session_id || !status || amount === undefined || !customer_email) {
-      return new Response(JSON.stringify({ error: 'Campos obrigatórios ausentes' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Campos obrigatórios ausentes' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
@@ -37,10 +36,10 @@ Deno.serve(async (req: Request) => {
 
     if (pagError || !pagamento) {
       console.error('Sessão não encontrada:', stripe_session_id)
-      return new Response(JSON.stringify({ error: 'Sessão não encontrada' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Sessão não encontrada' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     if (status === 'pago') {
@@ -71,8 +70,9 @@ Deno.serve(async (req: Request) => {
       const resetEm = new Date()
       resetEm.setMonth(resetEm.getMonth() + 1)
 
-      const { error: tokensError } = await supabase.from('tokens_inclusos').upsert(
-        {
+      const { error: tokensError } = await supabase
+        .from('tokens_inclusos')
+        .upsert({
           user_id: pagamento.user_id,
           plano: plano,
           tokens_whatsapp_limite,
@@ -80,10 +80,8 @@ Deno.serve(async (req: Request) => {
           mes_ano: mesAno,
           reset_em: resetEm.toISOString(),
           tokens_whatsapp_usado: 0,
-          tokens_prescricoes_usado: 0,
-        },
-        { onConflict: 'user_id,mes_ano' },
-      )
+          tokens_prescricoes_usado: 0
+        }, { onConflict: 'user_id,mes_ano' })
 
       if (tokensError) {
         console.error('Erro ao criar tokens:', tokensError)
@@ -96,7 +94,7 @@ Deno.serve(async (req: Request) => {
           .select('id, uso_atual')
           .eq('codigo', pagamento.cupom_aplicado)
           .single()
-
+        
         if (cupom) {
           await supabase
             .from('cupons')
@@ -105,10 +103,10 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      return new Response(JSON.stringify({ message: 'Pagamento processado com sucesso' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ message: 'Pagamento processado com sucesso' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     if (status === 'cancelado') {
@@ -119,28 +117,29 @@ Deno.serve(async (req: Request) => {
 
       if (updatePagError) throw updatePagError
 
-      return new Response(JSON.stringify({ message: 'Pagamento processado com sucesso' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ message: 'Pagamento processado com sucesso' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     if (status === 'pendente') {
-      return new Response(JSON.stringify({ message: 'Pagamento processado com sucesso' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ message: 'Pagamento processado com sucesso' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    return new Response(JSON.stringify({ message: 'Status não mapeado, ignorado' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ message: 'Status não mapeado, ignorado' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
   } catch (error: any) {
     console.error('Erro no webhook:', error)
-    return new Response(JSON.stringify({ error: 'Erro ao processar pagamento' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ error: 'Erro ao processar pagamento' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 })
