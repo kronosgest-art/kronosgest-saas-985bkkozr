@@ -21,30 +21,19 @@ const plans = [
     id: 'starter',
     name: 'Starter',
     price: 49,
-    benefits: ['Até 500 respostas WhatsApp/mês', 'Até 50 prescrições/mês', '1 Profissional'],
+    benefits: ['30 respostas WhatsApp/mês', '5 prescrições/mês', '1 profissional'],
   },
   {
     id: 'professional',
     name: 'Professional',
     price: 199,
-    benefits: [
-      'Até 2000 respostas WhatsApp/mês',
-      'Até 300 prescrições/mês',
-      'Até 3 Profissionais',
-      'Suporte Prioritário',
-    ],
+    benefits: ['300 respostas WhatsApp/mês', '50 prescrições/mês', '3 profissionais'],
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     price: 499,
-    benefits: [
-      'Respostas WhatsApp Ilimitadas',
-      'Prescrições Ilimitadas',
-      'Profissionais Ilimitados',
-      'Gerente de Conta Dedicado',
-      'Integração Personalizada',
-    ],
+    benefits: ['1000 respostas WhatsApp/mês', '200 prescrições/mês', 'Profissionais ilimitados'],
   },
 ]
 
@@ -88,8 +77,8 @@ export default function CheckoutPage() {
         .single()
 
       if (error || !data) {
-        if (couponInput.toUpperCase() === 'DESCONTO20') {
-          setAppliedCoupon({ code: 'DESCONTO20', discount: 20, type: 'percent' })
+        if (couponInput.toUpperCase() === 'PROMO20') {
+          setAppliedCoupon({ code: 'PROMO20', discount: 20, type: 'percent' })
           toast({
             title: 'Cupom aplicado!',
             description: 'Você ganhou 20% de desconto.',
@@ -108,7 +97,7 @@ export default function CheckoutPage() {
       }
 
       if (new Date(data.data_fim) < new Date()) {
-        setError('Este cupom já expirou.')
+        setError('Cupom inválido ou expirado.')
         return
       }
 
@@ -253,7 +242,7 @@ export default function CheckoutPage() {
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       className="pl-9 transition-colors focus-visible:ring-[#B8860B]"
-                      placeholder="Ex: DESCONTO20"
+                      placeholder="Ex: PROMO20"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                     />
@@ -266,7 +255,19 @@ export default function CheckoutPage() {
                     Aplicar Cupom
                   </Button>
                 </div>
-                {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+                {error && (
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-sm text-destructive">{error}</p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-[#1E3A8A] p-0 h-auto"
+                      onClick={applyCoupon}
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
                 {appliedCoupon && (
                   <p className="text-sm text-green-600 mt-2 font-medium flex items-center animate-in fade-in">
                     <Check className="h-4 w-4 mr-1" /> Cupom {appliedCoupon.code} aplicado com
@@ -304,6 +305,7 @@ export default function CheckoutPage() {
                         {
                           id: 'pix',
                           name: 'Pix',
+                          description: 'Pagamento instantâneo',
                           icon: QrCode,
                           color: 'text-[#10B981]',
                           bgHover: 'hover:bg-[#10B981]/5',
@@ -312,6 +314,7 @@ export default function CheckoutPage() {
                         {
                           id: 'boleto',
                           name: 'Boleto',
+                          description: 'Até 3 dias úteis',
                           icon: Barcode,
                           color: 'text-[#3B82F6]',
                           bgHover: 'hover:bg-[#3B82F6]/5',
@@ -320,6 +323,7 @@ export default function CheckoutPage() {
                         {
                           id: 'cartao',
                           name: 'Cartão de Crédito',
+                          description: 'Aprovação na hora',
                           icon: CreditCard,
                           color: 'text-[#B8860B]',
                           bgHover: 'hover:bg-[#B8860B]/5',
@@ -329,7 +333,7 @@ export default function CheckoutPage() {
                         <div
                           key={method.id}
                           className={cn(
-                            'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                            'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
                             paymentMethod === method.id
                               ? method.borderActive
                               : `border-transparent bg-secondary/50 ${method.bgHover}`,
@@ -338,12 +342,15 @@ export default function CheckoutPage() {
                         >
                           <method.icon
                             className={cn(
-                              'h-12 w-12 mb-3 transition-transform duration-200',
+                              'h-10 w-10 mb-2 transition-transform duration-200',
                               method.color,
                               paymentMethod === method.id ? 'scale-110' : 'scale-100',
                             )}
                           />
-                          <span className="font-medium text-sm text-center">{method.name}</span>
+                          <span className="font-medium text-sm">{method.name}</span>
+                          <span className="text-xs text-muted-foreground mt-1">
+                            {method.description}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -353,7 +360,7 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div
                         className={cn(
-                          'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                          'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
                           paymentMethod === 'stripe'
                             ? 'border-[#635BFF] bg-[#635BFF]/5 ring-2 ring-[#635BFF]/20'
                             : 'border-transparent bg-secondary/50 hover:bg-[#635BFF]/5',
@@ -362,12 +369,13 @@ export default function CheckoutPage() {
                       >
                         <Globe
                           className={cn(
-                            'h-12 w-12 mb-3 transition-transform duration-200 text-[#635BFF]',
+                            'h-10 w-10 mb-2 transition-transform duration-200 text-[#635BFF]',
                             paymentMethod === 'stripe' ? 'scale-110' : 'scale-100',
                           )}
                         />
-                        <span className="font-medium text-sm text-center">
-                          Cartão de Crédito (Stripe)
+                        <span className="font-medium text-sm">Cartão de Crédito (Stripe)</span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          Cartão internacional
                         </span>
                       </div>
                     </div>
@@ -391,10 +399,10 @@ export default function CheckoutPage() {
 
                 {appliedCoupon && (
                   <div className="flex justify-between items-center py-2 border-b border-border/50 text-green-600 animate-in fade-in">
-                    <span className="flex items-center">
+                    <span className="flex items-center font-medium">
                       <Tag className="h-3 w-3 mr-1" /> Desconto ({appliedCoupon.code})
                     </span>
-                    <span>
+                    <span className="font-bold">
                       - R${' '}
                       {appliedCoupon.type === 'percent'
                         ? (selectedPlan.price * (appliedCoupon.discount / 100)).toFixed(2)
@@ -405,7 +413,7 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between items-center pt-4">
                   <span className="text-lg font-medium text-[#1E3A8A]">Total</span>
-                  <span className="text-3xl font-bold text-[#B8860B] transition-all duration-300">
+                  <span className="text-4xl font-bold text-[#B8860B] transition-all duration-300">
                     R$ {calculateTotal().toFixed(2)}
                   </span>
                 </div>
