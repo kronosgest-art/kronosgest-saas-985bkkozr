@@ -54,6 +54,10 @@ const App = () => (
           <Route path="/login/paciente" element={<PatientLogin />} />
           <Route path="/patient-login" element={<Navigate to="/login/paciente" replace />} />
           <Route path="/patient-dashboard" element={<PatientDashboard />} />
+
+          {/* Public Checkout Route */}
+          <Route path="/checkout" element={<CheckoutPage />} />
+
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/consultation" element={<ConsultationWizard />} />
@@ -66,7 +70,6 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/anamnesis-templates" element={<AnamneseTemplates />} />
             <Route path="/upgrade" element={<UpgradePage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/admin/manage-free-access" element={<ManageFreeAccess />} />
             <Route path="/admin/dashboard" element={<AdminDashboardSaaS />} />
             <Route path="/admin/subscribers" element={<Subscribers />} />
