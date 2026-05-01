@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Check, Tag, QrCode, Barcode, CreditCard, Globe, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -87,7 +88,7 @@ export default function CheckoutPage() {
           setError(null)
           return
         }
-        setError('Cupom inválido ou expirado.')
+        setError('Cupom inválido ou expirado')
         toast({
           variant: 'destructive',
           title: 'Erro',
@@ -97,7 +98,7 @@ export default function CheckoutPage() {
       }
 
       if (new Date(data.data_fim) < new Date()) {
-        setError('Cupom inválido ou expirado.')
+        setError('Cupom inválido ou expirado')
         return
       }
 
@@ -114,7 +115,7 @@ export default function CheckoutPage() {
       })
     } catch (err) {
       console.error(err)
-      setError('Erro ao validar cupom.')
+      setError('Erro ao validar cupom')
     }
   }
 
@@ -123,13 +124,16 @@ export default function CheckoutPage() {
       title: 'Processando pagamento...',
       description: 'Aguarde enquanto preparamos seu ambiente.',
     })
+
+    // Simulate redirection to Edge Function
     setTimeout(() => {
+      const gateway = paymentMethod === 'stripe' ? 'Stripe' : 'Infinitypay'
       toast({
-        title: 'Sucesso!',
-        description: 'Plano assinado com sucesso. Bem-vindo ao KronosGest!',
-        className: 'bg-green-500 text-white border-none',
+        title: 'Redirecionamento',
+        description: `Redirecionando para a Edge Function de pagamento via ${gateway}...`,
+        className: 'bg-[#1E3A8A] text-white border-none',
       })
-    }, 2000)
+    }, 1500)
   }
 
   const calculateTotal = () => {
@@ -146,8 +150,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-12">
+    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-12 pb-24">
+      {/* Header com Nome da Marca */}
       <div className="text-center space-y-4 animate-in fade-in duration-500">
+        <h2 className="text-2xl font-bold tracking-wider text-[#1E3A8A] uppercase">Kronos Gest</h2>
         <h1 className="text-4xl font-bold text-[#B8860B]">Escolha seu Plano</h1>
         <p className="text-lg text-[#3B82F6]">Potencialize sua clínica com a melhor tecnologia</p>
       </div>
@@ -161,7 +167,7 @@ export default function CheckoutPage() {
               <Card
                 key={plan.id}
                 className={cn(
-                  'relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer animate-in fade-in slide-in-from-bottom-4',
+                  'relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer animate-in fade-in slide-in-from-bottom-4 flex flex-col',
                   selectedPlan?.id === plan.id
                     ? 'border-2 border-[#B8860B] shadow-lg ring-4 ring-[#B8860B]/20'
                     : 'border border-border',
@@ -181,7 +187,7 @@ export default function CheckoutPage() {
                     <span className="text-muted-foreground">/mês</span>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 flex-1">
                   <ul className="space-y-3">
                     {plan.benefits.map((benefit, j) => (
                       <li key={j} className="flex items-start text-sm text-muted-foreground">
@@ -232,9 +238,7 @@ export default function CheckoutPage() {
             <Card className="border-border/50 shadow-sm transition-all duration-300 hover:shadow-md">
               <CardHeader>
                 <CardTitle className="text-xl text-[#1E3A8A]">Cupom de Desconto</CardTitle>
-                <CardDescription>
-                  Tem um cupom? Insira abaixo para aplicar ao seu pedido.
-                </CardDescription>
+                <CardDescription>Tem um cupom?</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -242,7 +246,6 @@ export default function CheckoutPage() {
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       className="pl-9 transition-colors focus-visible:ring-[#B8860B]"
-                      placeholder="Ex: PROMO20"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                     />
@@ -257,7 +260,7 @@ export default function CheckoutPage() {
                 </div>
                 {error && (
                   <div className="mt-2 flex items-center justify-between">
-                    <p className="text-sm text-destructive">{error}</p>
+                    <p className="text-sm text-destructive font-medium">{error}</p>
                     <Button
                       variant="link"
                       size="sm"
@@ -288,18 +291,20 @@ export default function CheckoutPage() {
                     <TabsTrigger
                       value="brasil"
                       className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white"
+                      onClick={() => setPaymentMethod(null)}
                     >
                       Brasil
                     </TabsTrigger>
                     <TabsTrigger
                       value="internacional"
                       className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white"
+                      onClick={() => setPaymentMethod(null)}
                     >
                       Internacional
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="brasil" className="space-y-4 animate-in fade-in">
+                  <TabsContent value="brasil" className="space-y-6 animate-in fade-in">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       {[
                         {
@@ -307,27 +312,18 @@ export default function CheckoutPage() {
                           name: 'Pix',
                           description: 'Pagamento instantâneo',
                           icon: QrCode,
-                          color: 'text-[#10B981]',
-                          bgHover: 'hover:bg-[#10B981]/5',
-                          borderActive: 'border-[#10B981] bg-[#10B981]/5 ring-2 ring-[#10B981]/20',
                         },
                         {
                           id: 'boleto',
                           name: 'Boleto',
                           description: 'Até 3 dias úteis',
                           icon: Barcode,
-                          color: 'text-[#3B82F6]',
-                          bgHover: 'hover:bg-[#3B82F6]/5',
-                          borderActive: 'border-[#3B82F6] bg-[#3B82F6]/5 ring-2 ring-[#3B82F6]/20',
                         },
                         {
                           id: 'cartao',
                           name: 'Cartão de Crédito',
                           description: 'Aprovação na hora',
                           icon: CreditCard,
-                          color: 'text-[#B8860B]',
-                          bgHover: 'hover:bg-[#B8860B]/5',
-                          borderActive: 'border-[#B8860B] bg-[#B8860B]/5 ring-2 ring-[#B8860B]/20',
                         },
                       ].map((method) => (
                         <div
@@ -335,16 +331,17 @@ export default function CheckoutPage() {
                           className={cn(
                             'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
                             paymentMethod === method.id
-                              ? method.borderActive
-                              : `border-transparent bg-secondary/50 ${method.bgHover}`,
+                              ? 'border-[#B8860B] bg-[#B8860B]/5 ring-2 ring-[#B8860B]/20'
+                              : 'border-transparent bg-secondary/50 hover:bg-[#B8860B]/5',
                           )}
                           onClick={() => setPaymentMethod(method.id)}
                         >
                           <method.icon
                             className={cn(
                               'h-10 w-10 mb-2 transition-transform duration-200',
-                              method.color,
-                              paymentMethod === method.id ? 'scale-110' : 'scale-100',
+                              paymentMethod === method.id
+                                ? 'scale-110 text-[#B8860B]'
+                                : 'scale-100 text-[#1E3A8A]',
                             )}
                           />
                           <span className="font-medium text-sm">{method.name}</span>
@@ -354,23 +351,68 @@ export default function CheckoutPage() {
                         </div>
                       ))}
                     </div>
+
+                    {paymentMethod === 'pix' && (
+                      <div className="p-6 bg-secondary/30 rounded-xl border border-border flex flex-col items-center text-center animate-in slide-in-from-top-4">
+                        <QrCode className="h-32 w-32 text-muted-foreground mb-4" />
+                        <p className="font-medium">Escaneie o QR code para pagar</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          A aprovação é instantânea.
+                        </p>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'boleto' && (
+                      <div className="p-6 bg-secondary/30 rounded-xl border border-border flex flex-col items-center text-center animate-in slide-in-from-top-4">
+                        <Barcode className="h-16 w-16 text-muted-foreground mb-4" />
+                        <p className="font-medium">Boleto gerado com sucesso</p>
+                        <div className="mt-4 p-3 bg-background rounded-md border border-border break-all font-mono text-sm max-w-full">
+                          00000.00000 00000.000000 00000.000000 0 00000000000000
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'cartao' && (
+                      <div className="p-6 bg-secondary/30 rounded-xl border border-border space-y-4 animate-in slide-in-from-top-4">
+                        <div className="space-y-2">
+                          <Label>Número do Cartão</Label>
+                          <Input placeholder="0000 0000 0000 0000" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Validade</Label>
+                            <Input placeholder="MM/AA" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>CVV</Label>
+                            <Input placeholder="123" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nome no Cartão</Label>
+                          <Input placeholder="NOME DO TITULAR" />
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
 
-                  <TabsContent value="internacional" className="space-y-4 animate-in fade-in">
+                  <TabsContent value="internacional" className="space-y-6 animate-in fade-in">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div
                         className={cn(
                           'flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center',
                           paymentMethod === 'stripe'
-                            ? 'border-[#635BFF] bg-[#635BFF]/5 ring-2 ring-[#635BFF]/20'
-                            : 'border-transparent bg-secondary/50 hover:bg-[#635BFF]/5',
+                            ? 'border-[#B8860B] bg-[#B8860B]/5 ring-2 ring-[#B8860B]/20'
+                            : 'border-transparent bg-secondary/50 hover:bg-[#B8860B]/5',
                         )}
                         onClick={() => setPaymentMethod('stripe')}
                       >
                         <Globe
                           className={cn(
-                            'h-10 w-10 mb-2 transition-transform duration-200 text-[#635BFF]',
-                            paymentMethod === 'stripe' ? 'scale-110' : 'scale-100',
+                            'h-10 w-10 mb-2 transition-transform duration-200',
+                            paymentMethod === 'stripe'
+                              ? 'scale-110 text-[#B8860B]'
+                              : 'scale-100 text-[#1E3A8A]',
                           )}
                         />
                         <span className="font-medium text-sm">Cartão de Crédito (Stripe)</span>
