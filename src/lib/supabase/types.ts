@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -33,11 +39,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'abas_crm_etiqueta_id_fkey'
-            columns: ['etiqueta_id']
+            foreignKeyName: "abas_crm_etiqueta_id_fkey"
+            columns: ["etiqueta_id"]
             isOneToOne: false
-            referencedRelation: 'etiquetas'
-            referencedColumns: ['id']
+            referencedRelation: "etiquetas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -110,18 +116,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'agendamentos_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "agendamentos_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agendamentos_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "agendamentos_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -158,18 +164,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'anamnese_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "anamnese_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'anamnese_template_id_fkey'
-            columns: ['template_id']
+            foreignKeyName: "anamnese_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: 'anamnese_templates'
-            referencedColumns: ['template_id']
+            referencedRelation: "anamnese_templates"
+            referencedColumns: ["template_id"]
           },
         ]
       }
@@ -266,60 +272,82 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'consultas_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "consultas_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
-      credit_purchases: {
+      creditos_usuario: {
         Row: {
-          created_at: string
-          credits_amount: number
+          created_at: string | null
           id: string
-          organization_id: string | null
-          package_name: string
-          payment_method: string | null
-          price: number
-          status: string
-          updated_at: string
-          user_id: string | null
+          saldo_creditos: number | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          created_at?: string
-          credits_amount: number
+          created_at?: string | null
           id?: string
-          organization_id?: string | null
-          package_name: string
-          payment_method?: string | null
-          price: number
-          status?: string
-          updated_at?: string
-          user_id?: string | null
+          saldo_creditos?: number | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          created_at?: string
-          credits_amount?: number
+          created_at?: string | null
           id?: string
-          organization_id?: string | null
-          package_name?: string
-          payment_method?: string | null
-          price?: number
-          status?: string
-          updated_at?: string
-          user_id?: string | null
+          saldo_creditos?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: 'credit_purchases_organization_id_fkey'
-            columns: ['organization_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
+      }
+      cupons: {
+        Row: {
+          codigo: string
+          created_at: string | null
+          criado_por: string
+          data_fim: string
+          data_inicio: string
+          desconto_fixo: number | null
+          desconto_percentual: number | null
+          id: string
+          planos_validos: string[]
+          status: string | null
+          uso_atual: number | null
+          uso_maximo: number
+        }
+        Insert: {
+          codigo: string
+          created_at?: string | null
+          criado_por: string
+          data_fim: string
+          data_inicio: string
+          desconto_fixo?: number | null
+          desconto_percentual?: number | null
+          id?: string
+          planos_validos: string[]
+          status?: string | null
+          uso_atual?: number | null
+          uso_maximo: number
+        }
+        Update: {
+          codigo?: string
+          created_at?: string | null
+          criado_por?: string
+          data_fim?: string
+          data_inicio?: string
+          desconto_fixo?: number | null
+          desconto_percentual?: number | null
+          id?: string
+          planos_validos?: string[]
+          status?: string | null
+          uso_atual?: number | null
+          uso_maximo?: number
+        }
+        Relationships: []
       }
       despesas: {
         Row: {
@@ -375,11 +403,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'despesas_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "despesas_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -449,13 +477,55 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'exames_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "exames_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      indicacoes: {
+        Row: {
+          comissao_20_porcento: number
+          created_at: string | null
+          data_compra: string | null
+          data_indicacao: string | null
+          data_pagamento: string | null
+          id: string
+          indicado_id: string
+          indicador_id: string
+          plano_comprado: string
+          status: string | null
+          valor_venda: number
+        }
+        Insert: {
+          comissao_20_porcento: number
+          created_at?: string | null
+          data_compra?: string | null
+          data_indicacao?: string | null
+          data_pagamento?: string | null
+          id?: string
+          indicado_id: string
+          indicador_id: string
+          plano_comprado: string
+          status?: string | null
+          valor_venda: number
+        }
+        Update: {
+          comissao_20_porcento?: number
+          created_at?: string | null
+          data_compra?: string | null
+          data_indicacao?: string | null
+          data_pagamento?: string | null
+          id?: string
+          indicado_id?: string
+          indicador_id?: string
+          plano_comprado?: string
+          status?: string | null
+          valor_venda?: number
+        }
+        Relationships: []
       }
       leads: {
         Row: {
@@ -499,11 +569,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'leads_etiqueta_id_fkey'
-            columns: ['etiqueta_id']
+            foreignKeyName: "leads_etiqueta_id_fkey"
+            columns: ["etiqueta_id"]
             isOneToOne: false
-            referencedRelation: 'etiquetas'
-            referencedColumns: ['id']
+            referencedRelation: "etiquetas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -534,6 +604,39 @@ export type Database = {
           processada?: boolean | null
           resposta_ia?: string | null
           tipo?: string
+        }
+        Relationships: []
+      }
+      movimentacoes_credito: {
+        Row: {
+          created_at: string | null
+          data_movimentacao: string | null
+          descricao: string | null
+          id: string
+          origem: string
+          tipo: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_movimentacao?: string | null
+          descricao?: string | null
+          id?: string
+          origem: string
+          tipo: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string | null
+          data_movimentacao?: string | null
+          descricao?: string | null
+          id?: string
+          origem?: string
+          tipo?: string
+          user_id?: string
+          valor?: number
         }
         Relationships: []
       }
@@ -672,49 +775,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pacientes_acesso_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "pacientes_acesso_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          method: string | null
-          status: string | null
-          subscription_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          method?: string | null
-          status?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          method?: string | null
-          status?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'payments_subscription_id_fkey'
-            columns: ['subscription_id']
-            isOneToOne: false
-            referencedRelation: 'subscriptions'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -751,11 +816,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'prescricoes_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "prescricoes_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -819,13 +884,52 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profissionais_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "profissionais_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      profissionais_clinica: {
+        Row: {
+          clinica_id: string
+          created_at: string | null
+          crm: string | null
+          data_criacao: string | null
+          email: string
+          id: string
+          limite_ia_mensal: number | null
+          nome: string
+          status: string | null
+          tokens_usados_mes: number | null
+        }
+        Insert: {
+          clinica_id: string
+          created_at?: string | null
+          crm?: string | null
+          data_criacao?: string | null
+          email: string
+          id?: string
+          limite_ia_mensal?: number | null
+          nome: string
+          status?: string | null
+          tokens_usados_mes?: number | null
+        }
+        Update: {
+          clinica_id?: string
+          created_at?: string | null
+          crm?: string | null
+          data_criacao?: string | null
+          email?: string
+          id?: string
+          limite_ia_mensal?: number | null
+          nome?: string
+          status?: string | null
+          tokens_usados_mes?: number | null
+        }
+        Relationships: []
       }
       protocolos: {
         Row: {
@@ -968,65 +1072,20 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'receitas_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "receitas_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'receitas_protocolo_id_fkey'
-            columns: ['protocolo_id']
+            foreignKeyName: "receitas_protocolo_id_fkey"
+            columns: ["protocolo_id"]
             isOneToOne: false
-            referencedRelation: 'protocolos'
-            referencedColumns: ['id']
+            referencedRelation: "protocolos"
+            referencedColumns: ["id"]
           },
         ]
-      }
-      subscriptions: {
-        Row: {
-          blocked_reason: string | null
-          canceled_at: string | null
-          created_at: string
-          free_access_end_date: string | null
-          free_access_start_date: string | null
-          id: string
-          plan: string | null
-          status: string
-          trial_end_date: string
-          trial_start_date: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          blocked_reason?: string | null
-          canceled_at?: string | null
-          created_at?: string
-          free_access_end_date?: string | null
-          free_access_start_date?: string | null
-          id?: string
-          plan?: string | null
-          status?: string
-          trial_end_date: string
-          trial_start_date?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          blocked_reason?: string | null
-          canceled_at?: string | null
-          created_at?: string
-          free_access_end_date?: string | null
-          free_access_start_date?: string | null
-          id?: string
-          plan?: string | null
-          status?: string
-          trial_end_date?: string
-          trial_start_date?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       sync_logs: {
         Row: {
@@ -1049,11 +1108,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sync_logs_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "sync_logs_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1084,90 +1143,121 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'tcle_assinado_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "tcle_assinado_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
-      transacoes_financeiras: {
+      tokens_comprados: {
         Row: {
-          agendamento_id: string | null
-          categoria: string
-          created_at: string
-          data_transacao: string
-          descricao: string | null
+          created_at: string | null
+          data_compra: string | null
+          expira_em: string
           id: string
-          patient_id: string | null
-          profissional_id: string | null
-          protocolo_id: string | null
-          status: string
-          tipo: string
-          valor: number
-          venda_id: string | null
+          preco_pago: number
+          quantidade: number
+          status: string | null
+          tokens_restantes: number
+          user_id: string
         }
         Insert: {
-          agendamento_id?: string | null
-          categoria?: string
-          created_at?: string
-          data_transacao?: string
-          descricao?: string | null
+          created_at?: string | null
+          data_compra?: string | null
+          expira_em: string
           id?: string
-          patient_id?: string | null
-          profissional_id?: string | null
-          protocolo_id?: string | null
-          status?: string
-          tipo?: string
-          valor: number
-          venda_id?: string | null
+          preco_pago: number
+          quantidade: number
+          status?: string | null
+          tokens_restantes: number
+          user_id: string
         }
         Update: {
-          agendamento_id?: string | null
-          categoria?: string
-          created_at?: string
-          data_transacao?: string
+          created_at?: string | null
+          data_compra?: string | null
+          expira_em?: string
+          id?: string
+          preco_pago?: number
+          quantidade?: number
+          status?: string | null
+          tokens_restantes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tokens_inclusos: {
+        Row: {
+          created_at: string | null
+          id: string
+          mes_ano: string
+          plano: string
+          reset_em: string
+          tokens_prescricoes_limite: number
+          tokens_prescricoes_usado: number | null
+          tokens_whatsapp_limite: number
+          tokens_whatsapp_usado: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mes_ano: string
+          plano: string
+          reset_em: string
+          tokens_prescricoes_limite: number
+          tokens_prescricoes_usado?: number | null
+          tokens_whatsapp_limite: number
+          tokens_whatsapp_usado?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mes_ano?: string
+          plano?: string
+          reset_em?: string
+          tokens_prescricoes_limite?: number
+          tokens_prescricoes_usado?: number | null
+          tokens_whatsapp_limite?: number
+          tokens_whatsapp_usado?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      uso_tokens: {
+        Row: {
+          created_at: string | null
+          data_uso: string | null
+          descricao: string | null
+          id: string
+          origem: string
+          tipo: string
+          tokens_consumidos: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_uso?: string | null
           descricao?: string | null
           id?: string
-          patient_id?: string | null
-          profissional_id?: string | null
-          protocolo_id?: string | null
-          status?: string
-          tipo?: string
-          valor?: number
-          venda_id?: string | null
+          origem: string
+          tipo: string
+          tokens_consumidos: number
+          user_id: string
         }
-        Relationships: [
-          {
-            foreignKeyName: 'transacoes_financeiras_agendamento_id_fkey'
-            columns: ['agendamento_id']
-            isOneToOne: false
-            referencedRelation: 'agendamentos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'transacoes_financeiras_patient_id_fkey'
-            columns: ['patient_id']
-            isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'transacoes_financeiras_protocolo_id_fkey'
-            columns: ['protocolo_id']
-            isOneToOne: false
-            referencedRelation: 'protocolos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'transacoes_financeiras_venda_id_fkey'
-            columns: ['venda_id']
-            isOneToOne: false
-            referencedRelation: 'vendas'
-            referencedColumns: ['id']
-          },
-        ]
+        Update: {
+          created_at?: string | null
+          data_uso?: string | null
+          descricao?: string | null
+          id?: string
+          origem?: string
+          tipo?: string
+          tokens_consumidos?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       vendas: {
         Row: {
@@ -1205,18 +1295,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vendas_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "vendas_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_protocolo_id_fkey'
-            columns: ['protocolo_id']
+            foreignKeyName: "vendas_protocolo_id_fkey"
+            columns: ["protocolo_id"]
             isOneToOne: false
-            referencedRelation: 'protocolos'
-            referencedColumns: ['id']
+            referencedRelation: "protocolos"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1311,31 +1401,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1344,23 +1436,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1369,23 +1461,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1394,36 +1486,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -1431,6 +1523,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -1501,17 +1594,25 @@ export const Constants = {
 //   data_collected: jsonb (nullable, default: '{}'::jsonb)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
-// Table: credit_purchases
+// Table: creditos_usuario
 //   id: uuid (not null, default: gen_random_uuid())
-//   organization_id: uuid (nullable)
-//   user_id: uuid (nullable)
-//   package_name: text (not null)
-//   credits_amount: integer (not null)
-//   price: numeric (not null)
-//   status: text (not null, default: 'pending'::text)
-//   payment_method: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
+//   user_id: uuid (not null)
+//   saldo_creditos: numeric (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: cupons
+//   id: uuid (not null, default: gen_random_uuid())
+//   codigo: text (not null)
+//   desconto_percentual: integer (nullable)
+//   desconto_fixo: numeric (nullable)
+//   data_inicio: timestamp with time zone (not null)
+//   data_fim: timestamp with time zone (not null)
+//   uso_maximo: integer (not null)
+//   uso_atual: integer (nullable, default: 0)
+//   planos_validos: _text (not null)
+//   status: text (nullable, default: 'ativo'::text)
+//   criado_por: uuid (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: despesas
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -1546,6 +1647,18 @@ export const Constants = {
 //   interpretacao_ia: text (nullable)
 //   status: text (nullable, default: 'pendente'::text)
 //   observacoes_profissional: text (nullable)
+// Table: indicacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   indicador_id: uuid (not null)
+//   indicado_id: uuid (not null)
+//   plano_comprado: text (not null)
+//   valor_venda: numeric (not null)
+//   comissao_20_porcento: numeric (not null)
+//   status: text (nullable, default: 'pendente'::text)
+//   data_indicacao: timestamp with time zone (nullable, default: now())
+//   data_compra: timestamp with time zone (nullable)
+//   data_pagamento: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -1566,6 +1679,15 @@ export const Constants = {
 //   processada: boolean (nullable, default: false)
 //   resposta_ia: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: movimentacoes_credito
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   tipo: text (not null)
+//   valor: numeric (not null)
+//   origem: text (not null)
+//   descricao: text (nullable)
+//   data_movimentacao: timestamp with time zone (nullable, default: now())
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: organizations
 //   id: uuid (not null, default: gen_random_uuid())
 //   owner_id: uuid (nullable)
@@ -1605,14 +1727,6 @@ export const Constants = {
 //   criado_por: uuid (not null)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
-// Table: payments
-//   id: uuid (not null, default: gen_random_uuid())
-//   subscription_id: uuid (nullable)
-//   user_id: uuid (nullable)
-//   amount: numeric (not null)
-//   status: text (nullable, default: 'succeeded'::text)
-//   created_at: timestamp with time zone (not null, default: now())
-//   method: text (nullable, default: 'Cartão'::text)
 // Table: prescricoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   patient_id: uuid (not null)
@@ -1640,6 +1754,17 @@ export const Constants = {
 //   email: text (nullable)
 //   tipo_profissional: text (nullable, default: 'proprietario'::text)
 //   pode_ver_financeiro_clinica: boolean (nullable, default: false)
+// Table: profissionais_clinica
+//   id: uuid (not null, default: gen_random_uuid())
+//   clinica_id: uuid (not null)
+//   nome: text (not null)
+//   email: text (not null)
+//   crm: text (nullable)
+//   limite_ia_mensal: integer (nullable, default: 200)
+//   tokens_usados_mes: integer (nullable, default: 0)
+//   data_criacao: timestamp with time zone (nullable, default: now())
+//   status: text (nullable, default: 'ativo'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: protocolos
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1683,19 +1808,6 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   banco_recebimento: text (nullable)
 //   profissional_id: uuid (nullable)
-// Table: subscriptions
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (not null)
-//   trial_start_date: timestamp with time zone (not null, default: now())
-//   trial_end_date: timestamp with time zone (not null)
-//   free_access_start_date: timestamp with time zone (nullable)
-//   free_access_end_date: timestamp with time zone (nullable)
-//   status: text (not null, default: 'trial'::text)
-//   blocked_reason: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
-//   plan: text (nullable, default: 'Básico'::text)
-//   canceled_at: timestamp with time zone (nullable)
 // Table: sync_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   profissional_id: uuid (nullable)
@@ -1708,20 +1820,36 @@ export const Constants = {
 //   data_assinatura: timestamp with time zone (not null, default: now())
 //   tipo_assinatura: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: transacoes_financeiras
+// Table: tokens_comprados
 //   id: uuid (not null, default: gen_random_uuid())
-//   venda_id: uuid (nullable)
-//   patient_id: uuid (nullable)
-//   protocolo_id: uuid (nullable)
-//   profissional_id: uuid (nullable)
-//   tipo: text (not null, default: 'receita'::text)
-//   categoria: text (not null, default: 'protocolo'::text)
-//   valor: numeric (not null)
-//   data_transacao: timestamp with time zone (not null, default: now())
-//   status: text (not null, default: 'pendente'::text)
+//   user_id: uuid (not null)
+//   quantidade: integer (not null)
+//   preco_pago: numeric (not null)
+//   data_compra: timestamp with time zone (nullable, default: now())
+//   tokens_restantes: integer (not null)
+//   status: text (nullable, default: 'ativo'::text)
+//   expira_em: timestamp with time zone (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: tokens_inclusos
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   plano: text (not null)
+//   tokens_whatsapp_limite: integer (not null)
+//   tokens_prescricoes_limite: integer (not null)
+//   tokens_whatsapp_usado: integer (nullable, default: 0)
+//   tokens_prescricoes_usado: integer (nullable, default: 0)
+//   mes_ano: text (not null)
+//   reset_em: timestamp with time zone (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: uso_tokens
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   tipo: text (not null)
+//   tokens_consumidos: integer (not null)
+//   origem: text (not null)
 //   descricao: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   agendamento_id: uuid (nullable)
+//   data_uso: timestamp with time zone (nullable, default: now())
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: vendas
 //   id: uuid (not null, default: gen_random_uuid())
 //   protocolo_id: uuid (nullable)
@@ -1758,10 +1886,15 @@ export const Constants = {
 // Table: consultas
 //   FOREIGN KEY consultas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY consultas_pkey: PRIMARY KEY (id)
-// Table: credit_purchases
-//   FOREIGN KEY credit_purchases_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
-//   PRIMARY KEY credit_purchases_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY credit_purchases_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: creditos_usuario
+//   PRIMARY KEY creditos_usuario_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY creditos_usuario_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE creditos_usuario_user_id_key: UNIQUE (user_id)
+// Table: cupons
+//   UNIQUE cupons_codigo_key: UNIQUE (codigo)
+//   FOREIGN KEY cupons_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY cupons_pkey: PRIMARY KEY (id)
+//   CHECK cupons_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
 // Table: despesas
 //   PRIMARY KEY despesas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY despesas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
@@ -1772,12 +1905,23 @@ export const Constants = {
 // Table: exames
 //   FOREIGN KEY exames_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY exames_pkey: PRIMARY KEY (id)
+// Table: indicacoes
+//   FOREIGN KEY indicacoes_indicado_id_fkey: FOREIGN KEY (indicado_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   FOREIGN KEY indicacoes_indicador_id_fkey: FOREIGN KEY (indicador_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY indicacoes_pkey: PRIMARY KEY (id)
+//   CHECK indicacoes_plano_comprado_check: CHECK ((plano_comprado = ANY (ARRAY['Starter'::text, 'Professional'::text, 'Enterprise'::text])))
+//   CHECK indicacoes_status_check: CHECK ((status = ANY (ARRAY['pendente'::text, 'pago'::text, 'cancelado'::text])))
 // Table: leads
 //   FOREIGN KEY leads_etiqueta_id_fkey: FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id) ON DELETE SET NULL
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: mensagens_whatsapp
 //   PRIMARY KEY mensagens_whatsapp_pkey: PRIMARY KEY (id)
+// Table: movimentacoes_credito
+//   CHECK movimentacoes_credito_origem_check: CHECK ((origem = ANY (ARRAY['comissao_indicacao'::text, 'compra_tokens'::text, 'reembolso'::text])))
+//   PRIMARY KEY movimentacoes_credito_pkey: PRIMARY KEY (id)
+//   CHECK movimentacoes_credito_tipo_check: CHECK ((tipo = ANY (ARRAY['entrada'::text, 'saida'::text])))
+//   FOREIGN KEY movimentacoes_credito_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: organizations
 //   FOREIGN KEY organizations_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
@@ -1790,10 +1934,6 @@ export const Constants = {
 //   UNIQUE pacientes_acesso_email_key: UNIQUE (email)
 //   FOREIGN KEY pacientes_acesso_paciente_id_fkey: FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY pacientes_acesso_pkey: PRIMARY KEY (id)
-// Table: payments
-//   PRIMARY KEY payments_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY payments_subscription_id_fkey: FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
-//   FOREIGN KEY payments_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: prescricoes
 //   FOREIGN KEY prescricoes_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY prescricoes_pkey: PRIMARY KEY (id)
@@ -1801,6 +1941,11 @@ export const Constants = {
 //   FOREIGN KEY profissionais_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY profissionais_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY profissionais_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: profissionais_clinica
+//   UNIQUE profissionais_clinica_clinica_id_email_key: UNIQUE (clinica_id, email)
+//   FOREIGN KEY profissionais_clinica_clinica_id_fkey: FOREIGN KEY (clinica_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY profissionais_clinica_pkey: PRIMARY KEY (id)
+//   CHECK profissionais_clinica_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
 // Table: protocolos
 //   FOREIGN KEY protocolos_criado_por_fkey: FOREIGN KEY (criado_por) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY protocolos_pkey: PRIMARY KEY (id)
@@ -1810,24 +1955,26 @@ export const Constants = {
 //   FOREIGN KEY receitas_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 //   FOREIGN KEY receitas_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE SET NULL
 //   FOREIGN KEY receitas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-// Table: subscriptions
-//   PRIMARY KEY subscriptions_pkey: PRIMARY KEY (id)
-//   CHECK subscriptions_status_check: CHECK ((status = ANY (ARRAY['trial'::text, 'free_access'::text, 'suspended'::text, 'active'::text, 'blocked'::text])))
-//   FOREIGN KEY subscriptions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-//   UNIQUE subscriptions_user_id_key: UNIQUE (user_id)
 // Table: sync_logs
 //   PRIMARY KEY sync_logs_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY sync_logs_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES profissionais(id) ON DELETE CASCADE
 // Table: tcle_assinado
 //   FOREIGN KEY tcle_assinado_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY tcle_assinado_pkey: PRIMARY KEY (id)
-// Table: transacoes_financeiras
-//   FOREIGN KEY transacoes_financeiras_agendamento_id_fkey: FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id) ON DELETE CASCADE
-//   FOREIGN KEY transacoes_financeiras_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
-//   PRIMARY KEY transacoes_financeiras_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY transacoes_financeiras_profissional_id_fkey: FOREIGN KEY (profissional_id) REFERENCES auth.users(id) ON DELETE CASCADE
-//   FOREIGN KEY transacoes_financeiras_protocolo_id_fkey: FOREIGN KEY (protocolo_id) REFERENCES protocolos(id) ON DELETE CASCADE
-//   FOREIGN KEY transacoes_financeiras_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE
+// Table: tokens_comprados
+//   PRIMARY KEY tokens_comprados_pkey: PRIMARY KEY (id)
+//   CHECK tokens_comprados_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'expirado'::text])))
+//   FOREIGN KEY tokens_comprados_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: tokens_inclusos
+//   PRIMARY KEY tokens_inclusos_pkey: PRIMARY KEY (id)
+//   CHECK tokens_inclusos_plano_check: CHECK ((plano = ANY (ARRAY['Starter'::text, 'Professional'::text, 'Enterprise'::text])))
+//   FOREIGN KEY tokens_inclusos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE tokens_inclusos_user_id_mes_ano_key: UNIQUE (user_id, mes_ano)
+// Table: uso_tokens
+//   CHECK uso_tokens_origem_check: CHECK ((origem = ANY (ARRAY['inclusos'::text, 'comprados'::text])))
+//   PRIMARY KEY uso_tokens_pkey: PRIMARY KEY (id)
+//   CHECK uso_tokens_tipo_check: CHECK ((tipo = ANY (ARRAY['whatsapp_resposta'::text, 'prescricao'::text])))
+//   FOREIGN KEY uso_tokens_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: vendas
 //   FOREIGN KEY vendas_patient_id_fkey: FOREIGN KEY (patient_id) REFERENCES pacientes(id) ON DELETE CASCADE
 //   PRIMARY KEY vendas_pkey: PRIMARY KEY (id)
@@ -1886,11 +2033,18 @@ export const Constants = {
 //   Policy "consultas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = consultas.patient_id) AND (pacientes.user_id = auth.uid()))))
-// Table: credit_purchases
-//   Policy "Admins can manage all credit purchases" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "Admins can view all credit purchases" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
+// Table: creditos_usuario
+//   Policy "Usuários atualizam seus créditos" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Usuários veem seus créditos" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+// Table: cupons
+//   Policy "Todos veem cupons ativos" (SELECT, PERMISSIVE) roles={public}
+//     USING: ((status = 'ativo'::text) AND (data_fim > now()))
+//   Policy "Você atualiza cupons" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = criado_por)
+//   Policy "Você cria cupons" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = criado_por)
 // Table: despesas
 //   Policy "despesas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
@@ -1909,6 +2063,11 @@ export const Constants = {
 //   Policy "exames_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = exames.patient_id) AND (pacientes.user_id = auth.uid()))))
+// Table: indicacoes
+//   Policy "Usuários criam indicações" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = indicador_id)
+//   Policy "Usuários veem suas indicações" (SELECT, PERMISSIVE) roles={public}
+//     USING: ((auth.uid() = indicador_id) OR (auth.uid() = indicado_id))
 // Table: leads
 //   Policy "Users can delete their own leads" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
@@ -1929,6 +2088,11 @@ export const Constants = {
 //   Policy "authenticated_update_mensagens_whatsapp" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: movimentacoes_credito
+//   Policy "Sistema registra movimentações" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Usuários veem suas movimentações" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
 // Table: organizations
 //   Policy "authenticated_insert_org" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1953,11 +2117,6 @@ export const Constants = {
 //     USING: (criado_por = auth.uid())
 //   Policy "profissional_update_acesso" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (criado_por = auth.uid())
-// Table: payments
-//   Policy "Admin can insert payments" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: true
-//   Policy "Admin can read payments" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
 // Table: prescricoes
 //   Policy "prescricoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes p   WHERE ((p.id = prescricoes.patient_id) AND ((p.user_id = auth.uid()) OR (p.organization_id IN ( SELECT organizations.id            FROM organizations           WHERE (organizations.owner_id = auth.uid())))))))
@@ -1969,6 +2128,13 @@ export const Constants = {
 //     USING: true
 //   Policy "authenticated_update_prof" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: profissionais_clinica
+//   Policy "Clínica atualiza profissionais" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = clinica_id)
+//   Policy "Clínica cria profissionais" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = clinica_id)
+//   Policy "Clínica vê seus profissionais" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = clinica_id)
 // Table: protocolos
 //   Policy "protocolos_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (criado_por = auth.uid()) OR (is_padrao = true))
@@ -1983,11 +2149,6 @@ export const Constants = {
 //   Policy "receitas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (user_id = auth.uid())
 //     WITH CHECK: (user_id = auth.uid())
-// Table: subscriptions
-//   Policy "Users can update own subscription" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can view own subscription" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = user_id)
 // Table: sync_logs
 //   Policy "sync_logs_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1998,10 +2159,25 @@ export const Constants = {
 //   Policy "tcle_assinado_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = tcle_assinado.patient_id) AND (pacientes.user_id = auth.uid()))))
-// Table: transacoes_financeiras
-//   Policy "transacoes_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = transacoes_financeiras.patient_id) AND (pacientes.user_id = auth.uid())))))
-//     WITH CHECK: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = transacoes_financeiras.patient_id) AND (pacientes.user_id = auth.uid())))))
+// Table: tokens_comprados
+//   Policy "Usuários atualizam seus tokens" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Usuários compram tokens" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Usuários veem seus próprios tokens comprados" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+// Table: tokens_inclusos
+//   Policy "Usuários atualizam seus próprios limites" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Usuários criam seus próprios limites" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Usuários veem seus próprios limites" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+// Table: uso_tokens
+//   Policy "Sistema registra uso" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Usuários veem seu próprio uso" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
 // Table: vendas
 //   Policy "vendas_user_isolation" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((profissional_id = auth.uid()) OR (EXISTS ( SELECT 1    FROM pacientes   WHERE ((pacientes.id = vendas.patient_id) AND (pacientes.user_id = auth.uid())))))
@@ -2018,7 +2194,7 @@ export const Constants = {
 //     UPDATE public.payments SET status = p_status WHERE id = p_payment_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION admin_update_subscription(uuid, text, timestamp with time zone, timestamp with time zone)
 //   CREATE OR REPLACE FUNCTION public.admin_update_subscription(p_subscription_id uuid, p_status text, p_free_access_start_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_free_access_end_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
 //    RETURNS void
@@ -2027,7 +2203,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     UPDATE public.subscriptions
-//     SET
+//     SET 
 //       status = p_status,
 //       free_access_start_date = COALESCE(p_free_access_start_date, free_access_start_date),
 //       free_access_end_date = COALESCE(p_free_access_end_date, free_access_end_date),
@@ -2035,7 +2211,7 @@ export const Constants = {
 //     WHERE id = p_subscription_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION admin_update_subscription_full(uuid, text, text, text, integer)
 //   CREATE OR REPLACE FUNCTION public.admin_update_subscription_full(p_subscription_id uuid, p_status text DEFAULT NULL::text, p_plan text DEFAULT NULL::text, p_blocked_reason text DEFAULT NULL::text, p_add_months integer DEFAULT 0)
 //    RETURNS void
@@ -2046,25 +2222,25 @@ export const Constants = {
 //     IF p_status IS NOT NULL THEN
 //       UPDATE public.subscriptions SET status = p_status WHERE id = p_subscription_id;
 //     END IF;
-//
+//     
 //     IF p_plan IS NOT NULL THEN
 //       UPDATE public.subscriptions SET plan = p_plan WHERE id = p_subscription_id;
 //     END IF;
-//
+//   
 //     IF p_blocked_reason IS NOT NULL THEN
 //       UPDATE public.subscriptions SET blocked_reason = p_blocked_reason WHERE id = p_subscription_id;
 //     END IF;
-//
+//   
 //     IF p_add_months > 0 THEN
-//       UPDATE public.subscriptions
-//       SET
+//       UPDATE public.subscriptions 
+//       SET 
 //         free_access_end_date = COALESCE(free_access_end_date, trial_end_date, NOW()) + (p_add_months || ' months')::interval,
 //         status = CASE WHEN status IN ('blocked', 'suspended') THEN 'free_access' ELSE status END
 //       WHERE id = p_subscription_id;
 //     END IF;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_billing()
 //   CREATE OR REPLACE FUNCTION public.get_admin_billing()
 //    RETURNS TABLE(payment_id uuid, created_at timestamp with time zone, clinica_nome text, email text, plan text, amount numeric, status text, method text)
@@ -2073,7 +2249,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     RETURN QUERY
-//     SELECT
+//     SELECT 
 //       p.id AS payment_id,
 //       p.created_at,
 //       COALESCE(o.nome, prof.nome_completo, 'Desconhecida') AS clinica_nome,
@@ -2090,7 +2266,7 @@ export const Constants = {
 //     ORDER BY p.created_at DESC;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_credit_purchases()
 //   CREATE OR REPLACE FUNCTION public.get_admin_credit_purchases()
 //    RETURNS TABLE(id uuid, created_at timestamp with time zone, clinica_nome text, admin_email text, package_name text, credits_amount integer, price numeric, status text, payment_method text)
@@ -2115,7 +2291,7 @@ export const Constants = {
 //     ORDER BY cp.created_at DESC;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_subscriptions()
 //   CREATE OR REPLACE FUNCTION public.get_admin_subscriptions()
 //    RETURNS TABLE(subscription_id uuid, user_id uuid, nome text, email text, status text, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
@@ -2124,7 +2300,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     RETURN QUERY
-//     SELECT
+//     SELECT 
 //       s.id AS subscription_id,
 //       s.user_id,
 //       COALESCE(p.nome_completo, 'Desconhecido') AS nome,
@@ -2138,7 +2314,7 @@ export const Constants = {
 //     WHERE s.status IN ('trial', 'blocked', 'suspended', 'free_access');
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_all_subscribers()
 //   CREATE OR REPLACE FUNCTION public.get_all_subscribers()
 //    RETURNS TABLE(subscription_id uuid, user_id uuid, clinica_nome text, email text, plan text, status text, created_at timestamp with time zone, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
@@ -2163,7 +2339,7 @@ export const Constants = {
 //     LEFT JOIN public.organizations o ON p.organization_id = o.id OR o.owner_id = u.id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_profissional()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional()
 //    RETURNS trigger
@@ -2178,7 +2354,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_profissional_template()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional_template()
 //    RETURNS trigger
@@ -2296,7 +2472,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user_subscription()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
 //    RETURNS trigger
@@ -2308,7 +2484,7 @@ export const Constants = {
 //     IF NEW.raw_user_meta_data->>'role' = 'paciente' THEN
 //       RETURN NEW;
 //     END IF;
-//
+//   
 //     INSERT INTO public.subscriptions (user_id, trial_start_date, trial_end_date, status)
 //     VALUES (
 //       NEW.id,
@@ -2317,11 +2493,11 @@ export const Constants = {
 //       'trial'
 //     )
 //     ON CONFLICT (user_id) DO NOTHING;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_profissional_id()
 //   CREATE OR REPLACE FUNCTION public.set_profissional_id()
 //    RETURNS trigger
@@ -2334,7 +2510,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_config_ia_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_config_ia_updated_at()
 //    RETURNS trigger
@@ -2345,7 +2521,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_leads_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_leads_updated_at()
 //    RETURNS trigger
@@ -2356,7 +2532,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: configuracao_ia
@@ -2369,11 +2545,18 @@ export const Constants = {
 //   set_receitas_profissional_id: CREATE TRIGGER set_receitas_profissional_id BEFORE INSERT ON public.receitas FOR EACH ROW EXECUTE FUNCTION set_profissional_id()
 
 // --- INDEXES ---
+// Table: creditos_usuario
+//   CREATE UNIQUE INDEX creditos_usuario_user_id_key ON public.creditos_usuario USING btree (user_id)
+// Table: cupons
+//   CREATE UNIQUE INDEX cupons_codigo_key ON public.cupons USING btree (codigo)
 // Table: pacientes
 //   CREATE UNIQUE INDEX pacientes_cpf_active_idx ON public.pacientes USING btree (cpf) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (cpf IS NOT NULL) AND (cpf <> ''::text))
 //   CREATE UNIQUE INDEX pacientes_email_active_idx ON public.pacientes USING btree (email) WHERE ((deleted_at IS NULL) AND (status <> 'deletado'::text) AND (email IS NOT NULL) AND (email <> ''::text))
 // Table: pacientes_acesso
 //   CREATE UNIQUE INDEX pacientes_acesso_cpf_key ON public.pacientes_acesso USING btree (cpf)
 //   CREATE UNIQUE INDEX pacientes_acesso_email_key ON public.pacientes_acesso USING btree (email)
-// Table: subscriptions
-//   CREATE UNIQUE INDEX subscriptions_user_id_key ON public.subscriptions USING btree (user_id)
+// Table: profissionais_clinica
+//   CREATE UNIQUE INDEX profissionais_clinica_clinica_id_email_key ON public.profissionais_clinica USING btree (clinica_id, email)
+// Table: tokens_inclusos
+//   CREATE UNIQUE INDEX tokens_inclusos_user_id_mes_ano_key ON public.tokens_inclusos USING btree (user_id, mes_ano)
+
