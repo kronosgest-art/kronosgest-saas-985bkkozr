@@ -33,6 +33,7 @@ import PatientLogin from '@/pages/patient/PatientLogin'
 import PatientDashboard from '@/pages/patient/PatientDashboard'
 import PatientDocuments from '@/pages/patient/PatientDocuments'
 import UpgradePage from '@/pages/upgrade/UpgradePage'
+import TokensAvulsos from '@/pages/tokens/TokensAvulsos'
 import CheckoutPage from '@/pages/checkout/CheckoutPage'
 import CheckoutSuccessPage from '@/pages/checkout/CheckoutSuccessPage'
 import ManageFreeAccess from '@/pages/admin/ManageFreeAccess'
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/anamnesis-templates" element={<AnamneseTemplates />} />
             <Route path="/upgrade" element={<UpgradePage />} />
+            <Route path="/tokens-avulsos" element={<TokensAvulsos />} />
             <Route path="/admin/manage-free-access" element={<ManageFreeAccess />} />
             <Route path="/admin/dashboard" element={<AdminDashboardSaaS />} />
             <Route path="/admin/subscribers" element={<Subscribers />} />

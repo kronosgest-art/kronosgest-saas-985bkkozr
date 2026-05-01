@@ -11,8 +11,8 @@
     "sync-to-google-calendar": 4,
     "create-profissional": 4,
     "whatsapp-webhook": 5,
-    "gerar-link-infinitypay": 1,
-    "webhook-infinitypay": 1,
-    "gerar-sessao-stripe": 1
+    "gerar-link-infinitypay": 2,
+    "webhook-infinitypay": 2,
+    "gerar-sessao-stripe": 2
   }
 }

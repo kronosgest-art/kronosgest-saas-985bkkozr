@@ -31,7 +31,10 @@ Deno.serve(async (req: Request) => {
       global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseUserClient.auth.getUser()
 
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
@@ -58,7 +61,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (metodo_pagamento !== 'cartao_internacional' && metodo_pagamento !== 'stripe') {
-       return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
+      return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -70,14 +73,25 @@ Deno.serve(async (req: Request) => {
       Enterprise: 499,
     }
 
-    if (!planosPrecos[plano]) {
+    let precoOriginal = 0
+
+    if (plano.startsWith('Tokens-')) {
+      const qtdTokens = parseInt(plano.split('-')[1])
+      if (isNaN(qtdTokens) || qtdTokens < 100 || qtdTokens > 10000 || qtdTokens % 100 !== 0) {
+        return new Response(JSON.stringify({ error: 'Quantidade de tokens inválida.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      precoOriginal = (qtdTokens / 100) * 29
+    } else if (planosPrecos[plano]) {
+      precoOriginal = planosPrecos[plano]
+    } else {
       return new Response(JSON.stringify({ error: 'Plano selecionado é inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    let precoOriginal = planosPrecos[plano]
     let precoFinal = precoOriginal
     let desconto = 0
 
@@ -106,7 +120,11 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
+      if (
+        cupom.uso_atual !== null &&
+        cupom.uso_maximo !== null &&
+        cupom.uso_atual >= cupom.uso_maximo
+      ) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -176,35 +194,30 @@ Deno.serve(async (req: Request) => {
           {
             status: err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
+          },
         )
       }
     }
 
     // Registra na tabela pagamentos usando o session.id como order_nsu para compatibilidade com o fluxo atual
-    const { error: pagamentoError } = await supabaseAdmin
-      .from('pagamentos')
-      .insert({
-        user_id,
-        plano,
-        valor: precoFinal,
-        order_nsu: session.id,
-        status: 'pendente',
-        metodo_pagamento: 'cartao_internacional',
-        cupom_aplicado: cupom_codigo || null,
-      })
+    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
+      user_id,
+      plano,
+      valor: precoFinal,
+      order_nsu: session.id,
+      status: 'pendente',
+      metodo_pagamento: 'cartao_internacional',
+      cupom_aplicado: cupom_codigo || null,
+    })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
-    return new Response(
-      JSON.stringify({ session_id: session.id, checkout_url: session.url }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    return new Response(JSON.stringify({ session_id: session.id, checkout_url: session.url }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error: any) {
     console.error('Erro inesperado na edge function:', error)
     return new Response(
@@ -212,7 +225,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     )
   }
 })

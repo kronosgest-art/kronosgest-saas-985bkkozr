@@ -17,16 +17,11 @@ Deno.serve(async (req: Request) => {
     const reqData = await req.json()
     const { invoice_slug, order_nsu, status, amount, capture_method } = reqData
 
-    if (
-      !invoice_slug ||
-      !order_nsu ||
-      !status ||
-      amount === undefined ||
-      !capture_method
-    ) {
+    if (!invoice_slug || !order_nsu || !status || amount === undefined || !capture_method) {
       return new Response(
         JSON.stringify({
-          error: 'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
+          error:
+            'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
         }),
         {
           status: 400,
@@ -74,41 +69,61 @@ Deno.serve(async (req: Request) => {
         throw new Error(`Erro ao atualizar pagamento: ${updateError.message}`)
       }
 
-      let wppLimite = 0
-      let prescLimite = 0
-      const planoNormalizado = pagamento.plano.toLowerCase()
+      if (pagamento.plano.startsWith('Tokens-')) {
+        const qtdTokens = parseInt(pagamento.plano.split('-')[1]) || 0
+        const expiraEm = new Date()
+        expiraEm.setDate(expiraEm.getDate() + 30) // Validade de 30 dias
 
-      if (planoNormalizado === 'starter') {
-        wppLimite = 30
-        prescLimite = 5
-      } else if (planoNormalizado === 'professional') {
-        wppLimite = 300
-        prescLimite = 50
-      } else if (planoNormalizado === 'enterprise') {
-        wppLimite = 1000
-        prescLimite = 200
-      }
-
-      const resetEm = new Date()
-      resetEm.setMonth(resetEm.getMonth() + 1)
-      const mesAno = `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
-
-      const { error: tokenError } = await supabase.from('tokens_inclusos').upsert(
-        {
+        const { error: tokenError } = await supabase.from('tokens_comprados').insert({
           user_id: pagamento.user_id,
-          plano: pagamento.plano,
-          tokens_whatsapp_limite: wppLimite,
-          tokens_prescricoes_limite: prescLimite,
-          tokens_whatsapp_usado: 0,
-          tokens_prescricoes_usado: 0,
-          mes_ano: mesAno,
-          reset_em: resetEm.toISOString(),
-        },
-        { onConflict: 'user_id, mes_ano' },
-      )
+          quantidade: qtdTokens,
+          preco_pago: pagamento.valor,
+          tokens_restantes: qtdTokens,
+          expira_em: expiraEm.toISOString(),
+          status: 'ativo',
+          metodo_pagamento: pagamento.metodo_pagamento,
+        })
 
-      if (tokenError) {
-        console.error('Erro ao criar tokens:', tokenError)
+        if (tokenError) {
+          console.error('Erro ao adicionar tokens avulsos:', tokenError)
+        }
+      } else {
+        let wppLimite = 0
+        let prescLimite = 0
+        const planoNormalizado = pagamento.plano.toLowerCase()
+
+        if (planoNormalizado === 'starter') {
+          wppLimite = 30
+          prescLimite = 5
+        } else if (planoNormalizado === 'professional') {
+          wppLimite = 300
+          prescLimite = 50
+        } else if (planoNormalizado === 'enterprise') {
+          wppLimite = 1000
+          prescLimite = 200
+        }
+
+        const resetEm = new Date()
+        resetEm.setMonth(resetEm.getMonth() + 1)
+        const mesAno = `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+
+        const { error: tokenError } = await supabase.from('tokens_inclusos').upsert(
+          {
+            user_id: pagamento.user_id,
+            plano: pagamento.plano,
+            tokens_whatsapp_limite: wppLimite,
+            tokens_prescricoes_limite: prescLimite,
+            tokens_whatsapp_usado: 0,
+            tokens_prescricoes_usado: 0,
+            mes_ano: mesAno,
+            reset_em: resetEm.toISOString(),
+          },
+          { onConflict: 'user_id, mes_ano' },
+        )
+
+        if (tokenError) {
+          console.error('Erro ao criar tokens:', tokenError)
+        }
       }
 
       if (pagamento.cupom_aplicado) {
