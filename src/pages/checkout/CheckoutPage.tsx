@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -14,9 +15,46 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Check, Tag, QrCode, Barcode, CreditCard, Globe, AlertCircle } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
+
+const guestSchema = z
+  .object({
+    nome_completo: z.string().min(5, 'O nome deve ter pelo menos 5 caracteres').max(150),
+    cpf_cnpj: z
+      .string()
+      .regex(
+        /^(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})$/,
+        'Use 123.456.789-00 ou 12.345.678/0001-90',
+      ),
+    telefone: z.string().regex(/^\d{2} \d{4,5}-\d{4}$/, 'Use 11 99999-9999'),
+    email: z.string().email('Email inválido'),
+    confirm_email: z.string().email('Email inválido'),
+  })
+  .refine((data) => data.email === data.confirm_email, {
+    message: 'Os emails não correspondem',
+    path: ['confirm_email'],
+  })
 
 const plans = [
   {
@@ -51,10 +89,25 @@ export default function CheckoutPage() {
   } | null>(null)
   const [paymentTab, setPaymentTab] = useState('brasil')
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
+  const [showGuestModal, setShowGuestModal] = useState(false)
+  const [guestData, setGuestData] = useState<z.infer<typeof guestSchema> | null>(null)
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false)
 
   const { toast } = useToast()
+  const navigate = useNavigate()
   const section2Ref = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
+
+  const form = useForm<z.infer<typeof guestSchema>>({
+    resolver: zodResolver(guestSchema),
+    defaultValues: {
+      nome_completo: '',
+      cpf_cnpj: '',
+      telefone: '',
+      email: '',
+      confirm_email: '',
+    },
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000)
@@ -121,31 +174,30 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleCheckout = async () => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Autenticação necessária',
-        description: 'Faça login ou crie uma conta para prosseguir com o pagamento.',
-      })
-      // Em um fluxo real, redirecionaria para criar conta / login
+  const handleCheckout = async (finalGuestData?: z.infer<typeof guestSchema>) => {
+    if (!user && !finalGuestData) {
+      setShowGuestModal(true)
       return
     }
 
+    setIsProcessingCheckout(true)
     toast({
       title: 'Processando pagamento...',
       description: 'Aguarde enquanto preparamos seu ambiente.',
     })
 
+    const payload = {
+      user_id: user?.id || null,
+      guest_dados: finalGuestData || null,
+      plano: selectedPlan?.name,
+      metodo_pagamento: paymentMethod,
+      cupom_codigo: appliedCoupon?.code || null,
+    }
+
     if (paymentMethod === 'cartao_internacional') {
       try {
         const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
-          body: {
-            user_id: user.id,
-            plano: selectedPlan?.name,
-            metodo_pagamento: 'cartao_internacional',
-            cupom_codigo: appliedCoupon?.code || null,
-          },
+          body: payload,
         })
 
         if (error) throw new Error(error.message || 'Erro ao comunicar com o servidor')
@@ -165,12 +217,7 @@ export default function CheckoutPage() {
     } else {
       try {
         const { data, error } = await supabase.functions.invoke('gerar-link-infinitypay', {
-          body: {
-            user_id: user.id,
-            plano: selectedPlan?.name,
-            metodo_pagamento: paymentMethod,
-            cupom_codigo: appliedCoupon?.code || null,
-          },
+          body: payload,
         })
 
         if (error) {
@@ -193,8 +240,14 @@ export default function CheckoutPage() {
         })
       }
     }
+    setIsProcessingCheckout(false)
   }
 
+  const onSubmitGuest = (data: z.infer<typeof guestSchema>) => {
+    setGuestData(data)
+    setShowGuestModal(false)
+    handleCheckout(data)
+  }
   const calculateTotal = () => {
     if (!selectedPlan) return 0
     let total = selectedPlan.price
@@ -598,16 +651,17 @@ export default function CheckoutPage() {
                           ? 'opacity-50 cursor-not-allowed bg-white/20 text-white hover:bg-white/20'
                           : 'bg-gradient-to-r from-[#B8860B] to-[#DAA520] hover:opacity-100 shadow-[0_0_20px_rgba(184,134,11,0.5)] hover:shadow-[0_0_35px_rgba(184,134,11,0.8)] text-[#1E3A8A]',
                       )}
-                      disabled={!selectedPlan || !paymentMethod}
-                      onClick={handleCheckout}
+                      disabled={!selectedPlan || !paymentMethod || isProcessingCheckout}
+                      onClick={() => handleCheckout()}
                     >
                       {(!selectedPlan || !paymentMethod) && <span>Prosseguir para Pagamento</span>}
-                      {selectedPlan && paymentMethod && (
+                      {selectedPlan && paymentMethod && !isProcessingCheckout && (
                         <>
                           <span className="relative z-10">Prosseguir para Pagamento</span>
                           <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </>
                       )}
+                      {isProcessingCheckout && <span>Processando...</span>}
                     </Button>
                   </CardFooter>
                 </div>
@@ -615,6 +669,129 @@ export default function CheckoutPage() {
             </div>
           </div>
         )}
+
+        {/* Modal Guest Checkout */}
+        <Dialog open={showGuestModal} onOpenChange={setShowGuestModal}>
+          <DialogContent className="sm:max-w-[500px] bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-[#1E3A8A] font-display font-bold">
+                Dados para Emissão de Nota Fiscal
+              </DialogTitle>
+              <DialogDescription className="text-slate-600 text-base">
+                Preencha os dados abaixo para continuar
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitGuest)} className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="nome_completo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-semibold">Nome Completo</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="João Silva Santos"
+                          className="focus-visible:ring-[#1E3A8A]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cpf_cnpj"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-semibold">CPF/CNPJ</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="123.456.789-00 ou 12.345.678/0001-90"
+                          className="focus-visible:ring-[#1E3A8A]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="telefone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-semibold">Telefone</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="11 99999-9999"
+                          className="focus-visible:ring-[#1E3A8A]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-semibold">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="seu@email.com"
+                          className="focus-visible:ring-[#1E3A8A]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirm_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-semibold">
+                        Confirmar Email
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="seu@email.com"
+                          className="focus-visible:ring-[#1E3A8A]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter className="pt-6 flex flex-col sm:flex-row gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/login')}
+                    className="w-full sm:w-auto"
+                  >
+                    Fazer Login
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto bg-[#B8860B] hover:bg-[#DAA520] text-white font-semibold"
+                    disabled={!form.formState.isValid}
+                  >
+                    Continuar para Pagamento
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

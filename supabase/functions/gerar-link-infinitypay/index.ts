@@ -14,52 +14,77 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Autorização não fornecida.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const token = authHeader.replace('Bearer ', '')
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    
-    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+    const authHeader = req.headers.get('Authorization')
+    const reqData = await req.json()
+    const { plano, metodo_pagamento, cupom_codigo, guest_dados } = reqData
 
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    let userId = reqData.user_id || null
+
+    if (
+      authHeader &&
+      authHeader !== 'Bearer null' &&
+      authHeader !== 'Bearer undefined' &&
+      authHeader.length > 20
+    ) {
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
       })
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseUserClient.auth.getUser()
+
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      if (userId && userId !== user.id) {
+        return new Response(JSON.stringify({ error: 'Usuário inválido para a requisição.' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      userId = user.id
+    } else if (guest_dados && guest_dados.email) {
+      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', {
+        p_email: guest_dados.email,
+      })
+      if (userExists) {
+        return new Response(JSON.stringify({ error: 'Conta já existe. Faça login.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      userId = null
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
-    const reqData = await req.json()
-    const { user_id, plano, metodo_pagamento, cupom_codigo } = reqData
-
-    if (!user_id || !plano || !metodo_pagamento) {
+    if (!plano || !metodo_pagamento) {
       return new Response(JSON.stringify({ error: 'Campos obrigatórios ausentes.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    if (user_id !== user.id) {
-      return new Response(JSON.stringify({ error: 'Usuário inválido para a requisição.' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     const planosPrecos: Record<string, number> = {
-      'Starter': 49,
-      'Professional': 199,
-      'Enterprise': 499
+      Starter: 49,
+      Professional: 199,
+      Enterprise: 499,
     }
 
     let precoOriginal = 0
@@ -84,10 +109,6 @@ Deno.serve(async (req: Request) => {
     let precoFinal = precoOriginal
     let desconto = 0
 
-    // Using service role client to fetch coupons if RLS prevents anon reads
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-
     if (cupom_codigo) {
       const { data: cupom, error: cupomError } = await supabaseAdmin
         .from('cupons')
@@ -95,39 +116,43 @@ Deno.serve(async (req: Request) => {
         .eq('codigo', cupom_codigo.toUpperCase())
         .eq('status', 'ativo')
         .single()
-        
+
       if (cupomError || !cupom) {
         return new Response(JSON.stringify({ error: 'Cupom inválido ou inativo.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
+
       if (new Date(cupom.data_fim) < new Date()) {
         return new Response(JSON.stringify({ error: 'O cupom informado está expirado.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
-      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
+
+      if (
+        cupom.uso_atual !== null &&
+        cupom.uso_maximo !== null &&
+        cupom.uso_atual >= cupom.uso_maximo
+      ) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
+
       if (cupom.desconto_percentual) {
         desconto = precoOriginal * (cupom.desconto_percentual / 100)
       } else if (cupom.desconto_fixo) {
         desconto = cupom.desconto_fixo
       }
-      
+
       precoFinal = Math.max(0, precoOriginal - desconto)
     }
 
     const timestamp = Date.now()
-    const order_nsu = `kronos-${user_id}-${timestamp}`
+    const order_nsu = `kronos-${userId || 'guest'}-${timestamp}`
 
     const infiniteTag = Deno.env.get('INFINITEPAY_HANDLE') || 'kronosgest'
     const infinitepayApiKey = Deno.env.get('INFINITEPAY_API_KEY') || 'mock_key_for_test'
@@ -144,7 +169,7 @@ Deno.serve(async (req: Request) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${infinitepayApiKey}`
+            Authorization: `Bearer ${infinitepayApiKey}`,
           },
           body: JSON.stringify({
             handle: infiniteTag,
@@ -152,33 +177,36 @@ Deno.serve(async (req: Request) => {
               {
                 quantity: 1,
                 price: priceInCents,
-                description: `Assinatura Plano ${plano}`
-              }
+                description: `Assinatura Plano ${plano}`,
+              },
             ],
             order_nsu: order_nsu,
             redirect_url: `https://kronosgest.com.br/checkout-sucesso?order_nsu=${order_nsu}`,
-            webhook_url: `https://kronosgest.com.br/api/webhook-infinitypay`
-          })
+            webhook_url: `https://kronosgest.com.br/api/webhook-infinitypay`,
+          }),
         })
 
         if (response.status === 503 && attempt < delays.length) {
           console.log(`Infinitypay retornou 503. Tentando em ${delays[attempt]}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
           attempt++
           continue
         }
-        
+
         if (!response.ok) {
           const errText = await response.text()
           console.error(`Erro da API Infinitypay (${response.status}):`, errText)
           if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-            return new Response(JSON.stringify({ error: 'Erro ao gerar o link com a Infinitypay.' }), {
-              status: response.status,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
+            return new Response(
+              JSON.stringify({ error: 'Erro ao gerar o link com a Infinitypay.' }),
+              {
+                status: response.status,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            )
           }
           if (attempt < delays.length) {
-            await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+            await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
             attempt++
             continue
           }
@@ -186,50 +214,54 @@ Deno.serve(async (req: Request) => {
         }
 
         const apiResponseData = await response.json()
-        checkout_url = apiResponseData.checkout_url || apiResponseData.url || `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
+        checkout_url =
+          apiResponseData.checkout_url ||
+          apiResponseData.url ||
+          `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
         apiSuccess = true
       } catch (err) {
         if (attempt < delays.length) {
-          await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+          await new Promise((resolve) => setTimeout(resolve, delays[attempt]))
           attempt++
           continue
         }
-        console.error('Falha de conexão com Infinitypay, gerando link mockado para demonstração.', err)
+        console.error(
+          'Falha de conexão com Infinitypay, gerando link mockado para demonstração.',
+          err,
+        )
         checkout_url = `https://kronosgest.com.br/mock-checkout?order_nsu=${order_nsu}`
-        apiSuccess = true 
+        apiSuccess = true
       }
     }
-    
-    // Inserir registro na tabela pagamentos
-    const { error: pagamentoError } = await supabaseAdmin
-      .from('pagamentos')
-      .insert({
-        user_id,
-        plano,
-        valor: precoFinal,
-        order_nsu,
-        status: 'pendente',
-        metodo_pagamento,
-        cupom_aplicado: cupom_codigo || null
-      })
+
+    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
+      user_id: userId || null,
+      guest_email: guest_dados?.email || null,
+      guest_dados: guest_dados || null,
+      plano,
+      valor: precoFinal,
+      order_nsu,
+      status: 'pendente',
+      metodo_pagamento,
+      cupom_aplicado: cupom_codigo || null,
+    })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
+    return new Response(JSON.stringify({ checkout_url }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error: any) {
+    console.error('Erro inesperado na edge function:', error)
     return new Response(
-      JSON.stringify({ checkout_url }),
+      JSON.stringify({ error: 'Ocorreu um erro interno ao processar a solicitação.' }),
       {
-        status: 200,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     )
-
-  } catch (error: any) {
-    console.error('Erro inesperado na edge function:', error)
-    return new Response(JSON.stringify({ error: 'Ocorreu um erro interno ao processar a solicitação.' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
   }
 })
