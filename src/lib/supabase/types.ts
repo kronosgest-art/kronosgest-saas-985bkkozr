@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -33,11 +39,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'abas_crm_etiqueta_id_fkey'
-            columns: ['etiqueta_id']
+            foreignKeyName: "abas_crm_etiqueta_id_fkey"
+            columns: ["etiqueta_id"]
             isOneToOne: false
-            referencedRelation: 'etiquetas'
-            referencedColumns: ['id']
+            referencedRelation: "etiquetas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -110,18 +116,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'agendamentos_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "agendamentos_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agendamentos_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "agendamentos_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -158,18 +164,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'anamnese_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "anamnese_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'anamnese_template_id_fkey'
-            columns: ['template_id']
+            foreignKeyName: "anamnese_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: 'anamnese_templates'
-            referencedColumns: ['template_id']
+            referencedRelation: "anamnese_templates"
+            referencedColumns: ["template_id"]
           },
         ]
       }
@@ -266,11 +272,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'consultas_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "consultas_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -397,11 +403,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'despesas_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "despesas_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -471,11 +477,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'exames_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "exames_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -563,11 +569,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'leads_etiqueta_id_fkey'
-            columns: ['etiqueta_id']
+            foreignKeyName: "leads_etiqueta_id_fkey"
+            columns: ["etiqueta_id"]
             isOneToOne: false
-            referencedRelation: 'etiquetas'
-            referencedColumns: ['id']
+            referencedRelation: "etiquetas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -769,11 +775,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pacientes_acesso_paciente_id_fkey'
-            columns: ['paciente_id']
+            foreignKeyName: "pacientes_acesso_paciente_id_fkey"
+            columns: ["paciente_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -810,11 +816,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'prescricoes_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "prescricoes_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -878,11 +884,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profissionais_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "profissionais_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1066,18 +1072,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'receitas_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "receitas_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'receitas_protocolo_id_fkey'
-            columns: ['protocolo_id']
+            foreignKeyName: "receitas_protocolo_id_fkey"
+            columns: ["protocolo_id"]
             isOneToOne: false
-            referencedRelation: 'protocolos'
-            referencedColumns: ['id']
+            referencedRelation: "protocolos"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1102,11 +1108,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'sync_logs_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "sync_logs_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profissionais'
-            referencedColumns: ['id']
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1137,11 +1143,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'tcle_assinado_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "tcle_assinado_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1289,18 +1295,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vendas_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "vendas_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'pacientes'
-            referencedColumns: ['id']
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vendas_protocolo_id_fkey'
-            columns: ['protocolo_id']
+            foreignKeyName: "vendas_protocolo_id_fkey"
+            columns: ["protocolo_id"]
             isOneToOne: false
-            referencedRelation: 'protocolos'
-            referencedColumns: ['id']
+            referencedRelation: "protocolos"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1395,31 +1401,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1428,23 +1436,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1453,23 +1461,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1478,36 +1486,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -1515,6 +1523,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -2185,7 +2194,7 @@ export const Constants = {
 //     UPDATE public.payments SET status = p_status WHERE id = p_payment_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION admin_update_subscription(uuid, text, timestamp with time zone, timestamp with time zone)
 //   CREATE OR REPLACE FUNCTION public.admin_update_subscription(p_subscription_id uuid, p_status text, p_free_access_start_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_free_access_end_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
 //    RETURNS void
@@ -2194,7 +2203,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     UPDATE public.subscriptions
-//     SET
+//     SET 
 //       status = p_status,
 //       free_access_start_date = COALESCE(p_free_access_start_date, free_access_start_date),
 //       free_access_end_date = COALESCE(p_free_access_end_date, free_access_end_date),
@@ -2202,7 +2211,7 @@ export const Constants = {
 //     WHERE id = p_subscription_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION admin_update_subscription_full(uuid, text, text, text, integer)
 //   CREATE OR REPLACE FUNCTION public.admin_update_subscription_full(p_subscription_id uuid, p_status text DEFAULT NULL::text, p_plan text DEFAULT NULL::text, p_blocked_reason text DEFAULT NULL::text, p_add_months integer DEFAULT 0)
 //    RETURNS void
@@ -2213,25 +2222,25 @@ export const Constants = {
 //     IF p_status IS NOT NULL THEN
 //       UPDATE public.subscriptions SET status = p_status WHERE id = p_subscription_id;
 //     END IF;
-//
+//     
 //     IF p_plan IS NOT NULL THEN
 //       UPDATE public.subscriptions SET plan = p_plan WHERE id = p_subscription_id;
 //     END IF;
-//
+//   
 //     IF p_blocked_reason IS NOT NULL THEN
 //       UPDATE public.subscriptions SET blocked_reason = p_blocked_reason WHERE id = p_subscription_id;
 //     END IF;
-//
+//   
 //     IF p_add_months > 0 THEN
-//       UPDATE public.subscriptions
-//       SET
+//       UPDATE public.subscriptions 
+//       SET 
 //         free_access_end_date = COALESCE(free_access_end_date, trial_end_date, NOW()) + (p_add_months || ' months')::interval,
 //         status = CASE WHEN status IN ('blocked', 'suspended') THEN 'free_access' ELSE status END
 //       WHERE id = p_subscription_id;
 //     END IF;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_billing()
 //   CREATE OR REPLACE FUNCTION public.get_admin_billing()
 //    RETURNS TABLE(payment_id uuid, created_at timestamp with time zone, clinica_nome text, email text, plan text, amount numeric, status text, method text)
@@ -2240,7 +2249,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     RETURN QUERY
-//     SELECT
+//     SELECT 
 //       p.id AS payment_id,
 //       p.created_at,
 //       COALESCE(o.nome, prof.nome_completo, 'Desconhecida') AS clinica_nome,
@@ -2257,7 +2266,7 @@ export const Constants = {
 //     ORDER BY p.created_at DESC;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_credit_purchases()
 //   CREATE OR REPLACE FUNCTION public.get_admin_credit_purchases()
 //    RETURNS TABLE(id uuid, created_at timestamp with time zone, clinica_nome text, admin_email text, package_name text, credits_amount integer, price numeric, status text, payment_method text)
@@ -2282,7 +2291,7 @@ export const Constants = {
 //     ORDER BY cp.created_at DESC;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_admin_subscriptions()
 //   CREATE OR REPLACE FUNCTION public.get_admin_subscriptions()
 //    RETURNS TABLE(subscription_id uuid, user_id uuid, nome text, email text, status text, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
@@ -2291,7 +2300,7 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     RETURN QUERY
-//     SELECT
+//     SELECT 
 //       s.id AS subscription_id,
 //       s.user_id,
 //       COALESCE(p.nome_completo, 'Desconhecido') AS nome,
@@ -2305,7 +2314,7 @@ export const Constants = {
 //     WHERE s.status IN ('trial', 'blocked', 'suspended', 'free_access');
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_all_subscribers()
 //   CREATE OR REPLACE FUNCTION public.get_all_subscribers()
 //    RETURNS TABLE(subscription_id uuid, user_id uuid, clinica_nome text, email text, plan text, status text, created_at timestamp with time zone, trial_end_date timestamp with time zone, free_access_end_date timestamp with time zone)
@@ -2330,7 +2339,7 @@ export const Constants = {
 //     LEFT JOIN public.organizations o ON p.organization_id = o.id OR o.owner_id = u.id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_profissional()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional()
 //    RETURNS trigger
@@ -2345,7 +2354,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_profissional_template()
 //   CREATE OR REPLACE FUNCTION public.handle_new_profissional_template()
 //    RETURNS trigger
@@ -2463,7 +2472,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user_subscription()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
 //    RETURNS trigger
@@ -2475,7 +2484,7 @@ export const Constants = {
 //     IF NEW.raw_user_meta_data->>'role' = 'paciente' THEN
 //       RETURN NEW;
 //     END IF;
-//
+//   
 //     INSERT INTO public.subscriptions (user_id, trial_start_date, trial_end_date, status)
 //     VALUES (
 //       NEW.id,
@@ -2484,11 +2493,11 @@ export const Constants = {
 //       'trial'
 //     )
 //     ON CONFLICT (user_id) DO NOTHING;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_profissional_id()
 //   CREATE OR REPLACE FUNCTION public.set_profissional_id()
 //    RETURNS trigger
@@ -2501,7 +2510,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_config_ia_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_config_ia_updated_at()
 //    RETURNS trigger
@@ -2512,7 +2521,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_leads_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_leads_updated_at()
 //    RETURNS trigger
@@ -2523,7 +2532,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: configuracao_ia
@@ -2550,3 +2559,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX profissionais_clinica_clinica_id_email_key ON public.profissionais_clinica USING btree (clinica_id, email)
 // Table: tokens_inclusos
 //   CREATE UNIQUE INDEX tokens_inclusos_user_id_mes_ano_key ON public.tokens_inclusos USING btree (user_id, mes_ano)
+
