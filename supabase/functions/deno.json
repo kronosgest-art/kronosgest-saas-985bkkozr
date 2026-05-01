@@ -13,6 +13,7 @@
     "whatsapp-webhook": 5,
     "gerar-link-infinitypay": 2,
     "webhook-infinitypay": 2,
-    "gerar-sessao-stripe": 2
+    "gerar-sessao-stripe": 2,
+    "webhook-stripe": 1
   }
 }
