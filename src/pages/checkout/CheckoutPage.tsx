@@ -41,13 +41,8 @@ import { useAuth } from '@/hooks/use-auth'
 const guestSchema = z
   .object({
     nome_completo: z.string().min(5, 'O nome deve ter pelo menos 5 caracteres').max(150),
-    cpf_cnpj: z
-      .string()
-      .regex(
-        /^(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})$/,
-        'Use 123.456.789-00 ou 12.345.678/0001-90',
-      ),
-    telefone: z.string().regex(/^\d{2} \d{4,5}-\d{4}$/, 'Use 11 99999-9999'),
+    cpf_cnpj: z.string().min(11, 'Preencha o CPF ou CNPJ corretamente'),
+    telefone: z.string().min(10, 'Preencha o telefone corretamente com DDD'),
     email: z.string().email('Email inválido'),
     confirm_email: z.string().email('Email inválido'),
   })
@@ -631,7 +626,7 @@ export default function CheckoutPage() {
                       <FormLabel className="text-slate-800 font-semibold">CPF/CNPJ</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="123.456.789-00 ou 12.345.678/0001-90"
+                          placeholder="Apenas números ou formatado"
                           className="focus-visible:ring-[#1E3A8A]"
                           {...field}
                         />
@@ -648,7 +643,7 @@ export default function CheckoutPage() {
                       <FormLabel className="text-slate-800 font-semibold">Telefone</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="11 99999-9999"
+                          placeholder="(11) 99999-9999"
                           className="focus-visible:ring-[#1E3A8A]"
                           {...field}
                         />
