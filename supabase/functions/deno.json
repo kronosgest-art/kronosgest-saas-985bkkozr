@@ -11,7 +11,7 @@
     "sync-to-google-calendar": 7,
     "create-profissional": 7,
     "whatsapp-webhook": 8,
-    "gerar-sessao-stripe": 7,
+    "gerar-sessao-stripe": 8,
     "webhook-stripe": 7
   }
 }
