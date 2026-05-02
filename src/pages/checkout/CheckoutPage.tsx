@@ -130,8 +130,22 @@ export default function CheckoutPage() {
       const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
         body: payload,
       })
-      if (error || data?.error) throw new Error(data?.error || error?.message)
-      if (data?.checkout_url) window.location.href = data.checkout_url
+
+      const responseError = error || data?.error
+      if (responseError) {
+        const errorMsg =
+          typeof responseError === 'string'
+            ? responseError
+            : responseError.message || JSON.stringify(responseError)
+        throw new Error(errorMsg)
+      }
+
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url
+        return // Prevents setIsProcessing(false) from running while redirecting
+      } else {
+        throw new Error('Falha ao gerar o link de pagamento. Tente novamente.')
+      }
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Erro no pagamento', description: err.message })
     }
@@ -293,6 +307,9 @@ export default function CheckoutPage() {
                         alt="Google"
                         className="h-5"
                       />
+                      <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded ml-1 tracking-wider uppercase">
+                        Link
+                      </span>
                     </div>
                   </div>
                   <div
