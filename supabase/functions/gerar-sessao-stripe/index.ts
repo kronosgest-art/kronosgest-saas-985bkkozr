@@ -22,26 +22,21 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization')
     const reqData = await req.json()
     const { plano, metodo_pagamento, cupom_codigo, guest_dados } = reqData
-
+    
     let userId = reqData.user_id || null
     let customerEmail = ''
 
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    let user = null
+    let user = null;
 
-    if (
-      authHeader &&
-      authHeader !== 'Bearer null' &&
-      authHeader !== 'Bearer undefined' &&
-      authHeader.length > 20
-    ) {
-      const token = authHeader.replace('Bearer ', '')
+    if (authHeader && authHeader !== 'Bearer null' && authHeader !== 'Bearer undefined' && authHeader.length > 20) {
+      const token = authHeader.replace('Bearer ', '');
       if (token !== supabaseAnonKey) {
         const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
           global: { headers: { Authorization: authHeader } },
         })
         const { data: userData } = await supabaseUserClient.auth.getUser()
-        user = userData?.user || null
+        user = userData?.user || null;
       }
     }
 
@@ -55,9 +50,7 @@ Deno.serve(async (req: Request) => {
       userId = user.id
       customerEmail = user.email || ''
     } else if (guest_dados && guest_dados.email) {
-      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', {
-        p_email: guest_dados.email,
-      })
+      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', { p_email: guest_dados.email })
       if (userExists) {
         return new Response(JSON.stringify({ error: 'Conta já existe. Faça login.' }), {
           status: 400,
@@ -67,13 +60,10 @@ Deno.serve(async (req: Request) => {
       userId = null
       customerEmail = guest_dados.email
     } else {
-      return new Response(
-        JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
+      return new Response(JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (!plano || !metodo_pagamento) {
@@ -83,17 +73,9 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const validMethods = [
-      'pix',
-      'boleto',
-      'cartao',
-      'cartao_credito',
-      'cartao_internacional',
-      'stripe',
-      'credit_card',
-    ]
+    const validMethods = ['pix', 'boleto', 'cartao', 'cartao_credito', 'cartao_internacional', 'stripe', 'credit_card']
     if (!validMethods.includes(metodo_pagamento)) {
-      return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
+       return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -104,12 +86,7 @@ Deno.serve(async (req: Request) => {
       paymentMethodTypes = ['pix']
     } else if (metodo_pagamento === 'boleto') {
       paymentMethodTypes = ['boleto']
-    } else if (
-      metodo_pagamento === 'cartao' ||
-      metodo_pagamento === 'cartao_credito' ||
-      metodo_pagamento === 'cartao_internacional' ||
-      metodo_pagamento === 'credit_card'
-    ) {
+    } else if (metodo_pagamento === 'cartao' || metodo_pagamento === 'cartao_credito' || metodo_pagamento === 'cartao_internacional' || metodo_pagamento === 'credit_card') {
       paymentMethodTypes = ['card']
     }
 
@@ -163,11 +140,7 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      if (
-        cupom.uso_atual !== null &&
-        cupom.uso_maximo !== null &&
-        cupom.uso_atual >= cupom.uso_maximo
-      ) {
+      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -224,7 +197,7 @@ Deno.serve(async (req: Request) => {
             cupom_aplicado: cupom_codigo || '',
             nome_completo: guest_dados?.nome_completo || '',
             cpf_cnpj: guest_dados?.cpf_cnpj || '',
-            telefone: guest_dados?.telefone || '',
+            telefone: guest_dados?.telefone || ''
           },
         })
       } catch (err: any) {
@@ -240,31 +213,36 @@ Deno.serve(async (req: Request) => {
           {
             status: err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
+          }
         )
       }
     }
 
-    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
-      user_id: userId || null,
-      guest_email: guest_dados?.email || null,
-      guest_dados: guest_dados || null,
-      plano,
-      valor: precoFinal,
-      order_nsu: session.id,
-      status: 'pendente',
-      metodo_pagamento,
-      cupom_aplicado: cupom_codigo || null,
-    })
+    const { error: pagamentoError } = await supabaseAdmin
+      .from('pagamentos')
+      .insert({
+        user_id: userId || null,
+        guest_email: guest_dados?.email || null,
+        guest_dados: guest_dados || null,
+        plano,
+        valor: precoFinal,
+        order_nsu: session.id,
+        status: 'pendente',
+        metodo_pagamento,
+        cupom_aplicado: cupom_codigo || null,
+      })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
-    return new Response(JSON.stringify({ session_id: session.id, checkout_url: session.url }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ session_id: session.id, checkout_url: session.url }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   } catch (error: any) {
     console.error('Erro inesperado na edge function:', error)
     return new Response(
@@ -272,7 +250,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      }
     )
   }
 })
