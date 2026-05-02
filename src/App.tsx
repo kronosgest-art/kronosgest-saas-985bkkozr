@@ -41,6 +41,7 @@ import AdminDashboardSaaS from '@/pages/admin/AdminDashboardSaaS'
 import Subscribers from '@/pages/admin/Subscribers'
 import Billing from '@/pages/admin/Billing'
 import Credits from '@/pages/admin/Credits'
+import Coupons from '@/pages/admin/Coupons'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/admin/subscribers" element={<Subscribers />} />
             <Route path="/admin/billing" element={<Billing />} />
             <Route path="/admin/credits" element={<Credits />} />
+            <Route path="/admin/coupons" element={<Coupons />} />
 
             {/* Profissional / Admin Routes */}
             <Route path="/exams/biochemical" element={<BiochemicalExams />} />
