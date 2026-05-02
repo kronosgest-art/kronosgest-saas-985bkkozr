@@ -22,16 +22,24 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization')
     const reqData = await req.json()
     const { plano, metodo_pagamento, cupom_codigo, guest_dados } = reqData
-    
+
     let userId = reqData.user_id || null
     let customerEmail = ''
 
-    if (authHeader && authHeader !== 'Bearer null' && authHeader !== 'Bearer undefined' && authHeader.length > 20) {
+    if (
+      authHeader &&
+      authHeader !== 'Bearer null' &&
+      authHeader !== 'Bearer undefined' &&
+      authHeader.length > 20
+    ) {
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
       const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } },
       })
-      const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseUserClient.auth.getUser()
 
       if (userError || !user) {
         return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
@@ -39,7 +47,7 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      
+
       if (userId && userId !== user.id) {
         return new Response(JSON.stringify({ error: 'Usuário inválido para a requisição.' }), {
           status: 403,
@@ -49,7 +57,9 @@ Deno.serve(async (req: Request) => {
       userId = user.id
       customerEmail = user.email || ''
     } else if (guest_dados && guest_dados.email) {
-      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', { p_email: guest_dados.email })
+      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', {
+        p_email: guest_dados.email,
+      })
       if (userExists) {
         return new Response(JSON.stringify({ error: 'Conta já existe. Faça login.' }), {
           status: 400,
@@ -59,10 +69,13 @@ Deno.serve(async (req: Request) => {
       userId = null
       customerEmail = guest_dados.email
     } else {
-      return new Response(JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     if (!plano || !metodo_pagamento) {
@@ -72,11 +85,34 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    if (metodo_pagamento !== 'cartao_internacional' && metodo_pagamento !== 'stripe') {
-       return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
+    const validMethods = [
+      'pix',
+      'boleto',
+      'cartao',
+      'cartao_credito',
+      'cartao_internacional',
+      'stripe',
+      'credit_card',
+    ]
+    if (!validMethods.includes(metodo_pagamento)) {
+      return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    let paymentMethodTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = ['card']
+    if (metodo_pagamento === 'pix') {
+      paymentMethodTypes = ['pix']
+    } else if (metodo_pagamento === 'boleto') {
+      paymentMethodTypes = ['boleto']
+    } else if (
+      metodo_pagamento === 'cartao' ||
+      metodo_pagamento === 'cartao_credito' ||
+      metodo_pagamento === 'cartao_internacional' ||
+      metodo_pagamento === 'credit_card'
+    ) {
+      paymentMethodTypes = ['card']
     }
 
     const planosPrecos: Record<string, number> = {
@@ -129,7 +165,11 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
+      if (
+        cupom.uso_atual !== null &&
+        cupom.uso_maximo !== null &&
+        cupom.uso_atual >= cupom.uso_maximo
+      ) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -163,7 +203,7 @@ Deno.serve(async (req: Request) => {
     while (!session) {
       try {
         session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
+          payment_method_types: paymentMethodTypes,
           line_items: [
             {
               price_data: {
@@ -179,11 +219,14 @@ Deno.serve(async (req: Request) => {
           mode: 'payment',
           success_url: `https://kronosgest.com.br/checkout-sucesso?order_nsu={CHECKOUT_SESSION_ID}`,
           cancel_url: `https://kronosgest.com.br/checkout`,
-          customer_email: customerEmail,
+          customer_email: customerEmail || undefined,
           metadata: {
             user_id: userId || '',
             plano,
             cupom_aplicado: cupom_codigo || '',
+            nome_completo: guest_dados?.nome_completo || '',
+            cpf_cnpj: guest_dados?.cpf_cnpj || '',
+            telefone: guest_dados?.telefone || '',
           },
         })
       } catch (err: any) {
@@ -199,36 +242,31 @@ Deno.serve(async (req: Request) => {
           {
             status: err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
+          },
         )
       }
     }
 
-    const { error: pagamentoError } = await supabaseAdmin
-      .from('pagamentos')
-      .insert({
-        user_id: userId || null,
-        guest_email: guest_dados?.email || null,
-        guest_dados: guest_dados || null,
-        plano,
-        valor: precoFinal,
-        order_nsu: session.id,
-        status: 'pendente',
-        metodo_pagamento: 'cartao_internacional',
-        cupom_aplicado: cupom_codigo || null,
-      })
+    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
+      user_id: userId || null,
+      guest_email: guest_dados?.email || null,
+      guest_dados: guest_dados || null,
+      plano,
+      valor: precoFinal,
+      order_nsu: session.id,
+      status: 'pendente',
+      metodo_pagamento,
+      cupom_aplicado: cupom_codigo || null,
+    })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
-    return new Response(
-      JSON.stringify({ session_id: session.id, checkout_url: session.url }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    return new Response(JSON.stringify({ session_id: session.id, checkout_url: session.url }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error: any) {
     console.error('Erro inesperado na edge function:', error)
     return new Response(
@@ -236,7 +274,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     )
   }
 })

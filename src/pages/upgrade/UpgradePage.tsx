@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import {
   Card,
   CardContent,
@@ -40,6 +42,9 @@ export default function UpgradePage() {
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
 
   const checkoutRef = useRef<HTMLDivElement>(null)
+
+  const { user } = useAuth()
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const plans = [
     {
@@ -121,7 +126,7 @@ export default function UpgradePage() {
     }
   }
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     if (!paymentMethod) {
       toast({
         title: 'Selecione um método de pagamento',
@@ -129,12 +134,40 @@ export default function UpgradePage() {
       })
       return
     }
-    const planName = plans.find((p) => p.id === selectedPlanId)?.name
-    console.log(`Iniciando checkout para o plano: ${planName} via ${paymentMethod}`)
+
+    const selectedPlanData = plans.find((p) => p.id === selectedPlanId)
+    if (!selectedPlanData) return
+
+    setIsProcessing(true)
     toast({
       title: 'Redirecionando para pagamento',
-      description: `Processando assinatura do plano ${planName}...`,
+      description: `Processando assinatura do plano ${selectedPlanData.name}...`,
     })
+
+    try {
+      const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
+        body: {
+          user_id: user?.id || null,
+          plano: selectedPlanData.name,
+          metodo_pagamento: paymentMethod,
+          cupom_codigo: appliedCoupon || null,
+        },
+      })
+
+      if (error) throw new Error(error.message || 'Erro ao comunicar com o servidor')
+      if (data?.error) throw new Error(data.error)
+
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url
+      }
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro no pagamento',
+        description: err.message || 'Não foi possível gerar a sessão de pagamento.',
+      })
+      setIsProcessing(false)
+    }
   }
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId)
@@ -430,10 +463,10 @@ export default function UpgradePage() {
               <CardFooter className="pt-4 pb-8 px-8">
                 <Button
                   className="w-full h-16 text-xl font-bold bg-gradient-to-r from-[#3B82F6] to-[#B8860B] hover:opacity-100 hover:shadow-[0_0_20px_rgba(184,134,11,0.4)] transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none text-white rounded-xl uppercase tracking-wide"
-                  disabled={!paymentMethod}
+                  disabled={!paymentMethod || isProcessing}
                   onClick={handleFinalize}
                 >
-                  Finalizar Compra
+                  {isProcessing ? 'Processando...' : 'Finalizar Compra'}
                 </Button>
               </CardFooter>
             </Card>

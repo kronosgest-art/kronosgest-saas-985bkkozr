@@ -194,51 +194,24 @@ export default function CheckoutPage() {
       cupom_codigo: appliedCoupon?.code || null,
     }
 
-    if (paymentMethod === 'cartao_internacional') {
-      try {
-        const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
-          body: payload,
-        })
+    try {
+      const { data, error } = await supabase.functions.invoke('gerar-sessao-stripe', {
+        body: payload,
+      })
 
-        if (error) throw new Error(error.message || 'Erro ao comunicar com o servidor')
-        if (data?.error) throw new Error(data.error)
+      if (error) throw new Error(error.message || 'Erro ao comunicar com o servidor')
+      if (data?.error) throw new Error(data.error)
 
-        if (data?.checkout_url) {
-          window.location.href = data.checkout_url
-        }
-      } catch (err: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro no pagamento',
-          description:
-            err.message || 'Não foi possível gerar a sessão de pagamento. Tente novamente.',
-        })
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url
       }
-    } else {
-      try {
-        const { data, error } = await supabase.functions.invoke('gerar-link-infinitypay', {
-          body: payload,
-        })
-
-        if (error) {
-          throw new Error(error.message || 'Erro ao comunicar com o servidor')
-        }
-
-        if (data?.error) {
-          throw new Error(data.error)
-        }
-
-        if (data?.checkout_url) {
-          window.location.href = data.checkout_url
-        }
-      } catch (err: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro no pagamento',
-          description:
-            err.message || 'Não foi possível gerar o link de pagamento. Tente novamente.',
-        })
-      }
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro no pagamento',
+        description:
+          err.message || 'Não foi possível gerar a sessão de pagamento. Tente novamente.',
+      })
     }
     setIsProcessingCheckout(false)
   }
@@ -431,7 +404,7 @@ export default function CheckoutPage() {
                         className="data-[state=active]:bg-[#1E3A8A] data-[state=active]:text-white rounded-lg text-base py-3 transition-all duration-300 font-medium"
                         onClick={() => setPaymentMethod(null)}
                       >
-                        Brasil
+                        Nacional
                       </TabsTrigger>
                       <TabsTrigger
                         value="internacional"
@@ -496,72 +469,12 @@ export default function CheckoutPage() {
                         ))}
                       </div>
 
-                      {paymentMethod === 'pix' && (
-                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center animate-in slide-in-from-top-4">
-                          <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
-                            <QrCode className="h-32 w-32 text-slate-800" />
-                          </div>
-                          <p className="font-bold text-lg text-slate-800">
-                            Escaneie o QR code para pagar
+                      {paymentMethod && (
+                        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center animate-in slide-in-from-top-4">
+                          <p className="text-slate-600 font-medium">
+                            Você será redirecionado para o ambiente seguro do Stripe para finalizar
+                            o pagamento.
                           </p>
-                          <p className="text-base text-slate-500 mt-2">
-                            A aprovação é instantânea.
-                          </p>
-                        </div>
-                      )}
-
-                      {paymentMethod === 'boleto' && (
-                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center animate-in slide-in-from-top-4">
-                          <div className="bg-[#3B82F6]/10 p-5 rounded-full mb-6">
-                            <Barcode className="h-16 w-16 text-[#3B82F6]" />
-                          </div>
-                          <p className="font-bold text-lg text-slate-800">
-                            Boleto gerado com sucesso
-                          </p>
-                          <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200 break-all font-mono text-base max-w-full shadow-sm text-slate-600">
-                            00000.00000 00000.000000 00000.000000 0 00000000000000
-                          </div>
-                        </div>
-                      )}
-
-                      {paymentMethod === 'cartao' && (
-                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100 space-y-6 animate-in slide-in-from-top-4">
-                          <div className="space-y-3">
-                            <Label className="text-slate-700 font-semibold text-sm">
-                              Número do Cartão
-                            </Label>
-                            <Input
-                              placeholder=""
-                              className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                              <Label className="text-slate-700 font-semibold text-sm">
-                                Validade
-                              </Label>
-                              <Input
-                                placeholder=""
-                                className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
-                              />
-                            </div>
-                            <div className="space-y-3">
-                              <Label className="text-slate-700 font-semibold text-sm">CVV</Label>
-                              <Input
-                                placeholder=""
-                                className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <Label className="text-slate-700 font-semibold text-sm">
-                              Nome no Cartão
-                            </Label>
-                            <Input
-                              placeholder=""
-                              className="h-12 border-slate-200 focus-visible:ring-[#B8860B] rounded-xl text-lg"
-                            />
-                          </div>
                         </div>
                       )}
                     </TabsContent>
@@ -586,13 +499,22 @@ export default function CheckoutPage() {
                             )}
                           />
                           <span className="font-bold text-slate-800 text-lg">
-                            Cartão de Crédito (Stripe)
+                            Cartão de Crédito Internacional
                           </span>
                           <span className="text-sm text-slate-500 mt-2 font-medium">
-                            Cartão internacional
+                            Via Stripe Seguros
                           </span>
                         </div>
                       </div>
+
+                      {paymentMethod === 'cartao_internacional' && (
+                        <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center animate-in slide-in-from-top-4">
+                          <p className="text-slate-600 font-medium">
+                            Você será redirecionado para o ambiente seguro do Stripe para finalizar
+                            o pagamento.
+                          </p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>

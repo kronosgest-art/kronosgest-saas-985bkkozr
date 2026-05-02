@@ -81,8 +81,7 @@ export default function TokensAvulsos() {
     setError(null)
 
     try {
-      const isStripe = aba === 'internacional'
-      const endpoint = isStripe ? 'gerar-sessao-stripe' : 'gerar-link-infinitypay'
+      const endpoint = 'gerar-sessao-stripe'
       const planoNome = `Tokens-${quantidade}`
 
       const { data, error: funcError } = await supabase.functions.invoke(endpoint, {
