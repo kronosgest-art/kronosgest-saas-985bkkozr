@@ -22,24 +22,16 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization')
     const reqData = await req.json()
     const { plano, metodo_pagamento, cupom_codigo, guest_dados } = reqData
-
+    
     let userId = reqData.user_id || null
     let customerEmail = ''
 
-    if (
-      authHeader &&
-      authHeader !== 'Bearer null' &&
-      authHeader !== 'Bearer undefined' &&
-      authHeader.length > 20
-    ) {
+    if (authHeader && authHeader !== 'Bearer null' && authHeader !== 'Bearer undefined' && authHeader.length > 20) {
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
       const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } },
       })
-      const {
-        data: { user },
-        error: userError,
-      } = await supabaseUserClient.auth.getUser()
+      const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
 
       if (userError || !user) {
         return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
@@ -47,7 +39,7 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-
+      
       if (userId && userId !== user.id) {
         return new Response(JSON.stringify({ error: 'Usuário inválido para a requisição.' }), {
           status: 403,
@@ -57,9 +49,7 @@ Deno.serve(async (req: Request) => {
       userId = user.id
       customerEmail = user.email || ''
     } else if (guest_dados && guest_dados.email) {
-      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', {
-        p_email: guest_dados.email,
-      })
+      const { data: userExists } = await supabaseAdmin.rpc('check_user_exists_by_email', { p_email: guest_dados.email })
       if (userExists) {
         return new Response(JSON.stringify({ error: 'Conta já existe. Faça login.' }), {
           status: 400,
@@ -69,13 +59,10 @@ Deno.serve(async (req: Request) => {
       userId = null
       customerEmail = guest_dados.email
     } else {
-      return new Response(
-        JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
+      return new Response(JSON.stringify({ error: 'Autorização ou dados de visitante não fornecidos.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (!plano || !metodo_pagamento) {
@@ -86,7 +73,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (metodo_pagamento !== 'cartao_internacional' && metodo_pagamento !== 'stripe') {
-      return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
+       return new Response(JSON.stringify({ error: 'Método de pagamento inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -142,11 +129,7 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      if (
-        cupom.uso_atual !== null &&
-        cupom.uso_maximo !== null &&
-        cupom.uso_atual >= cupom.uso_maximo
-      ) {
+      if (cupom.uso_atual !== null && cupom.uso_maximo !== null && cupom.uso_atual >= cupom.uso_maximo) {
         return new Response(JSON.stringify({ error: 'Limite de uso do cupom atingido.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -216,31 +199,36 @@ Deno.serve(async (req: Request) => {
           {
             status: err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
+          }
         )
       }
     }
 
-    const { error: pagamentoError } = await supabaseAdmin.from('pagamentos').insert({
-      user_id: userId || null,
-      guest_email: guest_dados?.email || null,
-      guest_dados: guest_dados || null,
-      plano,
-      valor: precoFinal,
-      order_nsu: session.id,
-      status: 'pendente',
-      metodo_pagamento: 'cartao_internacional',
-      cupom_aplicado: cupom_codigo || null,
-    })
+    const { error: pagamentoError } = await supabaseAdmin
+      .from('pagamentos')
+      .insert({
+        user_id: userId || null,
+        guest_email: guest_dados?.email || null,
+        guest_dados: guest_dados || null,
+        plano,
+        valor: precoFinal,
+        order_nsu: session.id,
+        status: 'pendente',
+        metodo_pagamento: 'cartao_internacional',
+        cupom_aplicado: cupom_codigo || null,
+      })
 
     if (pagamentoError) {
       console.error('Erro ao salvar pagamento no banco:', pagamentoError)
     }
 
-    return new Response(JSON.stringify({ session_id: session.id, checkout_url: session.url }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ session_id: session.id, checkout_url: session.url }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   } catch (error: any) {
     console.error('Erro inesperado na edge function:', error)
     return new Response(
@@ -248,7 +236,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      }
     )
   }
 })

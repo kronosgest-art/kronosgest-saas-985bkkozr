@@ -20,8 +20,7 @@ Deno.serve(async (req: Request) => {
     if (!invoice_slug || !order_nsu || !status || amount === undefined || !capture_method) {
       return new Response(
         JSON.stringify({
-          error:
-            'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
+          error: 'Campos obrigatórios ausentes: invoice_slug, order_nsu, status, amount, capture_method',
         }),
         {
           status: 400,
@@ -49,11 +48,7 @@ Deno.serve(async (req: Request) => {
 
     const normalizedStatus = status.toLowerCase()
 
-    if (
-      normalizedStatus === 'pago' ||
-      normalizedStatus === 'paid' ||
-      normalizedStatus === 'approved'
-    ) {
+    if (normalizedStatus === 'pago' || normalizedStatus === 'paid' || normalizedStatus === 'approved') {
       const { error: updateError } = await supabase
         .from('pagamentos')
         .update({
@@ -71,11 +66,9 @@ Deno.serve(async (req: Request) => {
       let finalUserId = pagamento.user_id
 
       if (!finalUserId && pagamento.guest_dados && pagamento.guest_email) {
-        const guestData = pagamento.guest_dados as any
+        const guestData = pagamento.guest_dados as any;
         const tempPassword = Array.from(crypto.getRandomValues(new Uint8Array(8)))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join('')
-          .substring(0, 16)
+          .map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
 
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email: pagamento.guest_email,
@@ -84,13 +77,13 @@ Deno.serve(async (req: Request) => {
           user_metadata: {
             name: guestData.nome_completo,
             role: 'profissional',
-          },
-        })
+          }
+        });
 
         if (!authError && authUser?.user) {
-          finalUserId = authUser.user.id
+          finalUserId = authUser.user.id;
 
-          await supabase.from('pagamentos').update({ user_id: finalUserId }).eq('id', pagamento.id)
+          await supabase.from('pagamentos').update({ user_id: finalUserId }).eq('id', pagamento.id);
 
           await supabase.from('profissionais').insert({
             user_id: finalUserId,
@@ -99,10 +92,10 @@ Deno.serve(async (req: Request) => {
             telefone: guestData.telefone,
             cpf: guestData.cpf_cnpj,
             tipo_profissional: 'proprietario',
-            status: true,
-          })
+            status: true
+          });
 
-          const dbSecret = Deno.env.get('DB_ENCRYPTION_KEY') || 'kronos_secret_2026'
+          const dbSecret = Deno.env.get('DB_ENCRYPTION_KEY') || 'kronos_secret_2026';
           await supabase.rpc('inserir_dados_nf', {
             p_user_id: finalUserId,
             p_nome_completo: guestData.nome_completo,
@@ -112,32 +105,26 @@ Deno.serve(async (req: Request) => {
             p_plano: pagamento.plano,
             p_valor_pagamento: pagamento.valor,
             p_data_pagamento: new Date().toISOString(),
-            p_encryption_key: dbSecret,
-          })
+            p_encryption_key: dbSecret
+          });
 
-          const resendApiKey = Deno.env.get('RESEND_API_KEY')
+          const resendApiKey = Deno.env.get('RESEND_API_KEY');
           if (resendApiKey) {
             await fetch('https://api.resend.com/emails', {
               method: 'POST',
-              headers: {
-                Authorization: `Bearer ${resendApiKey}`,
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Authorization': `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 from: 'Kronos Gest <no-reply@kronosgest.com.br>',
                 to: [guestData.email],
                 subject: 'Bem-vindo ao Kronos Gest!',
-                html: `<p>Sua conta foi criada com sucesso.</p><p>Email: ${guestData.email}</p><p>Senha temporária: <strong>${tempPassword}</strong></p><p>Acesse: <a href="https://kronosgest.com.br/login">https://kronosgest.com.br/login</a></p><p>Sua Nota Fiscal será gerada em 8 dias e enviada para seu email.</p>`,
-              }),
-            })
+                html: `<p>Sua conta foi criada com sucesso.</p><p>Email: ${guestData.email}</p><p>Senha temporária: <strong>${tempPassword}</strong></p><p>Acesse: <a href="https://kronosgest.com.br/login">https://kronosgest.com.br/login</a></p><p>Sua Nota Fiscal será gerada em 8 dias e enviada para seu email.</p>`
+              })
+            });
           } else {
-            console.log(
-              'RESEND_API_KEY não configurada. Email não enviado. Senha temporária:',
-              tempPassword,
-            )
+            console.log('RESEND_API_KEY não configurada. Email não enviado. Senha temporária:', tempPassword);
           }
         } else {
-          console.error('Erro ao criar usuário guest:', authError)
+          console.error('Erro ao criar usuário guest:', authError);
         }
       }
 
@@ -146,7 +133,7 @@ Deno.serve(async (req: Request) => {
           const qtdTokens = parseInt(pagamento.plano.split('-')[1]) || 0
           const expiraEm = new Date()
           expiraEm.setDate(expiraEm.getDate() + 30)
-
+  
           const { error: tokenError } = await supabase.from('tokens_comprados').insert({
             user_id: finalUserId,
             quantidade: qtdTokens,
@@ -154,9 +141,9 @@ Deno.serve(async (req: Request) => {
             tokens_restantes: qtdTokens,
             expira_em: expiraEm.toISOString(),
             status: 'ativo',
-            metodo_pagamento: pagamento.metodo_pagamento,
+            metodo_pagamento: pagamento.metodo_pagamento
           })
-
+  
           if (tokenError) {
             console.error('Erro ao adicionar tokens avulsos:', tokenError)
           }
@@ -164,7 +151,7 @@ Deno.serve(async (req: Request) => {
           let wppLimite = 0
           let prescLimite = 0
           const planoNormalizado = pagamento.plano.toLowerCase()
-
+  
           if (planoNormalizado === 'starter') {
             wppLimite = 30
             prescLimite = 5
@@ -175,11 +162,11 @@ Deno.serve(async (req: Request) => {
             wppLimite = 1000
             prescLimite = 200
           }
-
+  
           const resetEm = new Date()
           resetEm.setMonth(resetEm.getMonth() + 1)
           const mesAno = `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
-
+  
           const { error: tokenError } = await supabase.from('tokens_inclusos').upsert(
             {
               user_id: finalUserId,
@@ -193,7 +180,7 @@ Deno.serve(async (req: Request) => {
             },
             { onConflict: 'user_id, mes_ano' },
           )
-
+  
           if (tokenError) {
             console.error('Erro ao criar tokens:', tokenError)
           }
